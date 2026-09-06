@@ -49,6 +49,8 @@ namespace DieWithASmile.Content
 			CoolerMenuCompat.OnTitleLike &&
 			(MenuLoader.CurrentMenu is DieWithASmileCalamitasMenu || CalamitasMenuForeign.HoldingCurrent);
 
+		private static bool HostLegacy => Active && !Engine.Content.WeModMenu.OnTitle;
+
 		public override void Load()
 		{
 			const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
@@ -84,7 +86,7 @@ namespace DieWithASmile.Content
 
 		private static void DrawTerrariaSocialHook(Action<Color, float> orig, Color color, float upBump)
 		{
-			if (!Active) {
+			if (!HostLegacy) {
 				orig(color, upBump);
 				return;
 			}
@@ -97,7 +99,7 @@ namespace DieWithASmile.Content
 
 		private static void DrawTmlSocialHook(Action<Color, float> orig, Color color, float upBump)
 		{
-			if (!Active) {
+			if (!HostLegacy) {
 				orig(color, upBump);
 				return;
 			}
@@ -110,10 +112,10 @@ namespace DieWithASmile.Content
 
 		private static void DrawVersionNumberHook(Action<Color, float> orig, Color color, float upBump)
 		{
-			if (Active && CalamitasMenuLayout.Editing)
+			if (HostLegacy && CalamitasMenuLayout.Editing)
 				return;
 
-			if (!Active) {
+			if (!HostLegacy) {
 				if (CoolerMenuCompat.CoreActive && MenuLoader.CurrentMenu is DieWithASmileCalamitasMenu)
 					return;
 
@@ -393,7 +395,7 @@ namespace DieWithASmile.Content
 				return;
 
 			cursor.Remove();
-			cursor.EmitDelegate<Func<float>>(() => Active ? Main.screenHeight - GetNewsBottomY() : 38f);
+			cursor.EmitDelegate<Func<float>>(() => HostLegacy ? Main.screenHeight - GetNewsBottomY() : 38f);
 		}
 
 		private static void PatchThemeSwap(ILContext il)
@@ -423,7 +425,7 @@ namespace DieWithASmile.Content
 
 		private static void AdjustThemeRect(ref Rectangle rectangle)
 		{
-			if (!Active || rectangle.IsEmpty)
+			if (!HostLegacy || rectangle.IsEmpty)
 				return;
 
 			if (CalamitasMenuLayout.ShouldBlockThemeSwap) {
@@ -457,7 +459,7 @@ namespace DieWithASmile.Content
 			float maxWidth,
 			float spread)
 		{
-			if (!Active) {
+			if (!HostLegacy) {
 				return ChatManager.DrawColorCodedStringWithShadow(
 					spriteBatch, font, text, position, color, rotation, origin, baseScale, maxWidth, spread);
 			}

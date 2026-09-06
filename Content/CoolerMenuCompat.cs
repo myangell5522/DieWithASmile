@@ -15,6 +15,8 @@ using Terraria.ModLoader;
 using Terraria.ModLoader.Config;
 using Terraria.UI;
 using Terraria.UI.Chat;
+using DieWithASmile.Engine.Content;
+using DieWithASmile.Engine.UI;
 
 namespace DieWithASmile.Content
 {
@@ -160,6 +162,9 @@ namespace DieWithASmile.Content
 			if (CalamitasMenuLayout.Editing)
 				return;
 
+			if (HideCoolerMenuButtons())
+				return;
+
 			if (Main.menuMode != 0 && Main.menuMode != CoolerMenuMode)
 				return;
 
@@ -219,6 +224,14 @@ namespace DieWithASmile.Content
 		private static void PatchCoolerHoverColor(ILContext il)
 		{
 			ILCursor cursor = new ILCursor(il);
+			if (il.Method.ReturnType.FullName == "System.Void") {
+				ILLabel run = cursor.DefineLabel();
+				cursor.EmitDelegate(HideCoolerMenuButtons);
+				cursor.Emit(OpCodes.Brfalse, run);
+				cursor.Emit(OpCodes.Ret);
+				cursor.MarkLabel(run);
+			}
+
 			while (cursor.TryGotoNext(MoveType.Before, i => i.MatchLdsfld(typeof(Main), nameof(Main.OurFavoriteColor)))) {
 				cursor.Remove();
 				cursor.EmitDelegate(GetButtonHoverColor);
@@ -258,6 +271,9 @@ namespace DieWithASmile.Content
 			float maxWidth,
 			float spread)
 		{
+			if (HideCoolerMenuButtons())
+				return Vector2.Zero;
+
 			bool ourMenu = MenuLoader.CurrentMenu is DieWithASmileCalamitasMenu;
 			bool hovered = color.R < 248 || color.G < 248 || color.B < 248;
 			if (!ourMenu || !hovered || string.IsNullOrEmpty(text)) {
@@ -285,6 +301,9 @@ namespace DieWithASmile.Content
 				baseScale.X);
 			return position + font.MeasureString(text) * baseScale;
 		}
+
+		private static bool HideCoolerMenuButtons() =>
+			WeModMenu.IsActive && (WePanels.Covering || WeSplash.Visible);
 
 		private static Color GetButtonHoverColor()
 		{

@@ -1,3 +1,43 @@
+Version 2.8.1
+
+Title
+- Open Wallpaper Engine panels no longer sit under Single Player / Multiplayer / Exit. Those buttons hide while a panel or splash is open, and the panels draw on top of the rest of the menu.
+- Nested pack previews each use their own scene art again (Calamitas, Don't Forget, Come Along, Last Meeting, Yharim, Witch, Soul).
+- Borrowed Entropy skies keep rain and glow, but the ENTROPY wordmark is left off so it does not sit behind Terraria.
+
+Player
+- The radial spectrum keeps moving in Settings and other menu tabs. Music already did; the visualizer now updates there too.
+
+Settings
+- "Main Menu Music" on the title Volume page sits to the right of its slider instead of overlapping the bar.
+
+Version 2.8.0
+
+Title
+- The Wallpaper Engine menu (wrench, panels, widgets, layout, grabber, client chrome) now hosts this theme. Die With A Smile art, logos, and packed tracks sit inside it as built-in packs with the watermelon badge. Switch Menu Theme still has a single theme.
+
+Player
+- Menu music plays through the Wallpaper Engine audio path. Packed tracks are extracted and played as files, including the Die With A Smile start offset.
+
+Version 2.7.12
+
+Player
+- Menu music no longer starts for a moment and then immediately fades out
+
+Version 2.7.11
+
+Conflict
+- The Red Screen of Death prompt is gone. Calamity Entropy's black explosion screen and "malicious code" text are skipped, so both mods can stay enabled together.
+
+Version 2.7.10
+
+KEEP BOTH MODS
+- THE RED SCREEN OF DEATH NOW HAS A FOURTH BUTTON: KEEP BOTH MODS. It leaves Calamity Entropy and this theme enabled together and closes the prompt. That choice is saved.
+
+Player
+- Loading is no longer silent: the playlist starts once during load and keeps playing when the title appears (reported by akatsumi0011, z0t3, DMolRod)
+- Music keeps playing in player select and other submenus instead of cutting out (reported by akatsumi0011)
+
 Version 2.7.9
 
 Player

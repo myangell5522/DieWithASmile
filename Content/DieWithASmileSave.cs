@@ -37,6 +37,7 @@ namespace DieWithASmile.Content
 		public List<string> DisabledCustomIds { get; set; } = new();
 		public List<CustomTrackRecord> CustomTracks { get; set; } = new();
 		public bool KeepMenuSelected { get; set; }
+		public bool KeepBothMods { get; set; }
 		public float MenuMusicVolume { get; set; } = 1f;
 		public float ShuffleSceneSeconds { get; set; } = 10f;
 		public List<int> ShuffleScenePool { get; set; } = new();

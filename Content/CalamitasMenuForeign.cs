@@ -78,6 +78,7 @@ namespace DieWithASmile.Content
 			InstallDrawHooks();
 			On_Main.DoUpdate += DoUpdateHook;
 			On_Main.DoDraw += DoDrawHook;
+			On_Main.UpdateAudio += UpdateAudioHook;
 			MethodInfo inner = typeof(MenuLoader).GetMethod("UpdateAndDrawModMenuInner", flags);
 			if (inner != null)
 				MonoModHooks.Add(inner, RestoreBeforeOurMenuDraw);
@@ -178,23 +179,26 @@ namespace DieWithASmile.Content
 			}
 		}
 
+		private static void UpdateAudioHook(On_Main.orig_UpdateAudio orig, Main self)
+		{
+			CalamitasMenuPlaylist.PrepareFrameAudio();
+			orig(self);
+			if (Main.gameMenu)
+				CalamitasMenuPlaylist.AssertTitleMusic();
+		}
+
 		private static void DoUpdateHook(On_Main.orig_DoUpdate orig, Main self, ref GameTime gameTime)
 		{
 			float volume = Main.musicVolume;
 			CalamitasMenuPlaylist.PrepareFrameAudio();
-			if (!Main.gameMenu || !CoolerMenuCompat.MenuBackdropActive)
-				PopAll();
-			else if (!CalamitasMenuConflict.Blocking)
-				PushCurrentForWallpaper();
-			else
-				PopAll();
+			PopAll();
 			try {
 				orig(self, ref gameTime);
 			}
 			finally {
 				CalamitasMenuPlaylist.RestoreIfStolen(volume);
 				PopAll();
-				if (Main.gameMenu && MenuLoader.CurrentMenu is DieWithASmileCalamitasMenu)
+				if (Main.gameMenu)
 					CalamitasMenuPlaylist.AssertTitleMusic();
 			}
 		}

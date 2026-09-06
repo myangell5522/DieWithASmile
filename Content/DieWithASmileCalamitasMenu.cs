@@ -4,6 +4,13 @@ using ReLogic.Content;
 using Terraria;
 using Terraria.Localization;
 using Terraria.ModLoader;
+using DieWithASmile.Engine.Audio;
+using DieWithASmile.Engine.Chrome;
+using DieWithASmile.Engine.Content;
+using DieWithASmile.Engine.Core;
+using DieWithASmile.Engine.Grab;
+using DieWithASmile.Engine.Layout;
+using DieWithASmile.Engine.UI;
 
 namespace DieWithASmile.Content
 {
@@ -20,58 +27,78 @@ namespace DieWithASmile.Content
 		{
 			get
 			{
-				if (DieWithASmileSettings.UsingVanillaWallpaper)
-					return null;
-
-				if (DieWithASmileSettings.UsingTmlWallpaper)
-					return CalamitasMenuForeign.TmlMenu?.MenuBackgroundStyle;
-
-				if (DieWithASmileSettings.UsingForeignWallpaper) {
-					ModMenu foreign = CalamitasMenuForeign.Find(DieWithASmileSave.Data.ForeignWallpaperId);
-					return foreign?.MenuBackgroundStyle;
-				}
-
-				return ModContent.GetInstance<CalamitasMenuBackgroundStyle>();
+				if (WeSave.Data.Wallpaper == WallpaperKind.Nested)
+					return ModContent.GetInstance<CalamitasMenuBackgroundStyle>();
+				if (WeSettings.HasCustomSky)
+					return ModContent.GetInstance<WeBackgroundStyle>();
+				return null;
 			}
 		}
 
-		public override Asset<Texture2D> SunTexture =>
-			DieWithASmileSettings.UsingPassthroughSky ? HostSun() : _emptyTexture;
+		public override Asset<Texture2D> SunTexture => HideSunMoon ? _emptyTexture : base.SunTexture;
 
-		public override Asset<Texture2D> MoonTexture =>
-			DieWithASmileSettings.UsingPassthroughSky ? HostMoon() : _emptyTexture;
+		public override Asset<Texture2D> MoonTexture => HideSunMoon ? _emptyTexture : base.MoonTexture;
 
-		public override int Music => CalamitasMenuPlaylist.MenuMusicId;
+		public override int Music
+		{
+			get
+			{
+				if (WeSave.Data.Music == MusicKind.Silence)
+					return 0;
+				if (WeSave.Data.Music == MusicKind.Custom)
+					return WePlaylist.MenuMusicId;
+				return 50;
+			}
+		}
+
+		private static bool HideSunMoon =>
+			!SceneGraph.Visible(SceneGraph.SunMoon) || WeSettings.HideSunMoon;
 
 		public override void Load()
 		{
 			_emptyTexture = ModContent.Request<Texture2D>(EmptyTexturePath);
-			CalamitasMenuPlaylist.Load(Mod);
-			CalamitasMenuSpectrum.Load();
+			WeIcons.Load();
+			WePresetLogos.Load();
+			WePackedMusic.EnsureExtracted(Mod);
+			WePlaylist.Load(Mod);
+			WeSpectrum.Load();
 			CalamitasMenuLogo.Load();
-			CalamitasMenuIcons.Load();
-			CalamitasMenuPanels.Load();
-			CalamitasMenuForeign.Load();
 		}
 
 		public override void OnSelected()
 		{
 			CalamitasMenuPersist.OnOurMenuSelected();
+			WePersist.OnSelected();
 			CalamitasMenuBackgroundStyle.ResetFade();
-			CalamitasMenuSpectrum.Reset();
-			CalamitasMenuPlayerUI.Reset();
-			CalamitasMenuPanels.Reset();
-			CalamitasMenuLayout.Reset();
-			CalamitasMenuUserArt.Scan();
-			CalamitasMenuForeign.SnapshotContent();
-			CalamitasMenuForeign.DropMissing();
-			CalamitasMenuPlaylist.OnThemeSelected();
+			WeSpectrum.Reset();
+			WeArt.Scan();
+			WeCatalog.Refresh();
+			WeCatalog.DropMissing();
+			WeLibrary.ScanIntoSave();
+			WeSplash.OnThemeSelected();
+			WePlaylist.OnThemeSelected();
+			WePlayerUI.Reset();
+			WePanels.Close();
+			LayoutEditor.Reset();
+			WrenchToolbar.OnThemeSelected();
+			WeType.Scan();
 		}
 
 		public override void OnDeselected()
 		{
-			CalamitasMenuLayout.Cancel(restore: false);
+			if (Main.gameMenu && Main.menuMode != 0) {
+				LayoutEditor.Cancel(false);
+				WePanels.Close();
+				WeSplash.Hide();
+				return;
+			}
+
+			WePersist.OnDeselected();
 			CalamitasMenuPersist.OnOurMenuDeselected();
+			WePlaylist.Silence();
+			LayoutEditor.Cancel(false);
+			WePanels.Close();
+			WeSplash.Hide();
 		}
 
 		public override void Update(bool isOnTitleScreen)
@@ -91,26 +118,43 @@ namespace DieWithASmile.Content
 				return;
 
 			_ticked = true;
-			CalamitasMenuPlaylist.HandleMenuLifecycle();
 			if (!CoolerMenuCompat.MenuBackdropActive)
 				return;
 
-			CalamitasMenuForeign.BeginFrame();
-			if (DieWithASmileSettings.UsingVanillaWallpaper)
-				Main.bgStyle = DieWithASmileSave.Data.VanillaBgStyle;
+			WeMenuHost.TickLogic();
 			CalamitasMenuBackgroundStyle.DrewThisFrame = false;
 			CalamitasMenuBackgroundStyle.UpdateFade();
-			CalamitasMenuSpectrum.Update(Mod);
 			if (!CoolerMenuCompat.OnTitleLike)
 				return;
 
 			DieWithASmileSettings.TickScenes();
-			CalamitasMenuLayout.Update();
-			CalamitasMenuPanels.Update();
-			CalamitasMenuPlayerUI.HandleTitleInput();
-			CalamitasMenuLogo.HandleTitleInput();
-			CalamitasMenuLayout.HandleTitleInput();
-			CalamitasMenuPlayerUI.Update();
+		}
+
+		public override bool PreDrawLogo(
+			SpriteBatch spriteBatch,
+			ref Vector2 logoDrawCenter,
+			ref float logoRotation,
+			ref float logoScale,
+			ref Color drawColor)
+		{
+			Tick();
+			if (!CoolerMenuCompat.MenuBackdropActive)
+				return false;
+
+			WeLook.StabilizeLogo(ref logoRotation, ref logoScale);
+			if (WeSave.Data.Wallpaper == WallpaperKind.Nested && !CalamitasMenuBackgroundStyle.DrewThisFrame)
+				CalamitasMenuBackgroundStyle.Draw(spriteBatch);
+
+			WeBackgroundStyle.Draw(spriteBatch);
+			WeBackgroundStyle.DrawAtmosphere(spriteBatch);
+			if (WeSave.Data.Logo is LogoKind.Custom or LogoKind.Hidden or LogoKind.Borrowed or LogoKind.Preset ||
+			    SceneGraph.Get(SceneGraph.Logo).Customized) {
+				if (WeSave.Data.Logo != LogoKind.Hidden && SceneGraph.Visible(SceneGraph.Logo))
+					WeLogo.DrawCustom(spriteBatch, 1f, logoRotation, logoScale);
+				return false;
+			}
+
+			return WeLogo.ShouldDrawVanilla(ref logoDrawCenter, ref logoScale);
 		}
 
 		public override void PostDrawLogo(
@@ -126,65 +170,8 @@ namespace DieWithASmile.Content
 				return;
 			}
 
-			if (!CalamitasMenuBackgroundStyle.DrewThisFrame)
-				CalamitasMenuBackgroundStyle.Draw(spriteBatch);
-
-			CalamitasMenuLogo.Draw(spriteBatch, CalamitasMenuBackgroundStyle.FadeAlpha);
-			if (CoolerMenuCompat.OnTitleLike) {
-				CalamitasMenuPlayerUI.Draw(spriteBatch, CalamitasMenuBackgroundStyle.FadeAlpha);
-				CalamitasMenuPanels.Draw(spriteBatch, CalamitasMenuBackgroundStyle.FadeAlpha);
-			}
-
-			CalamitasMenuPanels.EndFrame();
-			CalamitasMenuLogo.EndFrame();
-			CalamitasMenuLayout.EndFrame();
-			CalamitasMenuPlayerUI.EndFrame();
+			WeMenuHost.DrawOverlay(spriteBatch);
 			_ticked = false;
-		}
-
-		public override bool PreDrawLogo(
-			SpriteBatch spriteBatch,
-			ref Vector2 logoDrawCenter,
-			ref float logoRotation,
-			ref float logoScale,
-			ref Color drawColor)
-		{
-			Tick();
-			if (!CoolerMenuCompat.MenuBackdropActive)
-				return false;
-
-			CalamitasMenuBackgroundStyle.Draw(spriteBatch);
-			return false;
-		}
-
-		private Asset<Texture2D> HostSun()
-		{
-			if (DieWithASmileSettings.UsingTmlWallpaper) {
-				try {
-					Asset<Texture2D> sun = CalamitasMenuForeign.TmlMenu?.SunTexture;
-					if (sun != null)
-						return sun;
-				}
-				catch {
-				}
-			}
-
-			return base.SunTexture;
-		}
-
-		private Asset<Texture2D> HostMoon()
-		{
-			if (DieWithASmileSettings.UsingTmlWallpaper) {
-				try {
-					Asset<Texture2D> moon = CalamitasMenuForeign.TmlMenu?.MoonTexture;
-					if (moon != null)
-						return moon;
-				}
-				catch {
-				}
-			}
-
-			return base.MoonTexture;
 		}
 	}
 }

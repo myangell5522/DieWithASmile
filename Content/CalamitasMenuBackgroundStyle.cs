@@ -183,7 +183,11 @@ namespace DieWithASmile.Content
 
 		public override bool PreDrawCloseBackground(SpriteBatch spriteBatch)
 		{
-			return DieWithASmileSettings.UsingPassthroughSky;
+			if (DieWithASmileSettings.UsingPassthroughSky)
+				return true;
+
+			Draw(spriteBatch);
+			return false;
 		}
 
 		private static void GetBackgroundDestination(Texture2D texture, out Rectangle destination, out float scale) =>

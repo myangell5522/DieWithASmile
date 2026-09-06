@@ -68,16 +68,217 @@ UI: {
 	RenameHint: 이름 변경은 아티스트를 저장합니다. 재생할 수 없는 곡은 Broken 폴더로 옮겨집니다.
 	ClickRenameArtist: 아티스트 이름을 바꾸려면 클릭
 	ArtistPlaceholder: 아티스트 이름...
-	ConflictTitle: Calamity Entropy를 꺼야 합니다
-	ConflictBody: 권리 보유자의 요구에 따라 The End Of A Calamity Menu Theme를 쓰려면 Calamity Entropy를 비활성화해야 합니다. 이 충돌을 해결할 때까지 다른 메뉴 버튼은 잠깁니다. 두 모드가 다시 함께 켜져 있으면 이 창이 다시 나타납니다.
+	ConflictTitle: Calamity Entropy도 켜져 있습니다
+	ConflictBody: 권리 보유자는 이 테마를 쓸 때 Calamity Entropy를 끄라고 요청했습니다. 하나를 끄고 삭제하거나, 둘 다 유지하거나, 게임을 종료할 수 있습니다. 선택할 때까지 다른 메뉴 버튼은 잠깁니다.
 	ConflictOurName: The End Of A Calamity Menu Theme
 	ConflictEnabled: 활성화됨
 	ConflictRemoveEntropy: Calamity Entropy를 끄고 삭제한 뒤 다시 로드
 	ConflictRemoveUs: The End Of A Calamity Menu Theme를 끄고 삭제한 뒤 다시 로드
+	ConflictKeepBoth: 두 모드 모두 유지
 	ConflictExit: 게임 종료
 	ConflictWorking: 처리 중…
 	WePromoNew: NEW
 	WePromoTitle: Wallpaper Engine
 	WePromoBody: 제한 없는 새 모드, 확장 기능 포함 — 배경, 음악, 로고, 위젯.
 	WePromoButton: 창작마당
+	Wrench: Customize menu
+	BtnLogoPos: Move logo
+	BtnWallpaper: Change wallpaper
+	BtnMusic: Change music
+	BtnWidgets: Widgets
+	BtnLogo: Change logo
+	BtnLayout: Move elements
+	BtnClient: Client settings
+	BtnClean: Hide version clutter
+	SplashTitle: This is your menu
+	Splash1: It starts as regular tModLoader. Everything you change is optional.
+	Splash2: The circle between the menu buttons and Switch Menu Theme opens wallpapers, music, logo, widgets, and layout.
+	Splash3: Add a music player, clock, greeting, moon phase, or Discord server. One tap hides version clutter. Drag, resize, or hide any element.
+	GotIt: Got it
+	DontShow: Don't show this again
+	CancelLayout: Cancel
+	ResetVanilla: Reset to vanilla
+	SnapCenter: Center
+	HiddenLayers: Hidden elements
+	Restore: Restore
+	CannotHide: This element can only be moved
+	VanillaSky: Vanilla sky
+	SolidColor: Solid color
+	Gradient: Gradient
+	FitCover: Fill screen
+	FitContain: Fit inside
+	FitStretch: Stretch
+	WallpaperParallax: Mouse parallax
+	WallpaperDim: Dim
+	WallpaperVignette: Vignette
+	LivePreview: The menu is a live preview. Drag the mouse to feel parallax.
+	BorrowMix: Logo and sky are separate. A borrowed sky keeps that theme's own background effects.
+	FromMods: From other mods
+	BorrowEmpty: No other menu themes loaded
+	BorrowPending: Still loading...
+	BorrowKindLogo: logo
+	BorrowKindSky: sky + effects
+	BorrowKindStill: sky (still)
+	ToastBorrowGone: That mod is no longer loaded. Restored vanilla.
+	ToastBorrowFail: That menu theme failed to draw, so it was skipped.
+	SceneLayers: Layers  ·  back to front
+	AddImageLayer: Add image layer
+	AddEffectLayer: Add effect
+	ImageLayer: Image layer
+	LayerForeground: Draw in front
+	LayerOpacity: Opacity
+	LayerParallax: Parallax
+	LayerZoom: Zoom
+	LayerUp: Move back
+	LayerDown: Move front
+	RemoveLayer: Remove layer
+	FxStars: Stars
+	FxDust: Dust
+	FxFog: Fog
+	FxGrain: Grain
+	FxScan: Scanlines
+	FxFlies: Fireflies
+	FxClouds: Clouds
+	FxRain: Rain
+	FxBeat: Pulse to music
+	ImportImage: Import image
+	AnimHint: GIFs play on the menu. Click a file to use it; right-click deletes.
+	SectionSky: Sky
+	SectionLayers: Layers
+	SectionImages: Your images
+	SectionPack: From this pack
+	EmptyLayers: Import a picture or add a layer.
+	SkyVanilla: Vanilla
+	SkyColor: Color
+	SkyGradient: Gradient
+	OpenFolder: Open folder
+	VanillaLogo: tModLoader logo
+	HideLogo: Hide logo
+	LogoWatermelon1: Watermelon 1
+	LogoWatermelon2: Watermelon 2
+	LogoBlueArchive: Blue Archive Style
+	LogoFromPack: Die With A Smile
+	CenterImage: Center image
+	VanillaMusic: Vanilla title music
+	Silence: Silence
+	ImportSong: Import song
+	NoTracks: No custom tracks yet
+	TrackHint: Click a track to play it. The bin removes it from the library.
+	DeleteTrack: Remove track
+	AddPlayer: Music player
+	AddClock: Clock
+	AddQuote: Greeting / quote
+	AddMoon: Moon phase
+	AddDiscord: Discord server
+	WidgetHoverSettings: Hover for settings
+	OpenQuotes: Edit quotes
+	Clock24h: 24-hour time
+	Clock12h: 12-hour time
+	ClockAnalog: Analog
+	ClockDigital: Digital
+	ClockDate: Show date
+	DiscordHint1: 1. Developer Mode on → right-click the server → Copy Server ID
+	DiscordHint2: 2. Server Settings → Widget → turn on Server Widget
+	DiscordStyleCompact: Compact card
+	DiscordStyleBanner: Wide banner
+	DiscordStyleRoster: Member list
+	DiscordJoin: Join Voice
+	DiscordJoinShort: Join
+	DiscordVoice: Voice
+	DiscordVoiceEmpty: Empty
+	DiscordOnline: %n online
+	DiscordInVoice: %n in voice
+	DiscordNeedWidgetShort: Enable Server Widget
+	DiscordLoading: Looking up the server…
+	DiscordNeedWidget: Turn on Server Widget in Discord (Server Settings → Widget)
+	DiscordBadId: That ID wasn't found
+	DiscordNetError: Can't reach Discord right now
+	DiscordEmpty: Click the field and paste the server ID (Ctrl+V)
+	DiscordNeedDigits: Server IDs are 17–20 digits
+	DiscordIdPlaceholder: Paste server ID here
+	DiscordTapToSet: Click to set the server
+	DiscordChangeId: Change server ID
+	GreetingMorning: Good morning
+	GreetingAfternoon: Good afternoon
+	GreetingEvening: Good evening
+	GreetingNight: Good night
+	MoonPhase0: Full moon
+	MoonPhase1: Waning gibbous
+	MoonPhase2: Third quarter
+	MoonPhase3: Waning crescent
+	MoonPhase4: New moon
+	MoonPhase5: Waxing crescent
+	MoonPhase6: First quarter
+	MoonPhase7: Waxing gibbous
+	Layer_logo: Logo
+	Layer_menuButtons: Menu buttons
+	Layer_themeSwap: Theme switch
+	Layer_socialTerraria: Terraria links
+	Layer_socialTml: tModLoader links
+	Layer_version: Version
+	Layer_news: News
+	Layer_sunMoon: Sun / moon
+	Layer_wrench: Customize
+	Layer_widget_player: Music player
+	Layer_widget_clock: Clock
+	Layer_widget_quote: Greeting
+	Layer_widget_moon: Moon
+	Layer_widget_discord: Discord
+	CaptionColor: Title bar color
+	BorderColor: Border color
+	TitleTextColor: Title text color
+	DarkTitleBar: Dark title bar
+	PickIcon: Change window icon
+	ResetChrome: Reset window chrome
+	ShowHelp: Show tutorial
+	BorderlessHint: Title bar colors show in windowed mode.
+	HubStyle: Customize hub style
+	HubStyleRadial: Circle
+	HubStyleDock: Bar
+	ToastHubStyle: Hub style applied
+	ToastWallpaper: Wallpaper applied
+	ToastLogo: Logo applied
+	ToastMusic: Music applied
+	ToastIcon: Window icon applied
+	ToastChrome: Window colors applied
+	ToastReset: Reset to vanilla
+	ToastWidgetOn: Widget added
+	ToastWidgetOff: Widget removed
+	ToastDiscordId: Paste the server ID in the field — that's it
+	ToastTrackDeleted: Track removed
+	ToastLayerGone: Layer removed
+	ToastCleanOn: Version clutter hidden
+	ToastCleanOff: Version clutter restored
+	Red: Red
+	Green: Green
+	Blue: Blue
+	Accent: Accent color
+	LogoPulse: Logo grow / shrink
+	MuteUnfocused: Mute player when Terraria is in the background
+	Looks: Looks
+	SaveLook: Save current look
+	LookHint: Click a look to load it. Right-click deletes it.
+	ToastLookSaved: Look saved
+	ToastLookLoaded: Look applied
+	ToastLookGone: Look deleted
+	MenuTextColor: Menu text color
+	MenuTextCustom: Custom menu text color
+	BtnVanilla: Vanilla
+	BtnOutline: Outline
+	BtnAccent: Accent
+	BtnPlate: Plate
+	GroupWindow: Window
+	GroupMenu: Menu buttons
+	MenuPreview: Single Player
+	FontVanilla: tModLoader font
+	ImportFont: Import font
+	FontHint: TTF or OTF. Click to use. Right-click deletes.
+	FontWidth: Width
+	FontHeight: Height
+	ChipCaption: Bar
+	ChipBorder: Border
+	ChipTitle: Text
+	ToastFont: Font applied
+	ToastFontFail: Could not load that font
+	ToastFontGone: Font removed
 }

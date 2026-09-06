@@ -134,10 +134,10 @@ namespace DieWithASmile.Content
 
 		internal static float DrawScale => ScaleOf(DrawKind, CurrentTexture);
 
-		private static float ScaleOf(MenuLogo kind, Texture2D logo)
+		internal static float FitScale(MenuLogo kind, Texture2D logo, float userScale)
 		{
 			if (logo == null)
-				return 1f;
+				return userScale;
 
 			float cap = MathHelper.Min(TargetWidth, Main.screenWidth * 0.38f);
 			float source = kind switch
@@ -146,8 +146,11 @@ namespace DieWithASmile.Content
 				MenuLogo.Orbit => 2897f,
 				_ => logo.Width
 			};
-			return cap / source * CalamitasMenuLayout.LogoScale;
+			return cap / source * userScale;
 		}
+
+		private static float ScaleOf(MenuLogo kind, Texture2D logo) =>
+			FitScale(kind, logo, CalamitasMenuLayout.LogoScale);
 
 		internal static float DividerScreenY
 		{
@@ -198,7 +201,22 @@ namespace DieWithASmile.Content
 			float scale = ScaleOf(DrawKind, logo);
 			bool custom = DieWithASmileSettings.UsingFileLogo;
 			CalamitasMenuDraw.WithLinear(spriteBatch, () =>
-				DrawLogo(spriteBatch, DrawKind, Anchor, scale, fade, beat, preview: false, custom));
+				DrawLogo(spriteBatch, DrawKind, Anchor, scale, fade, beat, preview: false, custom, 0f));
+		}
+
+		internal static void DrawAt(SpriteBatch spriteBatch, MenuLogo logo, Vector2 center, float fade, float rotation, float bounce)
+		{
+			Texture2D tex = TextureOf(logo);
+			if (tex == null || fade <= 0f)
+				return;
+
+			bounce = MathHelper.Clamp(bounce, 0.5f, 1.6f);
+			float scale = FitScale(logo, tex, Engine.Content.WeLogo.Scale) * bounce;
+			float beat = Engine.Audio.WeSpectrum.SmoothBeat;
+			if (beat < 0.04f)
+				beat = 0.45f + 0.25f * (0.5f + 0.5f * MathF.Sin(Main.GlobalTimeWrappedHourly * 2.1f));
+			CalamitasMenuDraw.WithLinear(spriteBatch, () =>
+				DrawLogo(spriteBatch, logo, center, scale, fade, beat, preview: false, custom: false, rotation));
 		}
 
 		internal static void DrawPreview(SpriteBatch spriteBatch, Rectangle dest, MenuLogo logo, float fade)
@@ -209,7 +227,7 @@ namespace DieWithASmile.Content
 
 			float scale = Math.Min(dest.Width / (float)tex.Width, dest.Height / (float)tex.Height) * 0.92f;
 			Vector2 center = dest.Center.ToVector2();
-			DrawLogo(spriteBatch, logo, center, scale, fade, beat: 0.35f, preview: true, custom: false);
+			DrawLogo(spriteBatch, logo, center, scale, fade, beat: 0.35f, preview: true, custom: false, rotation: 0f);
 		}
 
 		internal static void DrawPreviewTexture(SpriteBatch spriteBatch, Rectangle dest, Texture2D tex, float fade)
@@ -222,42 +240,49 @@ namespace DieWithASmile.Content
 			spriteBatch.Draw(tex, center, null, Color.White * fade, 0f, tex.Size() * 0.5f, scale, SpriteEffects.None, 0f);
 		}
 
-		private static void DrawLogo(SpriteBatch spriteBatch, MenuLogo logo, Vector2 center, float scale, float fade, float beat, bool preview, bool custom)
+		private static void DrawLogo(SpriteBatch spriteBatch, MenuLogo logo, Vector2 center, float scale, float fade, float beat, bool preview, bool custom, float rotation)
 		{
 			Texture2D tex = custom ? CurrentTexture : TextureOf(logo);
 			if (tex == null)
 				return;
 
 			if (!custom && logo is MenuLogo.Classic or MenuLogo.Gothic or MenuLogo.Orbit)
-				DrawHalo(spriteBatch, center, tex, scale, fade, beat);
+				DrawHalo(spriteBatch, center, tex, scale, fade, beat, rotation);
 
-			spriteBatch.Draw(tex, center, null, Color.White * fade, 0f, tex.Size() * 0.5f, scale, SpriteEffects.None, 0f);
+			spriteBatch.Draw(tex, center, null, Color.White * fade, rotation, tex.Size() * 0.5f, scale, SpriteEffects.None, 0f);
 
 			if (custom)
 				return;
 
 			if (logo == MenuLogo.Hands)
-				DrawHandsLayer(spriteBatch, center, tex, scale, fade, preview);
+				DrawHandsLayer(spriteBatch, center, tex, scale, fade, preview, rotation);
 			else if (logo == MenuLogo.Sticker)
-				DrawStickerLayer(spriteBatch, center, tex, scale, fade, preview);
+				DrawStickerLayer(spriteBatch, center, tex, scale, fade, preview, rotation);
 
 			if (preview)
 				return;
 
-			Vector2 topLeft = center - tex.Size() * scale * 0.5f;
 			float shineSize = scale * 5.8f;
 			float pulse = 0.58f + 0.42f * beat;
 			if (logo == MenuLogo.Classic)
-				CalamitasMenuShine.Draw(spriteBatch, topLeft + new Vector2(ClassicShineX, ClassicShineY) * scale, shineSize, fade, pulse);
+				CalamitasMenuShine.Draw(spriteBatch, LocalToWorld(center, tex, scale, rotation, new Vector2(ClassicShineX, ClassicShineY)), shineSize, fade, pulse);
 			else if (logo == MenuLogo.Gothic)
-				CalamitasMenuShine.Draw(spriteBatch, topLeft + new Vector2(GothicShineX, GothicShineY) * scale, shineSize, fade, pulse);
+				CalamitasMenuShine.Draw(spriteBatch, LocalToWorld(center, tex, scale, rotation, new Vector2(GothicShineX, GothicShineY)), shineSize, fade, pulse);
 			else if (logo == MenuLogo.Orbit) {
-				CalamitasMenuShine.Draw(spriteBatch, topLeft + new Vector2(OrbitShineAx, OrbitShineAy) * scale, shineSize * 0.82f, fade, pulse);
-				CalamitasMenuShine.Draw(spriteBatch, topLeft + new Vector2(OrbitShineBx, OrbitShineBy) * scale, shineSize * 0.82f, fade, pulse);
+				CalamitasMenuShine.Draw(spriteBatch, LocalToWorld(center, tex, scale, rotation, new Vector2(OrbitShineAx, OrbitShineAy)), shineSize * 0.82f, fade, pulse);
+				CalamitasMenuShine.Draw(spriteBatch, LocalToWorld(center, tex, scale, rotation, new Vector2(OrbitShineBx, OrbitShineBy)), shineSize * 0.82f, fade, pulse);
 			}
 		}
 
-		private static void DrawHalo(SpriteBatch spriteBatch, Vector2 center, Texture2D logo, float scale, float fade, float beat)
+		private static Vector2 LocalToWorld(Vector2 center, Texture2D logo, float scale, float rotation, Vector2 local)
+		{
+			Vector2 fromCenter = (local - logo.Size() * 0.5f) * scale;
+			float c = MathF.Cos(rotation);
+			float s = MathF.Sin(rotation);
+			return center + new Vector2(fromCenter.X * c - fromCenter.Y * s, fromCenter.X * s + fromCenter.Y * c);
+		}
+
+		private static void DrawHalo(SpriteBatch spriteBatch, Vector2 center, Texture2D logo, float scale, float fade, float beat, float rotation)
 		{
 			Texture2D halo = CalamitasMenuShine.Texture;
 			if (halo == null)
@@ -272,26 +297,26 @@ namespace DieWithASmile.Content
 				center,
 				null,
 				CalamitasMenuAccent.Mid * (haloPulse * fade),
-				0f,
+				rotation,
 				halo.Size() * 0.5f,
 				haloScale,
 				SpriteEffects.None,
 				0f);
 		}
 
-		private static void DrawHandsLayer(SpriteBatch spriteBatch, Vector2 center, Texture2D logo, float scale, float fade, bool preview)
+		private static void DrawHandsLayer(SpriteBatch spriteBatch, Vector2 center, Texture2D logo, float scale, float fade, bool preview, float rotation)
 		{
 			Texture2D hands = _handsLayer?.Value;
 			if (hands == null)
 				return;
 
 			float bob = preview ? 0f : MathF.Sin(Main.GlobalTimeWrappedHourly * 1.05f) * 16f;
-			Vector2 topLeft = center - logo.Size() * scale * 0.5f;
-			Vector2 pos = topLeft + new Vector2(HandsLayerX, HandsLayerY + bob) * scale;
-			spriteBatch.Draw(hands, pos, null, Color.White * fade, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+			var local = new Vector2(HandsLayerX + hands.Width * 0.5f, HandsLayerY + bob + hands.Height * 0.5f);
+			Vector2 pos = LocalToWorld(center, logo, scale, rotation, local);
+			spriteBatch.Draw(hands, pos, null, Color.White * fade, rotation, hands.Size() * 0.5f, scale, SpriteEffects.None, 0f);
 		}
 
-		private static void DrawStickerLayer(SpriteBatch spriteBatch, Vector2 center, Texture2D logo, float scale, float fade, bool preview)
+		private static void DrawStickerLayer(SpriteBatch spriteBatch, Vector2 center, Texture2D logo, float scale, float fade, bool preview, float rotation)
 		{
 			Texture2D sticker = _sticker?.Value;
 			if (sticker == null)
@@ -299,14 +324,13 @@ namespace DieWithASmile.Content
 
 			float pulse = preview ? 1f : 1f + 0.08f * MathF.Sin(Main.GlobalTimeWrappedHourly * 2.4f);
 			float fit = Math.Min(StickerSlotW / sticker.Width, StickerSlotH / sticker.Height);
-			Vector2 topLeft = center - logo.Size() * scale * 0.5f;
-			Vector2 stickerCenter = topLeft + new Vector2(StickerCenterX, StickerCenterY) * scale;
+			Vector2 pos = LocalToWorld(center, logo, scale, rotation, new Vector2(StickerCenterX, StickerCenterY));
 			spriteBatch.Draw(
 				sticker,
-				stickerCenter,
+				pos,
 				null,
 				Color.White * fade,
-				0f,
+				rotation,
 				sticker.Size() * 0.5f,
 				scale * fit * pulse,
 				SpriteEffects.None,

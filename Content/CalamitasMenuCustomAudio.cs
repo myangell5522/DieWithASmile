@@ -272,14 +272,10 @@ namespace DieWithASmile.Content
 			Amplitude = playPeak;
 		}
 
-		internal static bool ForceFullMix;
 		internal static string PlayingPath => _path;
 
 		private static float Volume()
 		{
-			if (ForceFullMix)
-				return Math.Clamp(Math.Max(Main.musicVolume, 0.78f), 0.6f, 1f);
-
 			return DieWithASmileSettings.EffectiveMusicVolume * CalamitasMenuPlaylist.OutputMix;
 		}
 

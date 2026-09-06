@@ -129,7 +129,6 @@ namespace DieWithASmile.Content
 
 		internal static void Update()
 		{
-			CalamitasMenuPlaylist.Update();
 			if (!DieWithASmileSettings.PlayerEnabled)
 				return;
 

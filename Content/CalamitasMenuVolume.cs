@@ -204,7 +204,7 @@ namespace DieWithASmile.Content
 			text.R = (byte)((255 + text.R) / 2);
 			text.G = (byte)((255 + text.R) / 2);
 			text.B = (byte)((255 + text.R) / 2);
-			float labelX = 370f + Main.screenWidth * 0.5f - 400f;
+			float labelX = row.X + 18f;
 			Utils.DrawBorderStringFourWay(sb, FontAssets.DeathText.Value, label, labelX, row.Y + dy - 10f, text, Color.Black, Vector2.Zero, 0.5f);
 
 			int prevHover = IngameOptions.rightHover;

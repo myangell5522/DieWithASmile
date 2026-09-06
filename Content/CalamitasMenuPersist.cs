@@ -58,7 +58,9 @@ namespace DieWithASmile.Content
 				MonoModHooks.Add(activateOld, ActivateOldHook);
 		}
 
-		public override void OnWorldUnload() => CalamitasMenuPlaylist.MarkLeftTitle();
+		public override void OnWorldUnload()
+		{
+		}
 
 		public override void PostSetupContent()
 		{
@@ -68,12 +70,10 @@ namespace DieWithASmile.Content
 
 		public override void PreUpdatePlayers()
 		{
-			CalamitasMenuPlaylist.HandleMenuLifecycle();
 		}
 
 		public override void UpdateUI(GameTime gameTime)
 		{
-			CalamitasMenuPlaylist.HandleMenuLifecycle();
 			if (Main.gameMenu)
 				DieWithASmileSettings.TickScenes();
 			if (!Main.gameMenu)
