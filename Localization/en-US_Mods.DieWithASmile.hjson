@@ -276,6 +276,7 @@ UI: {
 	FontVanilla: tModLoader font
 	ImportFont: Import font
 	FontHint: TTF or OTF. Click to use. Right-click deletes.
+	FontOsHint: TTF or OTF files save here. Custom font drawing is Windows-only.
 	FontWidth: Width
 	FontHeight: Height
 	ChipCaption: Bar
@@ -284,6 +285,9 @@ UI: {
 	ToastFont: Font applied
 	ToastFontFail: Could not load that font
 	ToastFontGone: Font removed
+	ToastFontOs: Custom fonts draw on Windows. The file is saved for later.
+	ChromeOsHint: Window colors and icon are Windows-only. Everything else works here.
+	ToastChromeOs: Saved. Window colors apply on Windows.
 	ResetFactory: Reset mod to starter settings
 	ResetFactoryHint: Restores Entropy of Freedom, the pack logo, left menu, dock bar, and packed playlist. Deletes your pictures, uploaded music, fonts, and looks.
 	ResetFactorySure: Click again to confirm

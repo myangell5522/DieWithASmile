@@ -276,6 +276,7 @@ UI: {
 	FontVanilla: Шрифт tModLoader
 	ImportFont: Загрузить шрифт
 	FontHint: TTF или OTF. Клик — выбрать. ПКМ — удалить.
+	FontOsHint: TTF и OTF можно сохранить. Свой шрифт в меню рисуется только на Windows.
 	FontWidth: Ширина
 	FontHeight: Высота
 	ChipCaption: Фон
@@ -284,6 +285,9 @@ UI: {
 	ToastFont: Шрифт применён
 	ToastFontFail: Не удалось загрузить шрифт
 	ToastFontGone: Шрифт удалён
+	ToastFontOs: Свои шрифты рисуются на Windows. Файл сохранён.
+	ChromeOsHint: Цвет окна и иконка работают только на Windows. Остальное здесь как обычно.
+	ToastChromeOs: Сохранено. Цвета окна применятся на Windows.
 	ResetFactory: Сбросить мод к начальным настройкам
 	ResetFactoryHint: Вернёт Entropy of Freedom, логотип пака, левое меню, нижнюю панель и встроенный плейлист. Удалит ваши картинки, загруженную музыку, шрифты и пресеты.
 	ResetFactorySure: Нажми ещё раз для подтверждения

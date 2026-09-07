@@ -1,3 +1,8 @@
+Version 3.0.5
+
+Title
+- Mac and Linux no longer hit a missing dwmapi.dll / Windows file-dialog crash on load. Window chrome stays Windows-only; importing files uses the system picker (or the Open folder button).
+
 Version 3.0.4
 
 Title

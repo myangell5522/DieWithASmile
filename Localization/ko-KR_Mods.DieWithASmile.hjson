@@ -276,6 +276,7 @@ UI: {
 	FontVanilla: tModLoader font
 	ImportFont: Import font
 	FontHint: TTF or OTF. Click to use. Right-click deletes.
+	FontOsHint: TTF or OTF files save here. Custom font drawing is Windows-only.
 	FontWidth: Width
 	FontHeight: Height
 	ChipCaption: Bar
@@ -284,6 +285,9 @@ UI: {
 	ToastFont: Font applied
 	ToastFontFail: Could not load that font
 	ToastFontGone: Font removed
+	ToastFontOs: Custom fonts draw on Windows. The file is saved for later.
+	ChromeOsHint: Window colors and icon are Windows-only. Everything else works here.
+	ToastChromeOs: Saved. Window colors apply on Windows.
 	ResetFactory: 모드를 초기 설정으로 재설정
 	ResetFactoryHint: Entropy of Freedom, 팩 로고, 왼쪽 메뉴, 하단 독, 내장 재생목록을 되돌립니다. 직접 넣은 그림, 올린 음악, 글꼴, 프리셋을 삭제합니다.
 	ResetFactorySure: 확인하려면 한 번 더 누르세요

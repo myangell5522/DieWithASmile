@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework.Audio;
@@ -11,6 +9,7 @@ using NLayer;
 using NVorbis;
 using OggVorbisEncoder;
 using Terraria.Audio;
+using DieWithASmile.Engine.Core;
 
 namespace DieWithASmile.Content
 {
@@ -72,9 +71,9 @@ namespace DieWithASmile.Content
 
 		internal static string FullPath(string fileName) => Path.Combine(MusicFolder, fileName);
 
-		internal static void OpenMusicFolder() => OpenFolder(MusicFolder);
+		internal static void OpenMusicFolder() => WeFiles.OpenFolder(MusicFolder);
 
-		internal static void OpenBrokenFolder() => OpenFolder(DieWithASmileSave.BrokenFolder);
+		internal static void OpenBrokenFolder() => WeFiles.OpenFolder(DieWithASmileSave.BrokenFolder);
 
 		internal static void Quarantine(MenuTrack track)
 		{
@@ -117,24 +116,9 @@ namespace DieWithASmile.Content
 				: $"Couldn't play \"{name}\". Disable or delete it from the playlist, or remove it from the Music folder.";
 		}
 
-		internal static bool TryPickAudioFile(out string path) => TryPickFile(out path, ShowOpenDialog);
+		internal static bool TryPickAudioFile(out string path) => WeFiles.TryPickAudio(out path);
 
-		internal static bool TryPickImageFile(out string path) => TryPickFile(out path, ShowOpenImageDialog);
-
-		private static bool TryPickFile(out string path, Func<string> picker)
-		{
-			path = null;
-			string picked = null;
-			var thread = new Thread(() => picked = picker());
-			thread.SetApartmentState(ApartmentState.STA);
-			thread.Start();
-			thread.Join();
-			if (string.IsNullOrEmpty(picked) || !File.Exists(picked))
-				return false;
-
-			path = picked;
-			return true;
-		}
+		internal static bool TryPickImageFile(out string path) => WeFiles.TryPickImage(out path);
 
 		internal static void StartImport(string sourcePath)
 		{
@@ -604,18 +588,8 @@ namespace DieWithASmile.Content
 			return string.IsNullOrEmpty(value) ? null : value;
 		}
 
-		private static void OpenFolder(string folder)
-		{
-			try {
-				Directory.CreateDirectory(folder);
-				Process.Start(new ProcessStartInfo {
-					FileName = folder,
-					UseShellExecute = true
-				});
-			}
-			catch {
-			}
-		}
+		private static float MathHelperClamp(float value, float min, float max) =>
+			value < min ? min : value > max ? max : value;
 
 		private static string UniqueBrokenPath(string fileName)
 		{
@@ -633,63 +607,6 @@ namespace DieWithASmile.Content
 
 			return Path.Combine(DieWithASmileSave.BrokenFolder, $"{name}_{Guid.NewGuid():N}{ext}");
 		}
-
-		private static float MathHelperClamp(float value, float min, float max) =>
-			value < min ? min : value > max ? max : value;
-
-		private static string ShowOpenDialog()
-		{
-			var ofn = new OpenFileName();
-			ofn.lStructSize = Marshal.SizeOf<OpenFileName>();
-			ofn.lpstrFilter = "Audio (*.ogg;*.mp3;*.wav)\0*.ogg;*.mp3;*.wav\0Ogg\0*.ogg\0MP3\0*.mp3\0WAV\0*.wav\0";
-			ofn.lpstrFile = new string('\0', 1024);
-			ofn.nMaxFile = ofn.lpstrFile.Length;
-			ofn.lpstrTitle = "Upload a song";
-			ofn.Flags = 0x00080000 | 0x00001000 | 0x00000800;
-			return GetOpenFileName(ref ofn) ? ofn.lpstrFile.Split('\0')[0] : null;
-		}
-
-		private static string ShowOpenImageDialog()
-		{
-			var ofn = new OpenFileName();
-			ofn.lStructSize = Marshal.SizeOf<OpenFileName>();
-			ofn.lpstrFilter = "Images (*.png;*.jpg;*.jpeg)\0*.png;*.jpg;*.jpeg\0PNG\0*.png\0JPEG\0*.jpg;*.jpeg\0";
-			ofn.lpstrFile = new string('\0', 1024);
-			ofn.nMaxFile = ofn.lpstrFile.Length;
-			ofn.lpstrTitle = "Upload an image";
-			ofn.Flags = 0x00080000 | 0x00001000 | 0x00000800;
-			return GetOpenFileName(ref ofn) ? ofn.lpstrFile.Split('\0')[0] : null;
-		}
-
-		[DllImport("comdlg32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-		private static extern bool GetOpenFileName(ref OpenFileName ofn);
-
-		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-		private struct OpenFileName
-		{
-			public int lStructSize;
-			public IntPtr hwndOwner;
-			public IntPtr hInstance;
-			public string lpstrFilter;
-			public string lpstrCustomFilter;
-			public int nMaxCustFilter;
-			public int nFilterIndex;
-			public string lpstrFile;
-			public int nMaxFile;
-			public string lpstrFileTitle;
-			public int nMaxFileTitle;
-			public string lpstrInitialDir;
-			public string lpstrTitle;
-			public int Flags;
-			public short nFileOffset;
-			public short nFileExtension;
-			public string lpstrDefExt;
-			public IntPtr lCustData;
-			public IntPtr lpfnHook;
-			public string lpTemplateName;
-			public IntPtr pvReserved;
-			public int dwReserved;
-			public int FlagsEx;
-		}
 	}
 }
+

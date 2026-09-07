@@ -30,23 +30,30 @@ namespace DieWithASmile.Engine.Chrome
 
 		internal static void Apply()
 		{
-			IntPtr hwnd = Hwnd();
-			if (hwnd == IntPtr.Zero)
+			if (!WeOs.IsWindows)
 				return;
 
-			Capture(hwnd);
-			WeSaveData data = WeSave.Data;
-			if (!data.ChromeCustom) {
-				SetAttr(hwnd, DwmwaUseImmersiveDarkMode, 1);
-				return;
+			try {
+				IntPtr hwnd = Hwnd();
+				if (hwnd == IntPtr.Zero)
+					return;
+
+				Capture(hwnd);
+				WeSaveData data = WeSave.Data;
+				if (!data.ChromeCustom) {
+					SetAttr(hwnd, DwmwaUseImmersiveDarkMode, 1);
+					return;
+				}
+
+				int dark = data.DarkTitleBar ? 1 : 0;
+				SetAttr(hwnd, DwmwaUseImmersiveDarkMode, dark);
+				SetColor(hwnd, DwmwaCaptionColor, data.CaptionR, data.CaptionG, data.CaptionB);
+				SetColor(hwnd, DwmwaBorderColor, data.BorderR, data.BorderG, data.BorderB);
+				SetColor(hwnd, DwmwaTextColor, data.TitleTextR, data.TitleTextG, data.TitleTextB);
+				ApplySavedIcon(hwnd);
 			}
-
-			int dark = data.DarkTitleBar ? 1 : 0;
-			SetAttr(hwnd, DwmwaUseImmersiveDarkMode, dark);
-			SetColor(hwnd, DwmwaCaptionColor, data.CaptionR, data.CaptionG, data.CaptionB);
-			SetColor(hwnd, DwmwaBorderColor, data.BorderR, data.BorderG, data.BorderB);
-			SetColor(hwnd, DwmwaTextColor, data.TitleTextR, data.TitleTextG, data.TitleTextB);
-			ApplySavedIcon(hwnd);
+			catch {
+			}
 		}
 
 		internal static void Reset()
@@ -54,17 +61,24 @@ namespace DieWithASmile.Engine.Chrome
 			WeSave.Data.ChromeCustom = false;
 			WeSave.Data.WindowIconFile = "";
 			WeSave.Save();
+			if (!WeOs.IsWindows)
+				return;
+
 			IntPtr hwnd = Hwnd();
 			if (hwnd == IntPtr.Zero)
 				return;
 
-			uint def = DwmwaColorDefault;
-			DwmSetWindowAttribute(hwnd, DwmwaCaptionColor, ref def, sizeof(uint));
-			DwmSetWindowAttribute(hwnd, DwmwaBorderColor, ref def, sizeof(uint));
-			DwmSetWindowAttribute(hwnd, DwmwaTextColor, ref def, sizeof(uint));
-			int dark = 1;
-			DwmSetWindowAttribute(hwnd, DwmwaUseImmersiveDarkMode, ref dark, sizeof(int));
-			RestoreIcon(hwnd);
+			try {
+				uint def = DwmwaColorDefault;
+				DwmSetWindowAttribute(hwnd, DwmwaCaptionColor, ref def, sizeof(uint));
+				DwmSetWindowAttribute(hwnd, DwmwaBorderColor, ref def, sizeof(uint));
+				DwmSetWindowAttribute(hwnd, DwmwaTextColor, ref def, sizeof(uint));
+				int dark = 1;
+				DwmSetWindowAttribute(hwnd, DwmwaUseImmersiveDarkMode, ref dark, sizeof(int));
+				RestoreIcon(hwnd);
+			}
+			catch {
+			}
 		}
 
 		internal static void SetIcon(string sourcePath)
@@ -77,7 +91,7 @@ namespace DieWithASmile.Engine.Chrome
 				WeSave.Data.ChromeCustom = true;
 				WeSave.Save();
 				Apply();
-				WeToast.Show("ToastIcon");
+				WeToast.Show(WeOs.IsWindows ? "ToastIcon" : "ToastChromeOs");
 			}
 			catch {
 			}
@@ -85,6 +99,9 @@ namespace DieWithASmile.Engine.Chrome
 
 		internal static void Unload()
 		{
+			if (!WeOs.IsWindows)
+				return;
+
 			IntPtr hwnd = Hwnd();
 			if (hwnd != IntPtr.Zero)
 				RestoreIcon(hwnd);
@@ -139,13 +156,23 @@ namespace DieWithASmile.Engine.Chrome
 			_customIcon = IntPtr.Zero;
 		}
 
-		private static void SetAttr(IntPtr hwnd, int attr, int value) =>
-			DwmSetWindowAttribute(hwnd, attr, ref value, sizeof(int));
+		private static void SetAttr(IntPtr hwnd, int attr, int value)
+		{
+			try {
+				DwmSetWindowAttribute(hwnd, attr, ref value, sizeof(int));
+			}
+			catch {
+			}
+		}
 
 		private static void SetColor(IntPtr hwnd, int attr, int r, int g, int b)
 		{
-			uint color = (uint)(Math.Clamp(r, 0, 255) | (Math.Clamp(g, 0, 255) << 8) | (Math.Clamp(b, 0, 255) << 16));
-			DwmSetWindowAttribute(hwnd, attr, ref color, sizeof(uint));
+			try {
+				uint color = (uint)(Math.Clamp(r, 0, 255) | (Math.Clamp(g, 0, 255) << 8) | (Math.Clamp(b, 0, 255) << 16));
+				DwmSetWindowAttribute(hwnd, attr, ref color, sizeof(uint));
+			}
+			catch {
+			}
 		}
 
 		private static IntPtr Hwnd()

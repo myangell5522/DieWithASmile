@@ -130,6 +130,11 @@ namespace DieWithASmile.Engine.Core
 				WeSave.Data.FontFile = Path.GetFileName(dest);
 				WeSave.Save();
 				Scan();
+				if (!WeOs.IsWindows) {
+					WeToast.Show("ToastFontOs");
+					return true;
+				}
+
 				if (!Active) {
 					WeSave.Data.FontFile = "";
 					WeSave.Save();
@@ -269,6 +274,8 @@ namespace DieWithASmile.Engine.Core
 		private static void Load(string path, string family)
 		{
 			Drop();
+			if (!WeOs.IsWindows)
+				return;
 			if (string.IsNullOrEmpty(path) || !File.Exists(path))
 				return;
 
@@ -296,7 +303,7 @@ namespace DieWithASmile.Engine.Core
 		private static void Drop()
 		{
 			CloseDc();
-			if (_resourceAdded && !string.IsNullOrEmpty(_loadedPath)) {
+			if (WeOs.IsWindows && _resourceAdded && !string.IsNullOrEmpty(_loadedPath)) {
 				try {
 					RemoveFontResourceEx(_loadedPath, FrPrivate, IntPtr.Zero);
 				}
@@ -554,6 +561,9 @@ namespace DieWithASmile.Engine.Core
 
 		private static bool OpenDc()
 		{
+			if (!WeOs.IsWindows)
+				return false;
+
 			CloseDc();
 			IntPtr screen = GetDC(IntPtr.Zero);
 			_hdc = CreateCompatibleDC(screen);
@@ -601,6 +611,12 @@ namespace DieWithASmile.Engine.Core
 
 		private static void CloseDc()
 		{
+			if (!WeOs.IsWindows) {
+				_hdc = IntPtr.Zero;
+				_hfont = IntPtr.Zero;
+				_oldFont = IntPtr.Zero;
+				return;
+			}
 			if (_hdc != IntPtr.Zero && _oldFont != IntPtr.Zero)
 				SelectObject(_hdc, _oldFont);
 			if (_hfont != IntPtr.Zero)
@@ -614,6 +630,8 @@ namespace DieWithASmile.Engine.Core
 
 		private static Texture2D BakePreview(string path, string family)
 		{
+			if (!WeOs.IsWindows)
+				return null;
 			if (Main.graphics?.GraphicsDevice == null || string.IsNullOrEmpty(path) || !File.Exists(path))
 				return null;
 

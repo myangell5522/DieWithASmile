@@ -276,6 +276,7 @@ UI: {
 	FontVanilla: tModLoader font
 	ImportFont: Import font
 	FontHint: TTF or OTF. Click to use. Right-click deletes.
+	FontOsHint: TTF or OTF files save here. Custom font drawing is Windows-only.
 	FontWidth: Width
 	FontHeight: Height
 	ChipCaption: Bar
@@ -284,6 +285,9 @@ UI: {
 	ToastFont: Font applied
 	ToastFontFail: Could not load that font
 	ToastFontGone: Font removed
+	ToastFontOs: Custom fonts draw on Windows. The file is saved for later.
+	ChromeOsHint: Window colors and icon are Windows-only. Everything else works here.
+	ToastChromeOs: Saved. Window colors apply on Windows.
 	ResetFactory: 将模组重置为初始设置
 	ResetFactoryHint: 恢复 Entropy of Freedom、模组标志、左侧菜单、底部工具栏和内置播放列表。将删除你的图片、上传的音乐、字体和外观预设。
 	ResetFactorySure: 再点一次以确认

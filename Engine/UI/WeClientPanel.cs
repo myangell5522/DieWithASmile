@@ -150,7 +150,7 @@ namespace DieWithASmile.Engine.UI
 					WeSave.Data.ChromeCustom = true;
 					WeSave.Save();
 					ClientChrome.Apply();
-					WeToast.Show("ToastChrome");
+					WeToast.Show(WeOs.IsWindows ? "ToastChrome" : "ToastChromeOs");
 				}
 
 				if (ClickRow(panel, ref y, out int which)) {
@@ -181,7 +181,7 @@ namespace DieWithASmile.Engine.UI
 			DrawCard(spriteBatch, panel, ref y, WeText.UI("DarkTitleBar"), WeSave.Data.DarkTitleBar);
 			DrawButtonRow(spriteBatch, panel, ref y, WeText.UI("PickIcon"), WeText.UI("ResetChrome"));
 			DrawCard(spriteBatch, panel, ref y, WeText.UI("ShowHelp"), false);
-			DrawHint(spriteBatch, panel, ref y, WeText.UI("BorderlessHint"));
+			DrawHint(spriteBatch, panel, ref y, WeText.UI(WeOs.IsWindows ? "BorderlessHint" : "ChromeOsHint"));
 			y = top + h + 10;
 		}
 
@@ -287,7 +287,7 @@ namespace DieWithASmile.Engine.UI
 				DrawRgb(spriteBatch, panel, ref y, "menu", WeSettings.MenuTextColor);
 			DrawCard(spriteBatch, panel, ref y, WeText.UI("FontVanilla"), string.IsNullOrEmpty(WeSave.Data.FontFile));
 			DrawButtonRow(spriteBatch, panel, ref y, WeText.UI("ImportFont"), WeText.UI("OpenFolder"));
-			DrawHint(spriteBatch, panel, ref y, WeText.UI("FontHint"));
+			DrawHint(spriteBatch, panel, ref y, WeText.UI(WeOs.IsWindows ? "FontHint" : "FontOsHint"));
 			foreach (WeFontOffer offer in WeType.All)
 				DrawFontRow(spriteBatch, panel, ref y, offer);
 			DrawSlider(spriteBatch, panel, ref y, "fw", (WeLook.FontScaleX - 0.5f) / 1.3f, WeText.UI("FontWidth"));

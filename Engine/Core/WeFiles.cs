@@ -1,28 +1,30 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Terraria;
 
 namespace DieWithASmile.Engine.Core
 {
 	internal static class WeFiles
 	{
-		internal static bool TryPickAudio(out string path) => TryPick(out path, ShowAudio);
-		internal static bool TryPickImage(out string path) => TryPick(out path, ShowImage);
-		internal static bool TryPickIcon(out string path) => TryPick(out path, ShowIcon);
-		internal static bool TryPickFont(out string path) => TryPick(out path, ShowFont);
+		internal static bool TryPickAudio(out string path) =>
+			TryPick(out path, ShowAudio, "Upload a song", ".ogg", ".mp3", ".wav");
+
+		internal static bool TryPickImage(out string path) =>
+			TryPick(out path, ShowImage, "Upload an image", ".png", ".jpg", ".jpeg", ".gif");
+
+		internal static bool TryPickIcon(out string path) =>
+			TryPick(out path, ShowIcon, "Choose a window icon", ".ico", ".png", ".jpg", ".jpeg");
+
+		internal static bool TryPickFont(out string path) =>
+			TryPick(out path, ShowFont, "Choose a font", ".ttf", ".otf");
 
 		internal static void OpenFile(string path)
 		{
 			try {
 				if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
 					return;
-				Process.Start(new ProcessStartInfo {
-					FileName = path,
-					UseShellExecute = true
-				});
+				WeOs.Reveal(path);
 			}
 			catch {
 			}
@@ -32,10 +34,7 @@ namespace DieWithASmile.Engine.Core
 		{
 			try {
 				Directory.CreateDirectory(folder);
-				Process.Start(new ProcessStartInfo {
-					FileName = folder,
-					UseShellExecute = true
-				});
+				WeOs.Reveal(folder);
 			}
 			catch {
 			}
@@ -67,14 +66,31 @@ namespace DieWithASmile.Engine.Core
 			}
 		}
 
-		private static bool TryPick(out string path, Func<string> picker)
+		private static bool TryPick(out string path, Func<string> windowsPicker, string title, params string[] extensions)
 		{
 			path = null;
 			string picked = null;
-			var thread = new Thread(() => picked = picker());
-			thread.SetApartmentState(ApartmentState.STA);
-			thread.Start();
-			thread.Join();
+			try {
+				if (OperatingSystem.IsWindows()) {
+					var thread = new Thread(() => {
+						try {
+							picked = windowsPicker();
+						}
+						catch {
+						}
+					});
+					thread.SetApartmentState(ApartmentState.STA);
+					thread.Start();
+					thread.Join();
+				}
+				else {
+					picked = WeOs.PickFile(title, extensions);
+				}
+			}
+			catch {
+				return false;
+			}
+
 			if (string.IsNullOrEmpty(picked) || !File.Exists(picked))
 				return false;
 
@@ -107,7 +123,12 @@ namespace DieWithASmile.Engine.Core
 			ofn.nMaxFile = ofn.lpstrFile.Length;
 			ofn.lpstrTitle = title;
 			ofn.Flags = 0x00080000 | 0x00001000 | 0x00000800;
-			return GetOpenFileName(ref ofn) ? ofn.lpstrFile.Split('\0')[0] : null;
+			try {
+				return GetOpenFileName(ref ofn) ? ofn.lpstrFile.Split('\0')[0] : null;
+			}
+			catch {
+				return null;
+			}
 		}
 
 		internal static string UniquePath(string folder, string fileName)
