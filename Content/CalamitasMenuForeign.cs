@@ -9,6 +9,7 @@ using Terraria;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
+using DieWithASmile.Engine.Grab;
 
 namespace DieWithASmile.Content
 {
@@ -766,10 +767,7 @@ namespace DieWithASmile.Content
 
 		private static IEnumerable<ModMenu> All()
 		{
-			object raw = _menus?.GetValue(null);
-			if (raw is not IEnumerable<ModMenu> menus)
-				yield break;
-
+			List<ModMenu> menus = WeCatalog.SnapshotMenus();
 			EnsureDefaults(menus);
 			foreach (ModMenu menu in menus) {
 				if (menu == null)
@@ -835,10 +833,18 @@ namespace DieWithASmile.Content
 
 		private static bool CanUseForeignLogo(ModMenu menu)
 		{
-			if (HasBlitLogo(menu))
-				return true;
-			Texture2D unique = UniqueLogo(menu);
-			return unique != null && !IsSceneTexture(unique);
+			if (menu == null)
+				return false;
+
+			try {
+				if (HasBlitLogo(menu))
+					return true;
+				Texture2D unique = UniqueLogo(menu);
+				return unique != null && !IsSceneTexture(unique);
+			}
+			catch {
+				return false;
+			}
 		}
 
 		internal static bool HasWallpaper(ModMenu menu)
@@ -846,16 +852,24 @@ namespace DieWithASmile.Content
 			if (menu == null)
 				return false;
 
-			if (_wallpaper.TryGetValue(menu.FullName, out bool known))
-				return known;
+			try {
+				if (WeModArt.HasPackedSky(menu))
+					return true;
 
-			bool has = HasDrawableStyle(menu.MenuBackgroundStyle) ||
-			           IsSceneTexture(SafeLogo(menu)) ||
-			           SubstantialHook(menu, nameof(ModMenu.PreDrawLogo)) ||
-			           SubstantialHook(menu, nameof(ModMenu.PostDrawLogo)) ||
-			           Overrides(menu, nameof(ModMenu.IsAvailable));
-			_wallpaper[menu.FullName] = has;
-			return has;
+				if (_wallpaper.TryGetValue(menu.FullName, out bool known))
+					return known;
+
+				bool has = HasDrawableStyle(menu.MenuBackgroundStyle) ||
+				           IsSceneTexture(SafeLogo(menu)) ||
+				           SubstantialHook(menu, nameof(ModMenu.PreDrawLogo)) ||
+				           SubstantialHook(menu, nameof(ModMenu.PostDrawLogo)) ||
+				           Overrides(menu, nameof(ModMenu.IsAvailable));
+				_wallpaper[menu.FullName] = has;
+				return has;
+			}
+			catch {
+				return WeModArt.HasPackedSky(menu);
+			}
 		}
 
 		private static bool IsBlitLogo(ModMenu menu, Texture2D tex)

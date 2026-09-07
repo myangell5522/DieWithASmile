@@ -17,6 +17,7 @@ namespace DieWithASmile.Engine.Content
 	public class WeMenuHost : ModSystem
 	{
 		private static bool _esc;
+		private static bool _skipCursor;
 
 		public override void Load()
 		{
@@ -25,6 +26,8 @@ namespace DieWithASmile.Engine.Content
 
 			WeSave.EnsureLoaded();
 			On_Main.DrawMenu += DrawMenuHook;
+			On_Main.DrawCursor += DrawCursorHook;
+			On_Main.DrawThickCursor += DrawThickCursorHook;
 			WeBorrowFx.Load();
 			WeModListLook.Load(Mod);
 		}
@@ -32,6 +35,8 @@ namespace DieWithASmile.Engine.Content
 		public override void Unload()
 		{
 			On_Main.DrawMenu -= DrawMenuHook;
+			On_Main.DrawCursor -= DrawCursorHook;
+			On_Main.DrawThickCursor -= DrawThickCursorHook;
 			WeCatalog.Unload();
 			WeBorrow.Unload();
 			WeBorrowFx.Unload();
@@ -71,8 +76,10 @@ namespace DieWithASmile.Engine.Content
 			if (!WeModMenu.IsActive || !CoolerMenuCompat.MenuBackdropActive)
 				return;
 
-			if (WeModMenu.OnTitle)
+			if (WeModMenu.OnTitle) {
 				DrawTitleChrome();
+				DrawCursorOverChrome();
+			}
 
 			WeBackgroundStyle.EndFrame();
 			LayoutEditor.EndFrame();
@@ -110,6 +117,59 @@ namespace DieWithASmile.Engine.Content
 			}
 		}
 
+		private static void DrawCursorOverChrome()
+		{
+			SpriteBatch spriteBatch = Main.spriteBatch;
+			if (spriteBatch == null)
+				return;
+
+			TryEnd(spriteBatch);
+			try {
+				BeginCursor(spriteBatch);
+				Vector2 bonus = Main.DrawThickCursor();
+				Main.DrawCursor(bonus);
+			}
+			catch {
+				try {
+					Main.DrawCursor(Vector2.Zero);
+				}
+				catch {
+				}
+			}
+			finally {
+				TryEnd(spriteBatch);
+			}
+		}
+
+		private static void BeginCursor(SpriteBatch spriteBatch)
+		{
+			spriteBatch.Begin(
+				SpriteSortMode.Deferred,
+				BlendState.AlphaBlend,
+				SamplerState.PointClamp,
+				DepthStencilState.None,
+				RasterizerState.CullCounterClockwise,
+				null,
+				Main.UIScaleMatrix);
+		}
+
+		private static bool OwnsTitleCursor =>
+			WeModMenu.IsActive && WeModMenu.OnTitle && CoolerMenuCompat.MenuBackdropActive;
+
+		private static void DrawCursorHook(On_Main.orig_DrawCursor orig, Vector2 bonus, bool smart)
+		{
+			if (_skipCursor)
+				return;
+			orig(bonus, smart);
+		}
+
+		private static Vector2 DrawThickCursorHook(On_Main.orig_DrawThickCursor orig, bool smart)
+		{
+			if (_skipCursor)
+				return Vector2.Zero;
+			return orig(smart);
+		}
+
 		private static void DrawMenuHook(On_Main.orig_DrawMenu orig, Main self, GameTime time)
 		{
 			if (Main.gameMenu && WeModMenu.IsActive)
@@ -119,15 +179,17 @@ namespace DieWithASmile.Engine.Content
 			bool releaseAfterInput = Main.mouseLeftRelease;
 			int savedMouseY = Main.mouseY;
 			bool remapY = false;
+			bool savedMouseLeft = Main.mouseLeft;
 
 			if (WeModMenu.OnTitle) {
 				WeAnim.Pulse();
 				HandleInput();
 				releaseAfterInput = Main.mouseLeftRelease;
-				steal = WeSplash.Visible || WePanels.Covering || WePanels.AteInput || WrenchToolbar.Busy || LayoutEditor.Busy || WidgetHost.Busy;
+				steal = WeSplash.Visible || WePanels.Covering || WePanels.AteInput || WrenchToolbar.Busy || LayoutEditor.Editing || WidgetHost.Busy;
 				if (steal) {
 					Main.blockMouse = true;
 					Main.mouseLeftRelease = false;
+					Main.mouseLeft = false;
 				}
 
 				MenuButtonHooks.BeginFrame();
@@ -138,9 +200,17 @@ namespace DieWithASmile.Engine.Content
 				}
 			}
 
-			orig(self, time);
+			_skipCursor = OwnsTitleCursor;
+			try {
+				orig(self, time);
+			}
+			finally {
+				_skipCursor = false;
+			}
 
 			if (steal) {
+				Main.blockMouse = true;
+				Main.mouseLeft = savedMouseLeft && WeInput.LeftDown;
 				if (WeInput.LeftDown)
 					Main.mouseLeftRelease = false;
 				else

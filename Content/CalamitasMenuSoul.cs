@@ -96,7 +96,7 @@ namespace DieWithASmile.Content
 
 		internal static void Update()
 		{
-			float target = DieWithASmileSettings.UseSoulScene ? 1f : 0f;
+			float target = 0f;
 			if (_scene < target)
 				_scene = MathHelper.Min(target, _scene + FadeSpeed);
 			else if (_scene > target)

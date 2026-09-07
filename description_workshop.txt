@@ -1,27 +1,36 @@
-[h1]The End Of A Calamity Menu Theme[/h1]
-A fan-made tModLoader main menu theme inspired by Calamitas and the song "Die With A Smile".
+[h1]Please read[/h1]
+[h1]I want to apologize[/h1]
 
-This mod is [b]client-side[/b] and only changes the title screen. You can keep it enabled in multiplayer without the server or other players needing it. It does not add items, bosses, or gameplay.
+Hi to everyone who signed up for this work, and to all the newcomers. I want to clarify the situation that led to me damaging my relationship with the developers of the amazing Calamity Entropy mod.
+
+I used 6ekoh’s works to display them in the background of my mod without permission — so that his works would remain in the mod. During the dialogue, he asked that his works not be displayed alongside the Calamity Entropy mod. Why? I don’t know — he has his own reasons. As a result, access to Calamity Entropy was blocked when the “The End Of A Calamity Menu Theme” mod was active.
+
+By such actions, a very important rule was violated — “Modder has no right to demand what mods players should load.”
+
+I want to publicly apologize to the developers of the Calamity Entropy mod, to the subscribers who wanted to play with two active mods at once, and also to all of you. I am deeply to blame before all of you; I apologize once again for being foolish and naive, as well as for being poorly informed about the community rules.
+
+[h1]The End Of A Calamity Menu Theme[/h1]
+Main menu theme. Calamitas, "Die With A Smile".
+
+Client-side. Only the title screen. You can leave it on in multiplayer — nobody else needs the mod.
 
 [h2]Features[/h2]
 [list]
-[*][b]Client-side title screen[/b] — custom art, logo, menu styling, and nothing else in the game
-[*][b]Collapsible music player[/b] with a reactive spectrum that follows the playing audio, including custom uploads, and freezes when paused
-[*][b]Draggable player[/b] — hover to expand, then drag by empty space; the collapsed circle stays with it. The position is saved after leaving a world, restarting, or reloading the mod
-[*][b]Playlist[/b] — play, pause, skip, seek, loop one track, or shuffle your enabled songs
-[*][b]Custom uploads[/b] — add your own songs from the player; MP3 and WAV convert to OGG with a progress bar. Click a custom track's artist name to rename it (tags are read on upload)
-[*][b]Broken folder[/b] — unplayable songs are skipped and moved so the mod still loads
-[*][b]Background gallery[/b] — follow the music, lock a scene, or shuffle backgrounds every 0–15 seconds (click scenes to choose the pool; 0 only changes when you leave a world)
-[*][b]Logo gallery[/b] — five title-screen logos, including layered hand and sticker variants, plus uploads and other mods' menus
-[*][b]Custom art[/b] — PNG/JPEG logos and wallpapers in DieWithASmile/logo and DieWithASmile/wallpaper
-[*][b]Other-mod skies[/b] — pick another enabled menu theme's title background (including Wrath of the Gods) or Terraria's default Forest sky; gallery cards use the tModLoader logo or that mod's icon
-[*][b]Edit Position[/b] — drag the logo, player, and menu buttons; scroll to resize the logo; pan uploaded wallpapers; Save stores the layout
-[*][b]Accent colors[/b] — swatches in the galleries retint the player, hover, buttons, and UI icons (darker idle, lighter on hover)
-[*][b]Scene-changing tracks[/b] — Don't Forget fades into a Deltarune-inspired heart scene; Come Along with Me fades into a letter scene with mouse-reactive hands
-[*][b]Gallery arts[/b] — Calamitas, Don't Forget, Come Along with Me, Last meeting, Yharim Never Die, Witch of Supreme Memories, and The Soul of the Universe
-[*][b]Main Menu Music[/b] volume slider under Settings → Volume
-[*][b]Smooth music fades[/b] when mods finish loading, when entering a world, and when returning to the menu
-[*][b]Persistence[/b] — selected theme, playlist edits, uploads, loop, shuffle, background choice, volume, and player position are remembered
+[*] Custom art, logo, and menu look. Nothing in-game.
+[*] Music player with a spectrum that follows the track (including your uploads). Freezes when paused. Hover to expand, collapse to a circle. Drag it by empty space; the circle stays with it. Position is saved.
+[*] Play, pause, skip, seek, loop one track, shuffle.
+[*] Upload your own songs from the player. MP3 and WAV convert to OGG (there's a progress bar). Click a custom track's artist name to rename it — tags are read on upload.
+[*] Unplayable files get skipped and dumped into a broken folder so the mod still loads.
+[*] Background gallery: follow the music, lock one scene, or shuffle every 0–15 seconds. Click scenes to pick the pool. 0 means it only changes when you leave a world.
+[*] Logo gallery: pack logos (including layered Watermelono ones), plus uploads and other mods' menus.
+[*] Drop PNG/JPEG logos and wallpapers into DieWithASmile/logo and DieWithASmile/wallpaper.
+[*] Other-mod skies: use another enabled menu theme's title background (Wrath of the Gods included) or vanilla Forest. Cards show the tModLoader logo or that mod's icon.
+[*] Edit Position: drag the logo, player, and menu buttons. Scroll to resize the logo. Pan uploaded wallpapers. Save keeps the layout.
+[*] Accent colors in the galleries retint the player, hover, buttons, and UI icons (darker idle, lighter on hover).
+[*] Don't Forget fades into a Deltarune-style heart scene. Come Along with Me fades into a letter scene with mouse-reactive hands.
+[*] Gallery arts: Calamitas, Don't Forget, Come Along with Me, Last meeting, Yharim Never Die, Witch of Supreme Memories, Entropy of Freedom.
+[*] Music fades when mods finish loading, when you enter a world, and when you come back to the menu.
+[*] Theme, playlist, uploads, loop, shuffle, background, volume, and player position are remembered.
 [/list]
 
 [h2]Playlist[/h2]
@@ -31,10 +40,11 @@ This mod is [b]client-side[/b] and only changes the title screen. You can keep i
 [*][b]Goodbye To A World[/b] — Porter Robinson (requested by @yucky beastling)
 [*][b]Don't Forget[/b] — Toby Fox · Laura Shigihara (requested by Roaring Knight)
 [*][b]Come Along with Me[/b] — Ashley Eriksson, cover by Ariela (requested by @Binding [ANDY])
+[*][b]Entropy of Freedom[/b]
 [/list]
 
 [h2]Compatibility[/h2]
-Compatible with [b]Sam's Cooler Menu Screen[/b]. If that core theme is selected, the music player still collapses to a circle until you hover it, and can be dragged like in the standard menu (requested by @Mihail04).
+Works with [b]Sam's Cooler Menu Screen[/b]. If that theme is selected, the player still collapses to a circle until you hover it, and you can drag it the same way (requested by @Mihail04).
 
 [h2]Credits[/h2]
 [list]
@@ -42,35 +52,33 @@ Compatible with [b]Sam's Cooler Menu Screen[/b]. If that core theme is selected,
 [*][b]Artwork fitting and refinements:[/b] @Neshumi
 [*][b]Logo:[/b] #AscendedMolly (Aurora)
 [*][b]Original song:[/b] "Die With A Smile" — Lady Gaga & Bruno Mars
-[*][b]Cover performer:[/b] Celine Wanyi
-[*][b]Additional menu cover:[/b] "I Will Survive" — Gloria Gaynor, performed by Jennel Garcia
-[*][b]Additional menu track:[/b] "Goodbye To A World" — Porter Robinson, requested by @yucky beastling
-[*][b]Additional menu track:[/b] "Don't Forget" — Toby Fox · Laura Shigihara, requested by Roaring Knight
-[*][b]Additional menu track:[/b] "Come Along with Me" — Ashley Eriksson, cover by Ariela, requested by @Binding [ANDY]
-[*][b]CoolerMenu compatibility, including collapse-to-circle:[/b] requested by @Mihail04
-[*][b]Title-screen gallery and hide-player toggle:[/b] requested by @pixel
-[*][b]Custom song uploads and playlist editing:[/b] requested by @Schiz, @Vonnarch, @Tenciv, @EpicbowserDX, @pixel
-[*][b]Custom artist names:[/b] requested by @Vonnarch
-[*][b]Menu theme persists after restart:[/b] requested by @MPyre
-[*][b]Main Menu Music volume:[/b] requested by @TheRubick09
-[*][b]Client-side so it does not need to be disabled for multiplayer:[/b] requested by @cafitgoat
-[*][b]Menu music restarts after leaving a world, shuffle, and music fades:[/b] requested by @DMolRod
-[*][b]Background shuffle interval:[/b] requested by @SirMalik
-[*][b]Custom tracks starting on the main menu:[/b] requested by @Yucchi
-[*][b]Background shuffle only when leaving a world (0s):[/b] requested by @DMolRod
-[*][b]Title-screen logo picker:[/b] requested by @Kobyakoff1999, @Amiiastra, @Mijii, @meceedtogai
-[*][b]Keep our title scenes when another mod replaces the vanilla title sky:[/b] requested by Excell
-[*][b]Pan uploaded wallpapers in Edit Position:[/b] requested by hatsune.miku.con
-[*][b]Accent color palettes:[/b] requested by Remindah
-[*][b]Shuffle which backgrounds cycle (vanilla, Calamity, other mods, and uploads):[/b] requested by the milkman
-[*][b]Shuffle a random song every time the title screen opens:[/b] requested by soda
-[*][b]Eternal Garden title crash:[/b] reported by smooth, Cowboy
-[*][b]Characters not dying in-world until this theme was removed:[/b] reported by daedon.
+[*][b]Cover:[/b] Celine Wanyi
+[*][b]I Will Survive[/b] — Gloria Gaynor, performed by Jennel Garcia
+[*][b]Goodbye To A World[/b] — Porter Robinson, requested by @yucky beastling
+[*][b]Don't Forget[/b] — Toby Fox · Laura Shigihara, requested by Roaring Knight
+[*][b]Come Along with Me[/b] — Ashley Eriksson, cover by Ariela, requested by @Binding [ANDY]
+[*] CoolerMenu compatibility (collapse-to-circle): @Mihail04
+[*] Title-screen gallery and hide-player toggle: @pixel
+[*] Custom song uploads and playlist editing: @Schiz, @Vonnarch, @Tenciv, @EpicbowserDX, @pixel
+[*] Custom artist names: @Vonnarch
+[*] Theme persists after restart: @MPyre
+[*] Main Menu Music volume: @TheRubick09
+[*] Client-side so you don't have to disable it for multiplayer: @cafitgoat
+[*] Music restarts after leaving a world, shuffle, fades: @DMolRod
+[*] Background shuffle interval: @SirMalik
+[*] Custom tracks starting on the main menu: @Yucchi
+[*] Shuffle only when leaving a world (0s): @DMolRod
+[*] Title-screen logo picker: @Kobyakoff1999, @Amiiastra, @Mijii, @meceedtogai
+[*] Keep our title scenes when another mod replaces the vanilla sky: Excell
+[*] Pan uploaded wallpapers in Edit Position: hatsune.miku.con
+[*] Accent color palettes: Remindah
+[*] Shuffle which backgrounds cycle (vanilla, Calamity, other mods, uploads): the milkman
+[*] Shuffle a random song every time the title screen opens: soda
+[*] Eternal Garden title crash: reported by smooth, Cowboy
+[*] Characters not dying in-world until this theme was removed: reported by daedon.
 [/list]
 
-[h2]A note from the author[/h2]
-This is a passion project made for the love of the game.
+[h2]A note[/h2]
+I don't make money off this mod and I'm not going to. I don't own the song, the cover, or the credited art.
 
-I do [b]not[/b] monetize this mod. I am not receiving any money from it, and I have no intention to. I do not claim ownership of the original song, the cover, or the credited artwork.
-
-I may have overlooked a Terraria / tModLoader Steam Workshop rule along the way. If I did, it was not for profit — it was for the soul of the project. If a rightsholder or Valve/Re-Logic/tModLoader asks for this to be taken down or changed, I will comply.
+If I missed a Workshop rule, it wasn't for profit. If a rightsholder or Valve / Re-Logic / tModLoader wants this taken down or changed, I'll do it.

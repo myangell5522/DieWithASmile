@@ -31,7 +31,7 @@ namespace DieWithASmile.Content
 			"DieWithASmile/Assets/Textures/Menu/MeadowArt1",
 			"DieWithASmile/Assets/Textures/Menu/YharimArt",
 			"DieWithASmile/Assets/Textures/Menu/WitchArt",
-			"DieWithASmile/Assets/Textures/Menu/SoulOfTheUniverse"
+			"DieWithASmile/Assets/Textures/Menu/Freedom/Background"
 		};
 
 		private static string L(string key) => CalamitasMenuText.UI(key);
@@ -44,7 +44,7 @@ namespace DieWithASmile.Content
 			3 => L("SceneMeadow"),
 			4 => L("SceneYharim"),
 			5 => L("SceneWitch"),
-			6 => L("SceneSoul"),
+			6 => L("SceneFreedom"),
 			_ => ""
 		};
 

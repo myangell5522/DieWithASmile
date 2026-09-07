@@ -45,7 +45,6 @@ namespace DieWithASmile.Engine.UI
 		internal static void Update()
 		{
 			if (!WeModMenu.OnTitle) {
-				_visible = false;
 				_fade = 0f;
 				return;
 			}
@@ -107,6 +106,7 @@ namespace DieWithASmile.Engine.UI
 				DrawWrapped(spriteBatch, font, WeText.UI("Splash1"), card.X + 28, card.Y + 64, card.Width - 56, _fade);
 				DrawWrapped(spriteBatch, font, WeText.UI("Splash2"), card.X + 28, card.Y + 124, card.Width - 56, _fade);
 				DrawWrapped(spriteBatch, font, WeText.UI("Splash3"), card.X + 28, card.Y + 184, card.Width - 56, _fade);
+				DrawWrapped(spriteBatch, font, WeText.UI("Splash4"), card.X + 28, card.Y + 250, card.Width - 56, _fade);
 
 				DrawCheck(spriteBatch, CheckHit(card), _dontShow, WeText.UI("DontShow"), _fade);
 				DrawButton(spriteBatch, OkHit(card), WeText.UI("GotIt"), _fade);
@@ -116,7 +116,7 @@ namespace DieWithASmile.Engine.UI
 		private static Rectangle Card()
 		{
 			int w = Math.Min(620, Main.screenWidth - 80);
-			int h = 380;
+			int h = 460;
 			return new Rectangle((Main.screenWidth - w) / 2, (Main.screenHeight - h) / 2, w, h);
 		}
 

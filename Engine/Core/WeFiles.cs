@@ -41,6 +41,32 @@ namespace DieWithASmile.Engine.Core
 			}
 		}
 
+		internal static void ClearFolderContents(string folder)
+		{
+			try {
+				if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
+					return;
+
+				foreach (string file in Directory.GetFiles(folder)) {
+					try {
+						File.Delete(file);
+					}
+					catch {
+					}
+				}
+
+				foreach (string dir in Directory.GetDirectories(folder)) {
+					try {
+						Directory.Delete(dir, recursive: true);
+					}
+					catch {
+					}
+				}
+			}
+			catch {
+			}
+		}
+
 		private static bool TryPick(out string path, Func<string> picker)
 		{
 			path = null;

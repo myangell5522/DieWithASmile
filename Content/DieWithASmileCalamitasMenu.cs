@@ -69,9 +69,10 @@ namespace DieWithASmile.Content
 		{
 			CalamitasMenuPersist.OnOurMenuSelected();
 			WePersist.OnSelected();
-			CalamitasMenuBackgroundStyle.ResetFade();
 			WeSpectrum.Reset();
 			WeArt.Scan();
+			WeNestedPacks.EnsureWallpaper();
+			CalamitasMenuBackgroundStyle.ResetFade();
 			WeCatalog.Refresh();
 			WeCatalog.DropMissing();
 			WeLibrary.ScanIntoSave();
@@ -147,8 +148,7 @@ namespace DieWithASmile.Content
 
 			WeBackgroundStyle.Draw(spriteBatch);
 			WeBackgroundStyle.DrawAtmosphere(spriteBatch);
-			if (WeSave.Data.Logo is LogoKind.Custom or LogoKind.Hidden or LogoKind.Borrowed or LogoKind.Preset ||
-			    SceneGraph.Get(SceneGraph.Logo).Customized) {
+			if (WeSave.Data.Logo is LogoKind.Custom or LogoKind.Hidden or LogoKind.Borrowed or LogoKind.Preset) {
 				if (WeSave.Data.Logo != LogoKind.Hidden && SceneGraph.Visible(SceneGraph.Logo))
 					WeLogo.DrawCustom(spriteBatch, 1f, logoRotation, logoScale);
 				return false;

@@ -56,28 +56,7 @@ namespace DieWithASmile.Engine.Grab
 			return Contains(name, "Logo") ||
 			       Contains(name, "TitleCard") ||
 			       Contains(name, "Wordmark") ||
-			       Contains(name, "WordMark") ||
-			       IsEntropyWordmarkName(name);
-		}
-
-		private static bool IsEntropyWordmarkName(string name)
-		{
-			string leaf = Leaf(name);
-			if (leaf.Equals("Entropy", StringComparison.OrdinalIgnoreCase) ||
-			    leaf.Equals("CETitle", StringComparison.OrdinalIgnoreCase) ||
-			    leaf.Equals("CELogo", StringComparison.OrdinalIgnoreCase))
-				return true;
-
-			return Contains(leaf, "Entropy") &&
-			       (Contains(leaf, "Title") || Contains(leaf, "Word") || Contains(leaf, "Logo"));
-		}
-
-		private static string Leaf(string name)
-		{
-			int slash = Math.Max(name.LastIndexOf('/'), name.LastIndexOf('\\'));
-			string leaf = slash >= 0 ? name[(slash + 1)..] : name;
-			int dot = leaf.LastIndexOf('.');
-			return dot >= 0 ? leaf[..dot] : leaf;
+			       Contains(name, "WordMark");
 		}
 
 		internal static bool IsCoverSized(Texture2D tex) =>
@@ -186,6 +165,9 @@ namespace DieWithASmile.Engine.Grab
 		private static bool? CornersOpaque(Texture2D tex)
 		{
 			if (tex == null || tex.IsDisposed)
+				return null;
+
+			if (tex is RenderTarget2D)
 				return null;
 
 			int key = tex.GetHashCode();

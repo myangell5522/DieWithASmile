@@ -18,7 +18,7 @@ namespace DieWithASmile.Engine.Content
 		internal const string BlueArchive = "bluearchive";
 
 		internal static readonly string[] Ids = {
-			WeNestedPacks.Classic, WeNestedPacks.Gothic, WeNestedPacks.Orbit, WeNestedPacks.Hands, WeNestedPacks.Sticker,
+			WeNestedPacks.Gothic, WeNestedPacks.Orbit,
 			Watermelon1, Watermelon2, BlueArchive
 		};
 

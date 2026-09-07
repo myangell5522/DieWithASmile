@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.Xna.Framework.Graphics;
@@ -27,6 +28,8 @@ namespace DieWithASmile.Engine.Grab
 
 		private static Texture2D _vanillaLogo;
 		private static Texture2D _vanillaLogo2;
+		private static List<ModMenu> _menuSnap;
+		private static int _menuSnapAt = int.MinValue;
 		private static int _modCount = -1;
 		private static int _pulse;
 		private static bool _scanned;
@@ -37,6 +40,8 @@ namespace DieWithASmile.Engine.Grab
 
 		internal static void Refresh()
 		{
+			_menuSnap = null;
+			_menuSnapAt = int.MinValue;
 			try {
 				Rebuild();
 			}
@@ -88,6 +93,8 @@ namespace DieWithASmile.Engine.Grab
 			_vanillaLogo = null;
 			_vanillaLogo2 = null;
 			_menusField = null;
+			_menuSnap = null;
+			_menuSnapAt = int.MinValue;
 			_modCount = -1;
 			_scanned = false;
 		}
@@ -227,18 +234,37 @@ namespace DieWithASmile.Engine.Grab
 			var seenLogo = new HashSet<string>(StringComparer.Ordinal);
 			var seenSky = new HashSet<string>(StringComparer.Ordinal);
 
-			foreach (ModMenu menu in SnapshotMenus()) {
-				if (!IsBorrowCandidate(menu))
-					continue;
-				if (WeModArt.SkipMenu(menu))
-					continue;
+			List<ModMenu> menus = SnapshotMenus();
+			if (menus.Count == 0) {
+				_scanned = false;
+				return;
+			}
 
-				string id = SafeFullName(menu);
-				if (string.IsNullOrEmpty(id))
-					continue;
+			foreach (ModMenu menu in menus) {
+				try {
+					if (!IsBorrowCandidate(menu))
+						continue;
+					if (WeModArt.SkipMenu(menu))
+						continue;
 
-				ClassifyLogo(menu, id, logos, seenLogo);
-				ClassifySky(menu, id, skies, seenSky);
+					string id = SafeFullName(menu);
+					if (string.IsNullOrEmpty(id))
+						continue;
+
+					try {
+						ClassifyLogo(menu, id, logos, seenLogo);
+					}
+					catch {
+					}
+
+					try {
+						ClassifySky(menu, id, skies, seenSky);
+					}
+					catch {
+					}
+				}
+				catch {
+				}
 			}
 
 			logos.Sort(CompareOffers);
@@ -248,7 +274,11 @@ namespace DieWithASmile.Engine.Grab
 			LogoList.AddRange(logos);
 			SkyList.AddRange(skies);
 			_scanned = true;
-			PrimeModIcons();
+			try {
+				PrimeModIcons();
+			}
+			catch {
+			}
 		}
 
 		private static void ClassifyLogo(ModMenu menu, string id, List<WeOffer> logos, HashSet<string> seen)
@@ -270,9 +300,12 @@ namespace DieWithASmile.Engine.Grab
 			}
 
 			if (!fromProp) {
-				tex = PickMenuLogoField(menu) ?? WeModArt.FindLogo(menu);
+				tex = PickMenuLogoField(menu);
+				bool drawsLogo = HasThemeFx(menu) || WeModArt.IsEntropyMenu(menu);
+				if (tex == null && (!drawsLogo || WeModArt.IsEntropyMenu(menu)))
+					tex = WeModArt.FindLogo(menu);
 				pending = tex == null && WeModArt.LogoPending(menu);
-				if (!pending && tex == null && !OverridesMethod(menu, nameof(ModMenu.PreDrawLogo)))
+				if (!pending && tex == null && !drawsLogo)
 					return;
 			}
 
@@ -284,21 +317,26 @@ namespace DieWithASmile.Engine.Grab
 			if (!seen.Add(id))
 				return;
 
-			bool useStyle = IsDrawableStyle(ReadStyle(menu));
-			Texture2D scene = PickMenuScene(menu) ?? WeModArt.FindSky(menu);
+			ModSurfaceBackgroundStyle style = ReadStyle(menu);
+			bool dummyStyle = WeModArt.IsDummyStyle(style);
+			bool useStyle = !dummyStyle && IsDrawableStyle(style);
+			bool hostSky = WeModArt.HasHostSky(menu);
+			bool packed = WeModArt.HasPackedSky(menu);
+			bool useFx = HasThemeFx(menu) || (packed && OverridesMethod(menu, nameof(ModMenu.PreDrawLogo)));
+			Texture2D scene = PickMenuScene(menu);
+			if (scene == null && (packed || (!useStyle && !useFx && !hostSky)))
+				scene = WeModArt.FindSky(menu);
 			if (scene != null)
 				MenuScenes[id] = scene;
 
 			bool pending = scene == null && (HasPendingScene(menu) || WeModArt.SkyPending(menu));
-			bool useFx = OverridesMethod(menu, nameof(ModMenu.PreDrawLogo));
-			bool hostSky = WeModArt.HasHostSky(menu);
-			if (!useStyle && scene == null && !pending && !useFx && !hostSky)
+			if (!useStyle && scene == null && !pending && !useFx && !hostSky && !packed)
 				return;
 
 			WeOffer offer = MakeOffer(menu, id, WeOfferKind.Sky, pending);
 			offer.UseStyle = useStyle;
 			offer.UseMenuScene = scene != null || pending;
-			offer.UseThemeFx = useFx;
+			offer.UseThemeFx = useFx && !hostSky;
 			skies.Add(offer);
 		}
 
@@ -330,7 +368,7 @@ namespace DieWithASmile.Engine.Grab
 			Texture2D best = null;
 			int bestScore = 0;
 			foreach ((Texture2D tex, string name) in MenuTextures(menu)) {
-				if (tex == null || tex.IsDisposed || tex == logo)
+				if (tex == null || tex.IsDisposed || tex == logo || tex is RenderTarget2D)
 					continue;
 
 				int score = WeInspect.SceneScore(tex, name);
@@ -438,8 +476,13 @@ namespace DieWithASmile.Engine.Grab
 					if (WeInspect.LooksLikeJunkName(memberName) || WeInspect.LooksLikeJunkName(assetName))
 						return false;
 					tex = ReadyTexture(asset);
+					if (tex is RenderTarget2D)
+						return false;
 					return tex != null || includeUnloaded;
 				}
+
+				if (value is RenderTarget2D)
+					return false;
 
 				if (value is Texture2D direct && !direct.IsDisposed) {
 					if (WeInspect.LooksLikeJunkName(memberName))
@@ -484,25 +527,109 @@ namespace DieWithASmile.Engine.Grab
 			return true;
 		}
 
-		private static List<ModMenu> SnapshotMenus()
+		internal static List<ModMenu> SnapshotMenus()
 		{
+			if (_menuSnap != null && _menuSnapAt == _pulse)
+				return _menuSnap;
+
+			var copy = new List<ModMenu>();
+			var seen = new HashSet<string>(StringComparer.Ordinal);
+
+			void Add(ModMenu menu)
+			{
+				if (menu == null)
+					return;
+
+				string id = "";
+				try {
+					id = menu.FullName ?? "";
+				}
+				catch {
+				}
+
+				if (string.IsNullOrEmpty(id)) {
+					try {
+						id = menu.GetType().FullName ?? menu.GetType().Name ?? "";
+					}
+					catch {
+					}
+				}
+
+				if (string.IsNullOrEmpty(id) || !seen.Add(id))
+					return;
+				copy.Add(menu);
+			}
+
 			try {
 				_menusField ??= typeof(MenuLoader).GetField("menus", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
 				object raw = _menusField?.GetValue(null);
-				if (raw is IEnumerable<ModMenu> menus) {
-					var copy = new List<ModMenu>();
-					foreach (ModMenu menu in menus) {
-						if (menu != null)
-							copy.Add(menu);
+				if (raw is IEnumerable items) {
+					foreach (object item in items) {
+						try {
+							if (item is ModMenu menu)
+								Add(menu);
+						}
+						catch {
+						}
 					}
-
-					return copy;
 				}
 			}
 			catch {
 			}
 
-			return new List<ModMenu>();
+			try {
+				foreach (ModMenu menu in ModContent.GetContent<ModMenu>())
+					Add(menu);
+			}
+			catch {
+			}
+
+			try {
+				foreach (Mod mod in ModLoader.Mods) {
+					if (mod == null)
+						continue;
+
+					IEnumerable<ModMenu> fromMod;
+					try {
+						fromMod = mod.GetContent<ModMenu>();
+					}
+					catch {
+						continue;
+					}
+
+					if (fromMod == null)
+						continue;
+
+					foreach (ModMenu menu in fromMod) {
+						try {
+							Add(menu);
+						}
+						catch {
+						}
+					}
+				}
+			}
+			catch {
+			}
+
+			try {
+				if (ModLoader.TryGetMod("CalamityEntropy", out Mod entropy)) {
+					foreach (string name in new[] { "EModMenu", "EModMenuAlt" }) {
+						try {
+							if (entropy.TryFind(name, out ModMenu found))
+								Add(found);
+						}
+						catch {
+						}
+					}
+				}
+			}
+			catch {
+			}
+
+			_menuSnap = copy;
+			_menuSnapAt = _pulse;
+			return copy;
 		}
 
 		private static void CacheVanillaLogos()

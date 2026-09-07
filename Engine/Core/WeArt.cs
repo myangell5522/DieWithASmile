@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
+using DieWithASmile.Engine.Content;
 
 namespace DieWithASmile.Engine.Core
 {
@@ -23,10 +24,11 @@ namespace DieWithASmile.Engine.Core
 			    !string.IsNullOrEmpty(WeSave.Data.LogoId) &&
 			    WeSave.Data.Logos.All(item => item.Id != WeSave.Data.LogoId))
 				WeSave.Data.LogoId = "";
-			if (WeSave.Data.Wallpaper != WallpaperKind.Borrowed &&
+			if (WeSave.Data.Wallpaper == WallpaperKind.Image &&
 			    !string.IsNullOrEmpty(WeSave.Data.WallpaperId) &&
 			    WeSave.Data.Wallpapers.All(item => item.Id != WeSave.Data.WallpaperId))
 				WeSave.Data.WallpaperId = "";
+			WeNestedPacks.EnsureWallpaper();
 		}
 
 		internal static bool TryGetWallpaper(out Texture2D texture) =>

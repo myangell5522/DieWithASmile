@@ -45,7 +45,7 @@ UI: {
 	SceneMeadow: Last meeting
 	SceneYharim: Yharim Never Die
 	SceneWitch: Witch of Supreme Memories
-	SceneSoul: The Soul of the Universe
+	SceneFreedom: Entropy of Freedom
 	VanillaForest: 숲
 	VanillaCorruption: 타락
 	VanillaCrimson: 진홍
@@ -82,7 +82,7 @@ UI: {
 	WePromoBody: 제한 없는 새 모드, 확장 기능 포함 — 배경, 음악, 로고, 위젯.
 	WePromoButton: 창작마당
 	Wrench: Customize menu
-	BtnLogoPos: Move logo
+	BtnLogoPos: 로고만 이동
 	BtnWallpaper: Change wallpaper
 	BtnMusic: Change music
 	BtnWidgets: Widgets
@@ -94,10 +94,13 @@ UI: {
 	Splash1: It starts as regular tModLoader. Everything you change is optional.
 	Splash2: The circle between the menu buttons and Switch Menu Theme opens wallpapers, music, logo, widgets, and layout.
 	Splash3: Add a music player, clock, greeting, moon phase, or Discord server. One tap hides version clutter. Drag, resize, or hide any element.
+	Splash4: Calamity Entropy 차단이 더 이상 적용되지 않습니다. 두 모드를 함께 켠 채로 둘 수 있습니다.
 	GotIt: Got it
 	DontShow: Don't show this again
 	CancelLayout: Cancel
 	ResetVanilla: Reset to vanilla
+	ResetLogo: 로고 초기화
+	LogoEditHint: 로고만 드래그하세요. 스크롤로 크기를 바꿉니다. 다른 요소는 그대로입니다.
 	SnapCenter: Center
 	HiddenLayers: Hidden elements
 	Restore: Restore
@@ -154,8 +157,8 @@ UI: {
 	OpenFolder: Open folder
 	VanillaLogo: tModLoader logo
 	HideLogo: Hide logo
-	LogoWatermelon1: Watermelon 1
-	LogoWatermelon2: Watermelon 2
+	LogoWatermelon1: Watermelono Punches
+	LogoWatermelon2: Watermelono Mouth
 	LogoBlueArchive: Blue Archive Style
 	LogoFromPack: Die With A Smile
 	CenterImage: Center image
@@ -281,4 +284,8 @@ UI: {
 	ToastFont: Font applied
 	ToastFontFail: Could not load that font
 	ToastFontGone: Font removed
+	ResetFactory: 모드를 초기 설정으로 재설정
+	ResetFactoryHint: Entropy of Freedom, 팩 로고, 왼쪽 메뉴, 하단 독, 내장 재생목록을 되돌립니다. 직접 넣은 그림, 올린 음악, 글꼴, 프리셋을 삭제합니다.
+	ResetFactorySure: 확인하려면 한 번 더 누르세요
+	ToastFactoryReset: 모드가 초기 설정으로 재설정되었습니다
 }

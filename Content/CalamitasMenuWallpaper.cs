@@ -107,7 +107,7 @@ namespace DieWithASmile.Content
 				int index = 0;
 				if (key != null && key.Length > 6)
 					int.TryParse(key.AsSpan(6), out index);
-				index = Math.Clamp(index, 0, (int)MenuScene.Soul);
+				index = Math.Clamp(index, 0, (int)MenuScene.Freedom);
 				data.LockedScene = (MenuScene)index;
 			}
 			else if (key == Tml) {
@@ -178,7 +178,7 @@ namespace DieWithASmile.Content
 		private static List<string> DefaultScenes()
 		{
 			var list = new List<string>(7);
-			for (int i = 0; i <= (int)MenuScene.Soul; i++) {
+			for (int i = 0; i <= (int)MenuScene.Freedom; i++) {
 				string key = Scene(i);
 				if (!IsHidden(key))
 					list.Add(key);

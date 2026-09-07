@@ -2,6 +2,9 @@ using System;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
+using DieWithASmile.Engine.Audio;
+using DieWithASmile.Engine.Content;
+using DieWithASmile.Engine.Core;
 
 namespace DieWithASmile.Content
 {
@@ -13,6 +16,7 @@ namespace DieWithASmile.Content
 		Meadow = 3,
 		Yharim = 4,
 		Witch = 5,
+		Freedom = 6,
 		Soul = 6
 	}
 
@@ -194,19 +198,87 @@ namespace DieWithASmile.Content
 
 		internal static bool UsingPassthroughSky => UsingVanillaWallpaper || UsingTmlWallpaper;
 
-		internal static bool UseDontForgetScene =>
-			!UsingCustomWallpaper && (FollowMusic ? CalamitasMenuPlaylist.IsDontForget : LockedScene == MenuScene.DontForget);
+		internal static bool UseDontForgetScene
+		{
+			get
+			{
+				if (UsingCustomWallpaper)
+					return false;
+				if (WeSave.Data.Wallpaper == WallpaperKind.Nested)
+					return WeSave.Data.WallpaperId == WeNestedPacks.NestDontForget;
+				return FollowMusic ? Playing("dontforget") : LockedScene == MenuScene.DontForget;
+			}
+		}
 
-		internal static bool UseComeAlongScene =>
-			!UsingCustomWallpaper && (FollowMusic ? CalamitasMenuPlaylist.IsComeAlong : LockedScene == MenuScene.ComeAlong);
+		internal static bool UseComeAlongScene
+		{
+			get
+			{
+				if (UsingCustomWallpaper)
+					return false;
+				if (WeSave.Data.Wallpaper == WallpaperKind.Nested)
+					return WeSave.Data.WallpaperId == WeNestedPacks.NestComeAlong;
+				return FollowMusic ? Playing("comealong") : LockedScene == MenuScene.ComeAlong;
+			}
+		}
 
-		internal static bool UseMeadowScene => !UsingCustomWallpaper && !FollowMusic && LockedScene == MenuScene.Meadow;
+		internal static bool UseMeadowScene
+		{
+			get
+			{
+				if (UsingCustomWallpaper)
+					return false;
+				if (WeSave.Data.Wallpaper == WallpaperKind.Nested)
+					return WeSave.Data.WallpaperId == WeNestedPacks.NestMeadow;
+				return !FollowMusic && LockedScene == MenuScene.Meadow;
+			}
+		}
 
-		internal static bool UseYharimScene => !UsingCustomWallpaper && !FollowMusic && LockedScene == MenuScene.Yharim;
+		internal static bool UseYharimScene
+		{
+			get
+			{
+				if (UsingCustomWallpaper)
+					return false;
+				if (WeSave.Data.Wallpaper == WallpaperKind.Nested)
+					return WeSave.Data.WallpaperId == WeNestedPacks.NestYharim;
+				return !FollowMusic && LockedScene == MenuScene.Yharim;
+			}
+		}
 
-		internal static bool UseWitchScene => !UsingCustomWallpaper && !FollowMusic && LockedScene == MenuScene.Witch;
+		internal static bool UseWitchScene
+		{
+			get
+			{
+				if (UsingCustomWallpaper)
+					return false;
+				if (WeSave.Data.Wallpaper == WallpaperKind.Nested)
+					return WeSave.Data.WallpaperId == WeNestedPacks.NestWitch;
+				return !FollowMusic && LockedScene == MenuScene.Witch;
+			}
+		}
 
-		internal static bool UseSoulScene => !UsingCustomWallpaper && !FollowMusic && LockedScene == MenuScene.Soul;
+		internal static bool UseFreedomScene
+		{
+			get
+			{
+				if (UsingCustomWallpaper)
+					return false;
+				if (WeSave.Data.Wallpaper == WallpaperKind.Nested) {
+					if (string.IsNullOrEmpty(WeSave.Data.WallpaperId) || !WeNestedPacks.IsWallpaper(WeSave.Data.WallpaperId))
+						return true;
+					return WeSave.Data.WallpaperId == WeNestedPacks.NestFreedom;
+				}
+				return FollowMusic ? Playing("freedom") : LockedScene == MenuScene.Freedom;
+			}
+		}
+
+		private static bool Playing(string id)
+		{
+			if (string.Equals(WePlaylist.Current?.Id, id, StringComparison.Ordinal))
+				return true;
+			return string.Equals(CalamitasMenuPlaylist.Current?.Id, id, StringComparison.Ordinal);
+		}
 
 		internal static void SetPlayerEnabled(bool enabled)
 		{

@@ -79,6 +79,7 @@ namespace DieWithASmile.Engine.UI
 				return;
 			_id = WePanelId.None;
 			_dragSlider = null;
+			_factoryArmed = false;
 			DiscordWidget.Unfocus();
 			SoundEngine.PlaySound(SoundID.MenuClose);
 		}
@@ -104,8 +105,11 @@ namespace DieWithASmile.Engine.UI
 
 			bool pressed = WeInput.Edge(ref _mouseHeld, ref _holdLock);
 			bool rightPressed = WeInput.Edge(WeInput.RightDown, ref _rightHeld, ref _rightLock);
-			if (!IsOpen)
+			if (!IsOpen) {
+				if (Covering)
+					Main.blockMouse = true;
 				return;
+			}
 
 			_ateInput = true;
 			Main.blockMouse = true;
@@ -418,6 +422,7 @@ namespace DieWithASmile.Engine.UI
 			ClientWindow(spriteBatch, panel, ref y, false);
 			ClientMenu(spriteBatch, panel, ref y, false);
 			ClientAccent(spriteBatch, panel, ref y, false);
+			ClientFactory(spriteBatch, panel, ref y, false);
 		}
 
 		private static void ClickClient(Rectangle panel, ref int y)
@@ -427,6 +432,7 @@ namespace DieWithASmile.Engine.UI
 			ClientWindow(null, panel, ref y, true);
 			ClientMenu(null, panel, ref y, true);
 			ClientAccent(null, panel, ref y, true);
+			ClientFactory(null, panel, ref y, true);
 		}
 		private static void DrawHubStyle(SpriteBatch spriteBatch, Rectangle panel, ref int y, int style)
 		{
@@ -824,7 +830,8 @@ namespace DieWithASmile.Engine.UI
 
 		private static void DrawBorrowSection(SpriteBatch spriteBatch, Rectangle panel, ref int y, IReadOnlyList<WeOffer> offers, WeOfferKind kind)
 		{
-			DrawHint(spriteBatch, panel, ref y, WeText.UI(offers.Count == 0 ? "BorrowEmpty" : "FromMods"));
+			DrawHint(spriteBatch, panel, ref y, WeText.UI(
+				offers.Count > 0 ? "FromMods" : WeCatalog.Ready ? "BorrowEmpty" : "BorrowPending"));
 			foreach (WeOffer offer in offers)
 				DrawBorrowCard(spriteBatch, panel, ref y, offer, IsBorrowedOn(offer, kind));
 		}

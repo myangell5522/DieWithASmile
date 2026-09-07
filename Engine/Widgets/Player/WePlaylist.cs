@@ -49,22 +49,14 @@ namespace DieWithASmile.Engine.Audio
 
 		private static readonly MenuTrack Empty = new() { Title = "—", Artist = "", FileName = "", Id = "" };
 
-		internal static int MenuMusicId
-		{
-			get
-			{
-				if (WePersist.MenuStillLoading)
-					return Main.curMusic > 0 ? Main.curMusic : 50;
-				return 0;
-			}
-		}
+		internal static int MenuMusicId => 0;
 
 		internal static void Load(Terraria.ModLoader.Mod mod)
 		{
 			WeSave.EnsureLoaded();
 			WePackedMusic.EnsureExtracted(mod);
 			RecoverCrashedCustom();
-			Rebuild(play: false);
+			Rebuild(playId: PreferredTrackId(), play: false);
 		}
 
 		internal static void Unload()
@@ -75,6 +67,8 @@ namespace DieWithASmile.Engine.Audio
 		internal static void Rebuild(string playId = null, bool play = true)
 		{
 			string keepId = playId ?? Current?.Id;
+			if (string.IsNullOrEmpty(keepId))
+				keepId = PreferredTrackId();
 			WeLibrary.ScanIntoSave();
 			WeSaveData data = WeSave.Data;
 			Active.Clear();
@@ -95,7 +89,11 @@ namespace DieWithASmile.Engine.Audio
 			_loop = data.LoopEnabled && Active.Any(track => track.Id == data.LoopedTrackId);
 			_loopedId = _loop ? data.LoopedTrackId : "";
 			_shuffle = data.ShuffleEnabled;
-			int next = Math.Max(0, Active.FindIndex(track => track.Id == keepId));
+			int next = Active.FindIndex(track => track.Id == keepId);
+			if (next < 0)
+				next = Active.FindIndex(track => track.Id == WeNestedPacks.DefaultTrackId);
+			if (next < 0)
+				next = 0;
 			if (_loop && !string.IsNullOrEmpty(_loopedId)) {
 				int looped = Active.FindIndex(track => track.Id == _loopedId);
 				if (looped >= 0)
@@ -115,20 +113,36 @@ namespace DieWithASmile.Engine.Audio
 
 		internal static void OnThemeSelected()
 		{
-			Rebuild(play: false);
+			Rebuild(playId: PreferredTrackId(), play: false);
 			if (WeSave.Data.Music != MusicKind.Custom) {
 				Silence();
 				return;
 			}
 
-			if (WePersist.MenuStillLoading)
+			if (Active.Count == 0)
 				return;
 
-			if (_menuAudioStarted)
+			string want = PreferredTrackId();
+			if (_menuAudioStarted) {
+				if (!string.IsNullOrEmpty(want) && Current.Id != want) {
+					int next = Active.FindIndex(track => track.Id == want);
+					if (next >= 0)
+						PlayIndex(next);
+				}
+
 				return;
+			}
 
 			StartPlayback();
 			_menuAudioStarted = true;
+		}
+
+		internal static void RestartPacked(string playId = WeNestedPacks.DefaultTrackId)
+		{
+			WeSave.Data.LastTrackId = playId;
+			_menuAudioStarted = false;
+			Rebuild(playId: playId, play: true);
+			_menuAudioStarted = Active.Count > 0;
 		}
 
 		internal static void Silence()
@@ -156,6 +170,11 @@ namespace DieWithASmile.Engine.Audio
 			}
 
 			if (WePersist.MenuStillLoading) {
+				if (!_menuAudioStarted && WeSave.Data.Music == MusicKind.Custom && Active.Count > 0) {
+					StartPlayback();
+					_menuAudioStarted = true;
+				}
+
 				if (WeCustomAudio.HasOutput)
 					Update();
 				return;
@@ -329,10 +348,18 @@ namespace DieWithASmile.Engine.Audio
 				if (looped >= 0)
 					index = looped;
 			}
-			else if (_shuffle && !_loop)
+			else if (_shuffle && !_loop && string.IsNullOrEmpty(WeSave.Data.LastTrackId))
 				index = RandomIndex(_index);
 
 			PlayIndex(index);
+		}
+
+		private static string PreferredTrackId()
+		{
+			string saved = WeSave.Data.LastTrackId;
+			if (!string.IsNullOrEmpty(saved))
+				return saved;
+			return WeNestedPacks.DefaultTrackId;
 		}
 
 		private static void EnsureCustomMode()
@@ -354,6 +381,10 @@ namespace DieWithASmile.Engine.Audio
 			_paused = false;
 			_customRetryDelay = 0;
 			_mix = 1f;
+			if (!string.IsNullOrEmpty(Current.Id) && WeSave.Data.LastTrackId != Current.Id) {
+				WeSave.Data.LastTrackId = Current.Id;
+				WeSave.Save();
+			}
 			Main.newMusic = 0;
 			MuteVanilla();
 			if (!Current.Packed)

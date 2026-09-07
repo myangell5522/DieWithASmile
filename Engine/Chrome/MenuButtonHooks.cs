@@ -229,6 +229,13 @@ namespace DieWithASmile.Engine.Chrome
 				return;
 			}
 
+			if (WeMenuFont.Applies) {
+				WeMenuFont.Draw(
+					spriteBatch, spriteFont, text, position, paint, scale, origin,
+					rotation, effects, layerDepth, false);
+				return;
+			}
+
 			if (!wave || string.IsNullOrEmpty(text) || color.A < 16) {
 				spriteBatch.DrawString(spriteFont, text, position, paint, rotation, origin, scale, effects, layerDepth);
 				return;
@@ -267,6 +274,19 @@ namespace DieWithASmile.Engine.Chrome
 				}
 
 				return orig(spriteBatch, text, pos, paint, scale, anchorx, anchory, maxCharactersDisplayed);
+			}
+
+			if (WeMenuFont.Applies) {
+				var vanilla = FontAssets.DeathText.Value;
+				if (vanilla == null)
+					return orig(spriteBatch, text, pos, color, scale, anchorx, anchory, maxCharactersDisplayed);
+				if (maxCharactersDisplayed >= 0 && text != null && text.Length > maxCharactersDisplayed)
+					text = text.Substring(0, maxCharactersDisplayed);
+				Vector2 size = vanilla.MeasureString(text);
+				Vector2 origin = size * new Vector2(anchorx, anchory);
+				return WeMenuFont.Draw(
+					spriteBatch, vanilla, text, pos, color, scale, origin,
+					0f, SpriteEffects.None, 0f, true);
 			}
 
 			return orig(spriteBatch, text, pos, color, scale, anchorx, anchory, maxCharactersDisplayed);

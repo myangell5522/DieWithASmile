@@ -41,7 +41,7 @@ namespace DieWithASmile.Engine.Chrome
 			SoundEngine.PlaySound(SoundID.MenuTick);
 			switch (action) {
 				case WrenchAction.LogoPos:
-					LayoutEditor.Begin(SceneGraph.Logo);
+					LayoutEditor.Begin(SceneGraph.Logo, logoOnly: true);
 					WrenchToolbar.Collapse();
 					break;
 				case WrenchAction.Wallpaper:

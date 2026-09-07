@@ -49,6 +49,13 @@ namespace DieWithASmile.Engine.Chrome
 			MethodInfo themeInner = typeof(MenuLoader).GetMethod("UpdateAndDrawModMenuInner", flags);
 			if (themeInner != null)
 				MonoModHooks.Modify(themeInner, PatchThemeSwap);
+
+			On_ChatManager.DrawColorCodedStringWithShadow_SpriteBatch_DynamicSpriteFont_string_Vector2_Color_float_Vector2_Vector2_float_float += HideSwapStringHook;
+		}
+
+		public override void Unload()
+		{
+			On_ChatManager.DrawColorCodedStringWithShadow_SpriteBatch_DynamicSpriteFont_string_Vector2_Color_float_Vector2_Vector2_float_float -= HideSwapStringHook;
 		}
 
 		private void TryHook(MethodInfo method, Delegate hook)
@@ -59,12 +66,18 @@ namespace DieWithASmile.Engine.Chrome
 
 		private static bool Active => WeModMenu.OnTitle;
 
+		internal static bool HideSwap =>
+			WePanels.Covering || WeSplash.Visible || LayoutEditor.ShouldBlockThemeSwap;
+
 		private static void DrawTerrariaSocialHook(Action<Color, float> orig, Color color, float upBump)
 		{
 			if (!Active) {
 				orig(color, upBump);
 				return;
 			}
+
+			if (WePanels.Covering || WeSplash.Visible)
+				return;
 
 			if (!SceneGraph.Visible(SceneGraph.SocialTerraria))
 				return;
@@ -82,6 +95,9 @@ namespace DieWithASmile.Engine.Chrome
 				return;
 			}
 
+			if (WePanels.Covering || WeSplash.Visible)
+				return;
+
 			if (!SceneGraph.Visible(SceneGraph.SocialTml))
 				return;
 
@@ -97,6 +113,9 @@ namespace DieWithASmile.Engine.Chrome
 				orig(color, upBump);
 				return;
 			}
+
+			if (WePanels.Covering || WeSplash.Visible)
+				return;
 
 			if (!SceneGraph.Visible(SceneGraph.Version) || LayoutEditor.Editing)
 				return;
@@ -120,6 +139,9 @@ namespace DieWithASmile.Engine.Chrome
 				orig(color);
 				return;
 			}
+
+			if (WePanels.Covering || WeSplash.Visible)
+				return;
 
 			if (!SceneGraph.Visible(SceneGraph.News) || LayoutEditor.Editing)
 				return;
@@ -168,7 +190,7 @@ namespace DieWithASmile.Engine.Chrome
 
 		private static void OffsetModMenuHook(Action<int> orig, int offset)
 		{
-			if (Active && (LayoutEditor.ShouldBlockThemeSwap || WeSplash.Visible || WePanels.Covering))
+			if (Active && HideSwap)
 				return;
 			orig(offset);
 		}
@@ -203,11 +225,8 @@ namespace DieWithASmile.Engine.Chrome
 			if (!Active)
 				return;
 
-			if (!SceneGraph.Visible(SceneGraph.ThemeSwap) || LayoutEditor.ShouldBlockThemeSwap) {
-				rectangle = Rectangle.Empty;
-				_themeHitbox = rectangle;
+			if (HideSwap || !SceneGraph.Visible(SceneGraph.ThemeSwap))
 				return;
-			}
 
 			if (!SceneGraph.Get(SceneGraph.ThemeSwap).Customized)
 				return;
@@ -220,7 +239,7 @@ namespace DieWithASmile.Engine.Chrome
 			_themeHitbox = rectangle;
 		}
 
-		private static Vector2 DrawThemeSwap(
+		internal static Vector2 DrawThemeSwap(
 			SpriteBatch spriteBatch,
 			DynamicSpriteFont font,
 			string text,
@@ -232,17 +251,43 @@ namespace DieWithASmile.Engine.Chrome
 			float maxWidth,
 			float spread)
 		{
-			if (!Active || LayoutEditor.ShouldBlockThemeSwap || !SceneGraph.Visible(SceneGraph.ThemeSwap)) {
-				if (!Active)
-					return ChatManager.DrawColorCodedStringWithShadow(spriteBatch, font, text, position, color, rotation, origin, baseScale, maxWidth, spread);
+			if (!Active)
+				return ChatManager.DrawColorCodedStringWithShadow(spriteBatch, font, text, position, color, rotation, origin, baseScale, maxWidth, spread);
+
+			if (HideSwap || !SceneGraph.Visible(SceneGraph.ThemeSwap))
 				return position;
-			}
 
 			Vector2 pos = SceneGraph.Get(SceneGraph.ThemeSwap).Customized
 				? new Vector2(_themeHitbox.X, _themeHitbox.Y)
 				: position;
 			ChatManager.DrawColorCodedStringWithShadow(spriteBatch, font, text, pos, color, 0f, Vector2.Zero, baseScale, maxWidth, spread);
 			return position;
+		}
+
+		internal static bool IsSwapLabel(string text)
+		{
+			if (string.IsNullOrEmpty(text))
+				return false;
+			string prefix = Language.GetTextValue("tModLoader.ModMenuSwap");
+			return !string.IsNullOrEmpty(prefix) && text.StartsWith(prefix, StringComparison.Ordinal);
+		}
+
+		private static Vector2 HideSwapStringHook(
+			On_ChatManager.orig_DrawColorCodedStringWithShadow_SpriteBatch_DynamicSpriteFont_string_Vector2_Color_float_Vector2_Vector2_float_float orig,
+			SpriteBatch spriteBatch,
+			DynamicSpriteFont font,
+			string text,
+			Vector2 position,
+			Color baseColor,
+			float rotation,
+			Vector2 origin,
+			Vector2 baseScale,
+			float maxWidth,
+			float spread)
+		{
+			if (HideSwap && IsSwapLabel(text))
+				return position;
+			return orig(spriteBatch, font, text, position, baseColor, rotation, origin, baseScale, maxWidth, spread);
 		}
 	}
 }

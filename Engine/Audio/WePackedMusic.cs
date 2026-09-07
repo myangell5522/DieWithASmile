@@ -14,18 +14,28 @@ namespace DieWithASmile.Engine.Audio
 
 		internal static IReadOnlyList<MenuTrack> Tracks => Packed;
 
+		internal static void ForceExtract(Mod mod)
+		{
+			_extracted = false;
+			Packed.Clear();
+			EnsureExtracted(mod);
+		}
+
 		internal static void EnsureExtracted(Mod mod)
 		{
-			if (_extracted)
-				return;
-
-			_extracted = true;
 			WeSave.EnsureFolders();
-			Packed.Clear();
 			if (mod == null)
 				return;
 
+			if (!_extracted) {
+				_extracted = true;
+				Packed.Clear();
+			}
+
 			foreach (var built in CalamitasMenuPlaylist.BuiltIn) {
+				if (Packed.Exists(track => track.Id == built.Id))
+					continue;
+
 				string dest = Extract(mod, built.Path);
 				if (string.IsNullOrEmpty(dest))
 					continue;

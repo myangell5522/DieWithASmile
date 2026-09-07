@@ -102,7 +102,8 @@ namespace DieWithASmile.Content
 				MethodInfo updateMenu = menuSystem.GetMethod("UpdateMenu", BindingFlags.Public | BindingFlags.Static);
 				if (updateMenu != null)
 					MonoModHooks.Add(updateMenu, (Action orig) => {
-						orig();
+						if (!HideCoolerMenuButtons())
+							orig();
 						if (MenuLoader.CurrentMenu is DieWithASmileCalamitasMenu menu)
 							menu.Tick();
 					});

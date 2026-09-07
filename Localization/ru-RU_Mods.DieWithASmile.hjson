@@ -45,7 +45,7 @@ UI: {
 	SceneMeadow: Last meeting
 	SceneYharim: Yharim Never Die
 	SceneWitch: Witch of Supreme Memories
-	SceneSoul: The Soul of the Universe
+	SceneFreedom: Entropy of Freedom
 	VanillaForest: Лес
 	VanillaCorruption: Искажение
 	VanillaCrimson: Багрянец
@@ -82,7 +82,7 @@ UI: {
 	WePromoBody: Новый мод без ограничений и с расширенным функционалом — обои, музыка, логотипы и виджеты.
 	WePromoButton: Мастерская
 	Wrench: Настроить меню
-	BtnLogoPos: Положение лого
+	BtnLogoPos: Только лого
 	BtnWallpaper: Изменить обои
 	BtnMusic: Изменить музыку
 	BtnWidgets: Виджеты
@@ -94,10 +94,13 @@ UI: {
 	Splash1: Сначала всё как в обычном tModLoader. Любое изменение — по желанию.
 	Splash2: Круг между кнопками меню и сменой темы открывает обои, музыку, лого, виджеты и расстановку.
 	Splash3: Плеер, часы, приветствие, фаза луны или сервер Discord — как виджеты. Одним нажатием прячутся версии и соцсети. Любой элемент можно двигать, масштабировать или скрыть.
+	Splash4: Блокировка Calamity Entropy больше не действует — оба мода можно держать включёнными.
 	GotIt: Понятно
 	DontShow: Больше не показывать
 	CancelLayout: Отмена
 	ResetVanilla: Вернуть ваниль
+	ResetLogo: Сбросить лого
+	LogoEditHint: Двигай только лого. Колёсико меняет размер. Остальное не трогается.
 	SnapCenter: Центр
 	HiddenLayers: Скрытые элементы
 	Restore: Вернуть
@@ -154,8 +157,8 @@ UI: {
 	OpenFolder: Открыть папку
 	VanillaLogo: Лого tModLoader
 	HideLogo: Скрыть лого
-	LogoWatermelon1: Watermelon 1
-	LogoWatermelon2: Watermelon 2
+	LogoWatermelon1: Watermelono Punches
+	LogoWatermelon2: Watermelono Mouth
 	LogoBlueArchive: Blue Archive Style
 	LogoFromPack: Die With A Smile
 	CenterImage: По центру
@@ -281,4 +284,8 @@ UI: {
 	ToastFont: Шрифт применён
 	ToastFontFail: Не удалось загрузить шрифт
 	ToastFontGone: Шрифт удалён
+	ResetFactory: Сбросить мод к начальным настройкам
+	ResetFactoryHint: Вернёт Entropy of Freedom, логотип пака, левое меню, нижнюю панель и встроенный плейлист. Удалит ваши картинки, загруженную музыку, шрифты и пресеты.
+	ResetFactorySure: Нажми ещё раз для подтверждения
+	ToastFactoryReset: Мод сброшен к начальным настройкам
 }

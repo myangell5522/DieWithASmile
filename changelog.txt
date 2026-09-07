@@ -1,3 +1,68 @@
+Version 3.0.4
+
+Title
+- Calamity Entropy Vortex and Church themes show in the borrow list again (their dummy blank sky no longer hides them, and they are found even if tModLoader's menu list skipped them).
+- If a borrowed live sky fails to paint, the still preview is used instead of a black screen.
+
+Version 3.0.3
+
+Title
+- Other mods' logos and skies show up again when a big pack like Calamity Overhaul is loaded.
+- Calamity Overhaul's new Himayo (3D) and Shenyo (animated) menus can be borrowed as skies without wiping the rest of the gallery.
+
+Version 3.0.2
+
+Title
+- Entropy of Freedom is the actual starter wallpaper again (it no longer fell back to Calamitas after a scan/reset/update).
+- The Freedom scene appears immediately, without a Calamitas flash.
+- New players, this update, and factory reset all start Freedom wallpaper plus Entropy of Freedom music.
+
+Version 2.8.4
+
+Title
+- The mouse cursor is no longer drawn twice on the main title (a ghost offset down-right).
+- "Move logo" only moves the logo. "Move elements" still edits the full layout.
+
+Settings
+- The extra "Main Menu Music" slider is gone from title and in-game Volume.
+- Client settings now has a factory reset at the bottom (second click confirms). It restores the starter look and deletes your pictures, music, fonts, and looks.
+
+Backgrounds
+- The Soul of the Universe is retired.
+- New packed scene: Entropy of Freedom — full-sky layers, mouse parallax, slow independent bob, and letterbox bars (#72ABF5) with drifting clouds. Characters overlap the bars.
+- First-time install now starts on Entropy of Freedom with the watermelon logo.
+
+Logos
+- Duplicate Hands / Sticker pack logos are removed.
+- Watermelon 1 is Watermelono Punches; Watermelon 2 is Watermelono Mouth.
+
+Help
+- The first-run tip now says Calamity Entropy is no longer blocked.
+
+Player
+- Packed playlist includes "Entropy of Freedom". Follow-music also watches the live Wallpaper Engine player.
+
+Version 2.8.3
+
+Title
+- Entropy Vortex and Church skies keep rain, swirl, and cliffs, and the ENTROPY / Logool wordmark is dropped even when that texture is huge.
+- "Switch Menu Theme" no longer pops in the top-left while wallpaper, logo, widget, or music panels are open.
+
+Look
+- A custom menu font (and width/height scale) now follows Settings, Volume, character/world select, and other sub-menus. Achievements and Workshop stay on the default font.
+
+Workshop
+- The Wallpaper Engine download promo strip is gone from the Workshop Hub, so the normal description text is visible again.
+
+Version 2.8.2
+
+Title
+- The mouse cursor stays on top of wrench panels and splash instead of disappearing into them.
+- Clicks no longer go through an open panel into Single Player / CoolerMenu / theme swap underneath.
+
+Backgrounds
+- Both Calamity Entropy title skies (Vortex and Church) draw again. The filter only drops their Logo / Logool mark, not the rain, cliffs, or swirl layers.
+
 Version 2.8.1
 
 Title

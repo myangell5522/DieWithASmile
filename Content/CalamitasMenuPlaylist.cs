@@ -63,6 +63,11 @@ namespace DieWithASmile.Content
 				Title = "Come Along with Me",
 				Artist = "Ashley Eriksson",
 				CoverArtist = "Ariela"
+			},
+			new() {
+				Id = "freedom",
+				Path = "Assets/Music/EntropyOfFreedomMenu",
+				Title = "Entropy of Freedom"
 			}
 		};
 

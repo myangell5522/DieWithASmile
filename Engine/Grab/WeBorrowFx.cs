@@ -150,7 +150,7 @@ namespace DieWithASmile.Engine.Grab
 					}
 				}
 
-				return true;
+				return pass != Pass.Sky || _painted;
 			}
 			catch {
 				return false;
@@ -233,6 +233,10 @@ namespace DieWithASmile.Engine.Grab
 			if (tex == null)
 				return true;
 
+			Rectangle? destBox = hasDest ? dest : null;
+			if (_pass == Pass.Sky && IsBorrowedTitleMark(tex, pos, destBox))
+				return false;
+
 			if (WeInspect.IsFillPixel(tex) && !hasDest) {
 				bool fillCover = IsCover(tex, pos, scale, null);
 				if (_pass == Pass.Sky) {
@@ -243,7 +247,7 @@ namespace DieWithASmile.Engine.Grab
 				return !fillCover;
 			}
 
-			bool screen = tex is RenderTarget2D || IsCover(tex, pos, scale, hasDest ? dest : null);
+			bool screen = tex is RenderTarget2D || IsCover(tex, pos, scale, destBox);
 			if (screen) {
 				if (_pass == Pass.Sky) {
 					_painted = true;
@@ -253,7 +257,7 @@ namespace DieWithASmile.Engine.Grab
 				return false;
 			}
 
-			if (IsThemeLogo(tex) || (_pass == Pass.Sky && IsSkyTitleMark(tex, pos, scale, dest, hasDest))) {
+			if (IsThemeLogo(tex)) {
 				if (_pass == Pass.Sky)
 					return false;
 				KeepLogo(ref pos, ref scale, ref dest, hasDest, ref color);
@@ -273,6 +277,13 @@ namespace DieWithASmile.Engine.Grab
 			return false;
 		}
 
+		private static bool IsBorrowedTitleMark(Texture2D tex, Vector2 pos, Rectangle? dest)
+		{
+			if (IsThemeLogo(tex))
+				return true;
+			return NearLogo(pos, dest) && WeInspect.IsWordmark(tex);
+		}
+
 		private static bool IsThemeLogo(Texture2D tex)
 		{
 			if (tex == null)
@@ -288,37 +299,25 @@ namespace DieWithASmile.Engine.Grab
 			catch {
 			}
 
+			if (IsLogoFileLeaf(name))
+				return true;
 			return WeInspect.LooksLikeLogoName(name) && !WeInspect.LooksLikeSceneName(name);
 		}
 
-		private static bool IsSkyTitleMark(Texture2D tex, Vector2 pos, Vector2 scale, Rectangle dest, bool hasDest)
+		private static bool IsLogoFileLeaf(string name)
 		{
-			if (tex == null || WeInspect.IsFillPixel(tex) || tex is RenderTarget2D || WeInspect.IsIcon(tex))
-				return false;
-			if (IsCover(tex, pos, scale, hasDest ? dest : null))
+			if (string.IsNullOrEmpty(name))
 				return false;
 
-			string name = "";
-			try {
-				name = tex.Name ?? "";
-			}
-			catch {
-			}
-
-			if (WeInspect.LooksLikeSceneName(name))
-				return false;
-			if (WeInspect.LooksLikeLogoName(name))
-				return true;
-			if (!WeInspect.IsLogo(tex, name) && !WeInspect.IsWordmark(tex))
-				return false;
-
-			int w = hasDest ? dest.Width : Math.Max(1, (int)(tex.Width * Math.Abs(scale.X)));
-			int h = hasDest ? dest.Height : Math.Max(1, (int)(tex.Height * Math.Abs(scale.Y)));
-			if (w < 140 || h >= Main.screenHeight * 0.58f)
-				return false;
-			if (w / (float)Math.Max(1, h) < 1.5f)
-				return false;
-			return NearLogo(pos, hasDest ? dest : null);
+			string leaf = name;
+			int slash = Math.Max(name.LastIndexOf('/'), name.LastIndexOf('\\'));
+			if (slash >= 0 && slash < name.Length - 1)
+				leaf = name[(slash + 1)..];
+			int dot = leaf.LastIndexOf('.');
+			if (dot > 0)
+				leaf = leaf[..dot];
+			return leaf.Equals("Logo", StringComparison.OrdinalIgnoreCase) ||
+			       leaf.Equals("Logool", StringComparison.OrdinalIgnoreCase);
 		}
 
 		private static bool IsSkyTitleText(string text)
@@ -327,21 +326,8 @@ namespace DieWithASmile.Engine.Grab
 				return false;
 
 			string t = text.Trim();
-			if (t.Equals("ENTROPY", StringComparison.OrdinalIgnoreCase) ||
-			    t.Equals("Calamity Entropy", StringComparison.OrdinalIgnoreCase))
-				return true;
-			if (t.Contains('\n') || t.Contains('%') || t.Contains(':') || t.Length is < 4 or > 18)
-				return false;
-
-			int spaces = 0;
-			foreach (char c in t) {
-				if (c == ' ')
-					spaces++;
-				else if (!char.IsLetter(c) || char.IsLower(c))
-					return false;
-			}
-
-			return spaces <= 1;
+			return t.Equals("ENTROPY", StringComparison.OrdinalIgnoreCase) ||
+			       t.Equals("Calamity Entropy", StringComparison.OrdinalIgnoreCase);
 		}
 
 		private static Vector2 DrawBorderStringHook(

@@ -37,6 +37,7 @@ namespace DieWithASmile.Engine.Layout
 		private static bool _z;
 		private static bool _del;
 		private static int _blockTheme;
+		private static bool _logoOnly;
 
 		internal static bool Editing => _editing;
 		internal static bool Busy => _dragging || _panning;
@@ -53,12 +54,16 @@ namespace DieWithASmile.Engine.Layout
 			_dim = 0f;
 		}
 
-		internal static void Begin(string focus = "")
+		internal static void Begin(string focus = "", bool logoOnly = false)
 		{
 			WePanels.Close();
 			Work.Clear();
 			BeginSnap.Clear();
+			_logoOnly = logoOnly;
 			foreach (string id in SceneGraph.Ids) {
+				if (logoOnly && id != SceneGraph.Logo)
+					continue;
+
 				WeElementRecord live = Clone(SceneGraph.Find(id) ?? SceneGraph.DefaultRecord(id));
 				if (!live.Customized) {
 					Vector2 px = SceneGraph.DefaultPixel(id);
@@ -66,13 +71,18 @@ namespace DieWithASmile.Engine.Layout
 					live.AnchorY = pixelY(px.Y);
 				}
 
+				if (logoOnly)
+					live.Visible = true;
+
 				Work[id] = Clone(live);
 				BeginSnap[id] = Clone(live);
 			}
 
 			_workPan = WeSettings.WallpaperPan;
 			_editing = true;
-			_selected = SceneGraph.Visible(focus) ? focus : "";
+			_selected = logoOnly || SceneGraph.Visible(focus) ? (string.IsNullOrEmpty(focus) ? SceneGraph.Logo : focus) : "";
+			if (logoOnly)
+				_selected = SceneGraph.Logo;
 			_blockTheme = 12;
 			SoundEngine.PlaySound(SoundID.MenuOpen);
 		}
@@ -97,7 +107,8 @@ namespace DieWithASmile.Engine.Layout
 				live.Scale = record.Scale;
 			}
 
-			WeSettings.SaveWallpaperPan(_workPan);
+			if (!_logoOnly)
+				WeSettings.SaveWallpaperPan(_workPan);
 			WeSave.Save();
 			_editing = false;
 			_blockTheme = 12;
@@ -112,6 +123,7 @@ namespace DieWithASmile.Engine.Layout
 				SoundEngine.PlaySound(SoundID.MenuClose);
 			_editing = false;
 			_selected = "";
+			_logoOnly = false;
 			Work.Clear();
 		}
 
@@ -156,7 +168,7 @@ namespace DieWithASmile.Engine.Layout
 			_z = z;
 
 			bool del = Main.keyState.IsKeyDown(Keys.Delete);
-			if (del && !_del)
+			if (del && !_del && !_logoOnly)
 				HideSelected();
 			_del = del;
 
@@ -203,7 +215,7 @@ namespace DieWithASmile.Engine.Layout
 					return;
 				}
 
-			if (WeSettings.Current.Wallpaper == WallpaperKind.Image && WeArt.TryGetWallpaper(out _)) {
+			if (!_logoOnly && WeSettings.Current.Wallpaper == WallpaperKind.Image && WeArt.TryGetWallpaper(out _)) {
 					_panning = true;
 					_lastMouse = new Vector2(Main.mouseX, Main.mouseY);
 					WeInput.LockHold(ref _holdLock);
@@ -224,7 +236,7 @@ namespace DieWithASmile.Engine.Layout
 
 			Color idle = WeAccent.Mid * (0.75f * fade);
 			Color hot = WeAccent.Hover * fade;
-			foreach (string id in SceneGraph.VisibleIds()) {
+			foreach (string id in EditIds()) {
 				Rectangle hit = SceneGraph.Hit(id);
 				DrawBox(spriteBatch, hit, id == _selected || id == HitTest() ? hot : idle);
 			}
@@ -232,7 +244,16 @@ namespace DieWithASmile.Engine.Layout
 			DrawCenterGuides(spriteBatch, fade);
 			DrawToolbar(spriteBatch, fade);
 
-			if (WeSettings.Current.Wallpaper == WallpaperKind.Image || WeSettings.SelectedLayer() is { Kind: WeLayerKind.Image }) {
+			if (_logoOnly) {
+				var font = FontAssets.MouseText.Value;
+				string hint = WeText.UI("LogoEditHint");
+				Vector2 size = font.MeasureString(hint) * 0.72f;
+				ChatManager.DrawColorCodedStringWithShadow(
+					spriteBatch, font, hint,
+					new Vector2((Main.screenWidth - size.X) * 0.5f, 22f),
+					new Color(255, 236, 236) * fade, 0f, Vector2.Zero, new Vector2(0.72f));
+			}
+			else if (WeSettings.Current.Wallpaper == WallpaperKind.Image || WeSettings.SelectedLayer() is { Kind: WeLayerKind.Image }) {
 				var font = FontAssets.MouseText.Value;
 				string pan = WeText.UI("DragToPan");
 				Vector2 size = font.MeasureString(pan) * 0.72f;
@@ -286,10 +307,14 @@ namespace DieWithASmile.Engine.Layout
 			else if (cancel.Contains(Main.mouseX, Main.mouseY))
 				Cancel(true);
 			else if (reset.Contains(Main.mouseX, Main.mouseY)) {
-				WeSettings.ResetVanillaTheme();
-				WePlaylist.OnThemeSelected();
-				WeToast.Show("ToastReset");
-				Begin();
+				if (_logoOnly)
+					ResetLogoWork();
+				else {
+					WeSettings.ResetVanillaTheme();
+					WePlaylist.OnThemeSelected();
+					WeToast.Show("ToastReset");
+					Begin();
+				}
 			}
 
 			WeInput.LockHold(ref _holdLock);
@@ -304,7 +329,7 @@ namespace DieWithASmile.Engine.Layout
 		{
 			DrawChip(spriteBatch, SaveHit(), WeText.UI("SaveLayout"), fade);
 			DrawChip(spriteBatch, CancelHit(), WeText.UI("CancelLayout"), fade);
-			DrawChip(spriteBatch, ResetHit(), WeText.UI("ResetVanilla"), fade);
+			DrawChip(spriteBatch, ResetHit(), WeText.UI(_logoOnly ? "ResetLogo" : "ResetVanilla"), fade);
 		}
 
 		private static void DrawChip(SpriteBatch spriteBatch, Rectangle hit, string text, float fade)
@@ -334,12 +359,38 @@ namespace DieWithASmile.Engine.Layout
 
 		private static string HitTest()
 		{
-			foreach (string id in SceneGraph.VisibleIds()) {
+			foreach (string id in EditIds()) {
 				if (SceneGraph.Hit(id).Contains(Main.mouseX, Main.mouseY))
 					return id;
 			}
 
 			return "";
+		}
+
+		private static IEnumerable<string> EditIds()
+		{
+			if (_logoOnly) {
+				yield return SceneGraph.Logo;
+				yield break;
+			}
+
+			foreach (string id in SceneGraph.VisibleIds())
+				yield return id;
+		}
+
+		private static void ResetLogoWork()
+		{
+			if (!Work.TryGetValue(SceneGraph.Logo, out WeElementRecord record))
+				return;
+
+			PushUndo();
+			Vector2 px = SceneGraph.DefaultPixel(SceneGraph.Logo);
+			record.Customized = false;
+			record.Visible = true;
+			record.Scale = 1f;
+			record.AnchorX = pixelX(px.X);
+			record.AnchorY = pixelY(px.Y);
+			_selected = SceneGraph.Logo;
 		}
 
 		private static void BeginDrag(string id)

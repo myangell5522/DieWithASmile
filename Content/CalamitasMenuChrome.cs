@@ -15,6 +15,8 @@ using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.UI.Chat;
+using DieWithASmile.Engine.Chrome;
+using DieWithASmile.Engine.Content;
 
 namespace DieWithASmile.Content
 {
@@ -49,7 +51,7 @@ namespace DieWithASmile.Content
 			CoolerMenuCompat.OnTitleLike &&
 			(MenuLoader.CurrentMenu is DieWithASmileCalamitasMenu || CalamitasMenuForeign.HoldingCurrent);
 
-		private static bool HostLegacy => Active && !Engine.Content.WeModMenu.OnTitle;
+		private static bool HostLegacy => Active && !WeModMenu.OnTitle;
 
 		public override void Load()
 		{
@@ -377,7 +379,7 @@ namespace DieWithASmile.Content
 
 		private static void OffsetModMenuHook(Action<int> orig, int offset)
 		{
-			if (CalamitasMenuLayout.ShouldBlockThemeSwap)
+			if (CalamitasMenuLayout.ShouldBlockThemeSwap || MenuChrome.HideSwap)
 				return;
 
 			orig(offset);
@@ -459,6 +461,12 @@ namespace DieWithASmile.Content
 			float maxWidth,
 			float spread)
 		{
+			if (MenuChrome.HideSwap)
+				return position;
+
+			if (WeModMenu.OnTitle)
+				return MenuChrome.DrawThemeSwap(spriteBatch, font, text, position, color, rotation, origin, baseScale, maxWidth, spread);
+
 			if (!HostLegacy) {
 				return ChatManager.DrawColorCodedStringWithShadow(
 					spriteBatch, font, text, position, color, rotation, origin, baseScale, maxWidth, spread);

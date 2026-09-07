@@ -71,6 +71,8 @@ namespace DieWithASmile.Content
 
 		internal static void Reset() => _scene = 0f;
 
+		internal static void Snap(bool on) => _scene = on ? 1f : 0f;
+
 		internal static void Update()
 		{
 			float target = DieWithASmileSettings.UseMeadowScene ? 1f : 0f;

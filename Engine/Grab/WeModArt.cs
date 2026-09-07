@@ -17,6 +17,8 @@ namespace DieWithASmile.Engine.Grab
 		private static readonly Dictionary<string, string[]> FilesByMod = new(StringComparer.Ordinal);
 		private static readonly HashSet<string> Missing = new(StringComparer.Ordinal);
 
+		private static readonly HashSet<string> PrimedHost = new(StringComparer.Ordinal);
+		private static Vector2 _overhaulMouse;
 		private static FieldInfo _menuField;
 		private static FieldInfo _riftIntensity;
 		private static readonly Color RiftTop = new(27, 27, 39);
@@ -27,6 +29,7 @@ namespace DieWithASmile.Engine.Grab
 			Assets.Clear();
 			FilesByMod.Clear();
 			Missing.Clear();
+			PrimedHost.Clear();
 			_menuField = null;
 			_riftIntensity = null;
 		}
@@ -39,12 +42,60 @@ namespace DieWithASmile.Engine.Grab
 			return NameHas(SafeTitle(menu), "Paradise's Shining", "Paradise Shining");
 		}
 
-		internal static bool HasHostSky(ModMenu menu) =>
-			TypeName(menu) is "AvatarRiftSkyMainMenu";
+		internal static bool HasHostSky(ModMenu menu)
+		{
+			string type = TypeName(menu);
+			return type is "AvatarRiftSkyMainMenu" or "HimayoMenu" or "ShenyoMenu";
+		}
+
+		internal static bool IsEntropyMenu(ModMenu menu)
+		{
+			if (menu == null)
+				return false;
+
+			string type = TypeName(menu);
+			if (type is "EModMenu" or "EModMenuAlt")
+				return true;
+
+			try {
+				string ns = menu.GetType().Namespace ?? "";
+				return ns.StartsWith("CalamityEntropy.Content.Menu", StringComparison.Ordinal);
+			}
+			catch {
+				return false;
+			}
+		}
+
+		internal static bool HasPackedSky(ModMenu menu) =>
+			menu != null && (IsEntropyMenu(menu) || HasHostSky(menu));
+
+		internal static bool IsDummyStyle(ModSurfaceBackgroundStyle style)
+		{
+			if (style == null)
+				return false;
+
+			try {
+				Type type = style.GetType();
+				string ns = type.Namespace ?? "";
+				return type.Name == "MenuBack" && ns.Contains("CalamityEntropy", StringComparison.Ordinal);
+			}
+			catch {
+				return false;
+			}
+		}
 
 		internal static void PrimeLiveSky(ModMenu menu)
 		{
-			if (menu == null || TypeName(menu) is not "XAscentMainNenu")
+			if (menu == null)
+				return;
+
+			string type = TypeName(menu);
+			if (type is "HimayoMenu" or "ShenyoMenu") {
+				PrimeOverhaul(menu, type);
+				return;
+			}
+
+			if (type is not "XAscentMainNenu")
 				return;
 
 			try {
@@ -64,6 +115,12 @@ namespace DieWithASmile.Engine.Grab
 			if (menu == null || !HasHostSky(menu))
 				return;
 
+			string type = TypeName(menu);
+			if (type is "HimayoMenu" or "ShenyoMenu") {
+				TickOverhaul(menu, type);
+				return;
+			}
+
 			try {
 				if (RiftSkyInstance() is not CustomSky sky)
 					return;
@@ -79,6 +136,10 @@ namespace DieWithASmile.Engine.Grab
 		{
 			if (menu == null || !HasHostSky(menu) || spriteBatch == null)
 				return false;
+
+			string type = TypeName(menu);
+			if (type is "HimayoMenu" or "ShenyoMenu")
+				return TryDrawOverhaul(spriteBatch, menu, type);
 
 			WeDraw.DrawVerticalGradient(spriteBatch, WeDraw.CoverRect, RiftTop, RiftBottom, 1f);
 
@@ -136,6 +197,122 @@ namespace DieWithASmile.Engine.Grab
 				"currentMenu",
 				BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
 
+		private static void PrimeOverhaul(ModMenu menu, string type)
+		{
+			if (!PrimedHost.Add(type))
+				return;
+
+			try {
+				if (type == "HimayoMenu") {
+					InvokeOverhaul(menu, "CalamityOverhaul.Content.MainMenus.Himayo.HimayoMenuCamera", "Reset");
+					InvokeOverhaul(menu, "CalamityOverhaul.Content.MainMenus.Himayo.HimayoPetalField", "Reset");
+					SetOverhaulFloat(menu, "CalamityOverhaul.Content.MainMenus.Himayo.HimayoMenuOverride", "fade", 1f);
+				}
+				else {
+					InvokeOverhaul(menu, "CalamityOverhaul.Content.MainMenus.Shenyo.ShenyoGhostLakeScene", "Reset");
+					SetOverhaulFloat(menu, "CalamityOverhaul.Content.MainMenus.Shenyo.ShenyoMenuOverride", "fade", 1f);
+				}
+			}
+			catch {
+			}
+		}
+
+		private static void TickOverhaul(ModMenu menu, string type)
+		{
+			try {
+				Vector2 mouse = new(Main.mouseX, Main.mouseY);
+				Vector2 vel = mouse - _overhaulMouse;
+				_overhaulMouse = mouse;
+				if (type == "HimayoMenu") {
+					SetOverhaulFloat(menu, "CalamityOverhaul.Content.MainMenus.Himayo.HimayoMenuOverride", "fade", 1f);
+					InvokeOverhaul(menu, "CalamityOverhaul.Content.MainMenus.Himayo.HimayoMenuCamera", "Tick");
+					InvokeOverhaul(menu, "CalamityOverhaul.Content.MainMenus.Himayo.HimayoPetalField", "Tick", false, mouse, vel, false);
+				}
+				else {
+					SetOverhaulFloat(menu, "CalamityOverhaul.Content.MainMenus.Shenyo.ShenyoMenuOverride", "fade", 1f);
+					InvokeOverhaul(menu, "CalamityOverhaul.Content.MainMenus.Shenyo.ShenyoGhostLakeScene", "Tick");
+				}
+			}
+			catch {
+			}
+		}
+
+		private static bool TryDrawOverhaul(SpriteBatch spriteBatch, ModMenu menu, string type)
+		{
+			GraphicsDevice device = null;
+			try {
+				device = Main.instance?.GraphicsDevice;
+				string overrideType = type == "HimayoMenu"
+					? "CalamityOverhaul.Content.MainMenus.Himayo.HimayoMenuOverride"
+					: "CalamityOverhaul.Content.MainMenus.Shenyo.ShenyoMenuOverride";
+				SetOverhaulFloat(menu, overrideType, "fade", 1f);
+				InvokeOverhaul(menu, overrideType, "DrawAtmosphereLayer");
+				return true;
+			}
+			catch {
+				return false;
+			}
+			finally {
+				try {
+					device?.SetRenderTarget(null);
+				}
+				catch {
+				}
+
+				try {
+					if (device != null) {
+						device.Textures[0] = null;
+						device.Textures[1] = null;
+					}
+				}
+				catch {
+				}
+			}
+		}
+
+		private static Type OverhaulType(ModMenu menu, string typeName)
+		{
+			try {
+				Type type = menu.GetType().Assembly.GetType(typeName);
+				if (type != null)
+					return type;
+			}
+			catch {
+			}
+
+			try {
+				if (ModLoader.TryGetMod("CalamityOverhaul", out Mod mod))
+					return mod.Code?.GetType(typeName);
+			}
+			catch {
+			}
+
+			return null;
+		}
+
+		private static void InvokeOverhaul(ModMenu menu, string typeName, string method, params object[] args)
+		{
+			Type type = OverhaulType(menu, typeName);
+			if (type == null)
+				return;
+
+			int count = args?.Length ?? 0;
+			const BindingFlags flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+			foreach (MethodInfo info in type.GetMethods(flags)) {
+				if (info.Name != method || info.GetParameters().Length != count)
+					continue;
+				info.Invoke(null, count > 0 ? args : null);
+				return;
+			}
+		}
+
+		private static void SetOverhaulFloat(ModMenu menu, string typeName, string field, float value)
+		{
+			OverhaulType(menu, typeName)
+				?.GetField(field, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
+				?.SetValue(null, value);
+		}
+
 		private static void SetRiftIntensity(float value)
 		{
 			try {
@@ -191,6 +368,9 @@ namespace DieWithASmile.Engine.Grab
 					return tex;
 			}
 
+			if (IsEntropyMenu(menu) || HasHostSky(menu))
+				return null;
+
 			return FirstPacked(menu, sky: true, preview: false);
 		}
 
@@ -209,6 +389,9 @@ namespace DieWithASmile.Engine.Grab
 					return tex;
 			}
 
+			if (IsEntropyMenu(menu) || HasHostSky(menu))
+				return null;
+
 			return FirstPacked(menu, sky: true, preview: true);
 		}
 
@@ -223,6 +406,9 @@ namespace DieWithASmile.Engine.Grab
 					return tex;
 			}
 
+			if (IsEntropyMenu(menu))
+				return null;
+
 			return FirstPacked(menu, sky: false, preview: false);
 		}
 
@@ -235,6 +421,9 @@ namespace DieWithASmile.Engine.Grab
 					return true;
 			}
 
+			if (IsEntropyMenu(menu) || HasHostSky(menu))
+				return false;
+
 			return PackedPending(menu, sky: true);
 		}
 
@@ -246,6 +435,9 @@ namespace DieWithASmile.Engine.Grab
 				if (Pending(SafeMod(menu), path))
 					return true;
 			}
+
+			if (IsEntropyMenu(menu))
+				return false;
 
 			return PackedPending(menu, sky: false);
 		}
@@ -275,6 +467,8 @@ namespace DieWithASmile.Engine.Grab
 			string type = TypeName(menu);
 			if (type is "CalamityMainMenu" or "CalamityMainMenu_Classic")
 				yield return "MainMenu/Logo";
+			if (type is "EModMenu" or "EModMenuAlt")
+				yield return "Assets/Extra/Logo";
 
 			if (IsCatalyst(menu)) {
 				yield return "Assets/Backgrounds/MainMenu/CatstrageldonLogo";
@@ -307,6 +501,26 @@ namespace DieWithASmile.Engine.Grab
 					yield return "Assets/Textures/Map/AvatarUniverseExplorationMapBackground";
 					yield return "NoxusBoss/Assets/Textures/Map/AvatarUniverseExplorationMapBackground";
 					yield break;
+				case "EModMenu":
+					yield return "Assets/Extra/menu/VoidVortex";
+					yield return "Assets/Extra/menu/layer2";
+					yield return "Assets/Extra/menu/layer3";
+					yield return "Assets/Extra/menu/layer4";
+					yield break;
+				case "EModMenuAlt":
+					yield return "Assets/Extra/menu/menu2/1";
+					yield return "Assets/Extra/menu/menu2/2";
+					yield return "Assets/Extra/menu/menu2/3";
+					yield return "Assets/Extra/menu/menu2/7";
+					yield break;
+				case "HimayoMenu":
+					yield return "Assets/ADV/Himayo/HimayoEquirectangular";
+					yield return "Assets/MainMenus/Himayo/AsuENoKakehashi";
+					yield break;
+				case "ShenyoMenu":
+					yield return "Assets/MainMenus/Shenyo/YumeNoKizahashi";
+					yield return "Assets/ADV/Shenyo/Shenyo";
+					yield break;
 				case "CalamityMainMenu":
 					yield return "MainMenu/ModernMenuBackground";
 					yield break;
@@ -329,6 +543,14 @@ namespace DieWithASmile.Engine.Grab
 				yield return "MainMenu/ClassicMenuBackground";
 			else if (NameHas(type, "Calamity") && NameHas(display, "Calamity", "Style"))
 				yield return "MainMenu/ModernMenuBackground";
+			else if (NameHas(type, "EModMenuAlt") || NameHas(display, "Church")) {
+				yield return "Assets/Extra/menu/menu2/1";
+				yield return "Assets/Extra/menu/menu2/2";
+			}
+			else if (NameHas(type, "EModMenu") || NameHas(display, "Vortex")) {
+				yield return "Assets/Extra/menu/VoidVortex";
+				yield return "Assets/Extra/menu/layer2";
+			}
 		}
 
 		private static Texture2D FirstPacked(ModMenu menu, bool sky, bool preview)
@@ -478,6 +700,8 @@ namespace DieWithASmile.Engine.Grab
 			if (NameHas(display, "Ascent") && (Contains(path, "Ascent") || Contains(path, "AvatarUniverse")))
 				return true;
 			if (Contains(path, "AstrageldonBackground") || Contains(path, "AstrageldonLogo"))
+				return true;
+			if (Contains(typeName, "EModMenu") && (Contains(path, "Extra/menu") || Contains(path, "Extra/Logo")))
 				return true;
 			return false;
 		}

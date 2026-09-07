@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Terraria;
+using DieWithASmile.Content;
 using DieWithASmile.Engine.Audio;
 using DieWithASmile.Engine.Chrome;
 using DieWithASmile.Engine.Grab;
@@ -147,6 +148,7 @@ namespace DieWithASmile.Engine.Core
 			WeSave.Save();
 			WeArt.Scan();
 			WeCatalog.DropMissing();
+			CalamitasMenuBackgroundStyle.SnapLockedScenes();
 			int hub = Math.Clamp(WeSave.Data.WrenchStyle, 0, 1);
 			if (hub != prevHub) {
 				if (hub == 0)

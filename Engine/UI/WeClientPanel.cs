@@ -11,6 +11,8 @@ namespace DieWithASmile.Engine.UI
 {
 	internal static partial class WePanels
 	{
+		private static bool _factoryArmed;
+
 		private static int LooksGroupH(int n) => 32 + 40 + 28 + n * 42 + 14;
 
 		private static int MenuGroupH(int fonts, bool customRgb)
@@ -21,10 +23,13 @@ namespace DieWithASmile.Engine.UI
 			return h;
 		}
 
+		private static int FactoryGroupH() => 32 + 42 + 28 + 14;
+
 		internal static float ClientContentHeight()
 		{
 			return LooksGroupH(WePresets.All.Count) + 10 + 140 + 10 + 356 + 10 +
-			       MenuGroupH(WeType.All.Count, WeSave.Data.MenuTextCustom) + 10 + 118 + 16;
+			       MenuGroupH(WeType.All.Count, WeSave.Data.MenuTextCustom) + 10 + 118 + 10 +
+			       FactoryGroupH() + 16;
 		}
 
 		private static void DrawGroupShell(SpriteBatch spriteBatch, Rectangle panel, int y, int h, string title)
@@ -389,6 +394,35 @@ namespace DieWithASmile.Engine.UI
 			}
 
 			y = top + h;
+		}
+
+		private static void ClientFactory(SpriteBatch spriteBatch, Rectangle panel, ref int y, bool click)
+		{
+			int h = FactoryGroupH();
+			int top = y;
+			DrawGroupShell(spriteBatch, panel, top, h, WeText.UI("ResetFactory"));
+			y = top + 32;
+			if (click) {
+				if (ClickCard(panel, ref y)) {
+					if (!_factoryArmed)
+						_factoryArmed = true;
+					else {
+						_factoryArmed = false;
+						WeSettings.ResetToPackDefaults();
+						WeToast.Show("ToastFactoryReset");
+					}
+				}
+				else
+					_factoryArmed = false;
+
+				SkipHint(ref y);
+				y = top + h + 16;
+				return;
+			}
+
+			DrawCard(spriteBatch, panel, ref y, WeText.UI(_factoryArmed ? "ResetFactorySure" : "ResetFactory"), _factoryArmed);
+			DrawHint(spriteBatch, panel, ref y, WeText.UI("ResetFactoryHint"));
+			y = top + h + 16;
 		}
 	}
 }

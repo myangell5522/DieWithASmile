@@ -45,7 +45,7 @@ UI: {
 	SceneMeadow: Last meeting
 	SceneYharim: Yharim Never Die
 	SceneWitch: Witch of Supreme Memories
-	SceneSoul: The Soul of the Universe
+	SceneFreedom: Entropy of Freedom
 	VanillaForest: Forest
 	VanillaCorruption: Corruption
 	VanillaCrimson: Crimson
@@ -82,7 +82,7 @@ UI: {
 	WePromoBody: New mod, no limits — extra features for wallpapers, music, logos, and widgets.
 	WePromoButton: Workshop
 	Wrench: Customize menu
-	BtnLogoPos: Move logo
+	BtnLogoPos: Move logo only
 	BtnWallpaper: Change wallpaper
 	BtnMusic: Change music
 	BtnWidgets: Widgets
@@ -94,10 +94,13 @@ UI: {
 	Splash1: It starts as regular tModLoader. Everything you change is optional.
 	Splash2: The circle between the menu buttons and Switch Menu Theme opens wallpapers, music, logo, widgets, and layout.
 	Splash3: Add a music player, clock, greeting, moon phase, or Discord server. One tap hides version clutter. Drag, resize, or hide any element.
+	Splash4: Calamity Entropy is no longer blocked. You can keep both mods enabled together.
 	GotIt: Got it
 	DontShow: Don't show this again
 	CancelLayout: Cancel
 	ResetVanilla: Reset to vanilla
+	ResetLogo: Reset logo
+	LogoEditHint: Drag only the logo. Scroll to resize. Other elements stay put.
 	SnapCenter: Center
 	HiddenLayers: Hidden elements
 	Restore: Restore
@@ -154,8 +157,8 @@ UI: {
 	OpenFolder: Open folder
 	VanillaLogo: tModLoader logo
 	HideLogo: Hide logo
-	LogoWatermelon1: Watermelon 1
-	LogoWatermelon2: Watermelon 2
+	LogoWatermelon1: Watermelono Punches
+	LogoWatermelon2: Watermelono Mouth
 	LogoBlueArchive: Blue Archive Style
 	LogoFromPack: Die With A Smile
 	CenterImage: Center image
@@ -281,4 +284,8 @@ UI: {
 	ToastFont: Font applied
 	ToastFontFail: Could not load that font
 	ToastFontGone: Font removed
+	ResetFactory: Reset mod to starter settings
+	ResetFactoryHint: Restores Entropy of Freedom, the pack logo, left menu, dock bar, and packed playlist. Deletes your pictures, uploaded music, fonts, and looks.
+	ResetFactorySure: Click again to confirm
+	ToastFactoryReset: Mod reset to starter settings
 }

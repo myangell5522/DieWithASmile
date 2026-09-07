@@ -1,7 +1,12 @@
 using System;
 using Microsoft.Xna.Framework;
+using Terraria.ModLoader;
+using DieWithASmile.Content;
+using DieWithASmile.Engine.Audio;
 using DieWithASmile.Engine.Chrome;
 using DieWithASmile.Engine.Content;
+using DieWithASmile.Engine.Layout;
+using DieWithASmile.Engine.UI;
 
 namespace DieWithASmile.Engine.Core
 {
@@ -73,6 +78,7 @@ namespace DieWithASmile.Engine.Core
 			Current.WallpaperId = id;
 			WeSave.Save();
 			WeNestedPacks.ApplyScene(id);
+			CalamitasMenuBackgroundStyle.SnapLockedScenes();
 		}
 
 		internal static void SetWallpaperColor(bool gradient)
@@ -435,6 +441,123 @@ namespace DieWithASmile.Engine.Core
 
 			WeSave.Save();
 			WeType.Scan();
+		}
+
+		internal static void ResetToPackDefaults() => ResetLookToPack(wipeFiles: true);
+
+		internal static void ResetLookToPack(bool wipeFiles)
+		{
+			WePlaylist.Silence();
+			WeCustomAudio.Stop();
+
+			if (wipeFiles) {
+				WeFiles.ClearFolderContents(WeSave.MusicFolder);
+				WeFiles.ClearFolderContents(WeSave.WallpaperFolder);
+				WeFiles.ClearFolderContents(WeSave.LogoFolder);
+				WeFiles.ClearFolderContents(WeSave.FontFolder);
+				WeFiles.ClearFolderContents(WeSave.IconFolder);
+				WeFiles.ClearFolderContents(WeSave.PresetFolder);
+				WeFiles.ClearFolderContents(WeSave.BrokenFolder);
+				WeFiles.ClearFolderContents(DieWithASmileSave.MusicFolder);
+				WeFiles.ClearFolderContents(DieWithASmileSave.BrokenFolder);
+				WeFiles.ClearFolderContents(DieWithASmileSave.LogoFolder);
+				WeFiles.ClearFolderContents(DieWithASmileSave.WallpaperFolder);
+			}
+
+			WeSaveData data = Current;
+			data.WallpaperDim = 0f;
+			data.WallpaperVignette = 0f;
+			data.WallpaperParallax = false;
+			data.WallpaperFit = WallpaperFit.Cover;
+			data.ClockWidget = false;
+			data.QuoteWidget = false;
+			data.MoonWidget = false;
+			data.DiscordWidget = false;
+			data.DiscordStyle = 0;
+			data.CleanChrome = true;
+			data.WrenchStyle = (int)WrenchStyle.Dock;
+			data.DisableLogoPulse = false;
+			data.MuteWhenUnfocused = false;
+			data.MenuTextCustom = false;
+			data.MenuTextR = 255;
+			data.MenuTextG = 255;
+			data.MenuTextB = 255;
+			data.ButtonStyle = 0;
+			data.FontFile = "";
+			data.FontScaleX = 1f;
+			data.FontScaleY = 1f;
+			data.AccentIndex = 0;
+			data.LoopEnabled = false;
+			data.ShuffleEnabled = false;
+			data.LoopedTrackId = "";
+			data.LastTrackId = WeNestedPacks.DefaultTrackId;
+			data.DisabledTrackIds.Clear();
+			data.Tracks.Clear();
+			data.Wallpapers.Clear();
+			data.Logos.Clear();
+			data.Layers.Clear();
+			data.SelectedLayerId = "";
+			data.SplashDismissed = false;
+			data.WrenchOpened = false;
+			data.KeepMenuSelected = true;
+			foreach (WeElementRecord element in data.Elements) {
+				element.Customized = false;
+				element.Visible = true;
+				element.Scale = 1f;
+			}
+
+			DieWithASmileSaveData legacy = DieWithASmileSave.Data;
+			legacy.FollowMusic = false;
+			legacy.ShuffleScenes = false;
+			legacy.ShuffleLogos = false;
+			legacy.LockedScene = MenuScene.Freedom;
+			legacy.LoopEnabled = false;
+			legacy.ShuffleEnabled = false;
+			legacy.LoopedTrackId = "";
+			legacy.DisabledBuiltInIds.Clear();
+			legacy.DisabledCustomIds.Clear();
+			legacy.CustomTracks.Clear();
+			legacy.CustomLogos.Clear();
+			legacy.CustomWallpapers.Clear();
+			legacy.ShuffleScenePool.Clear();
+			legacy.ShuffleWallpaperPool.Clear();
+			legacy.HiddenWallpapers.Clear();
+			legacy.MenuMusicVolume = 1f;
+			legacy.PlayerEnabled = true;
+			legacy.PlayerPositionSet = false;
+			legacy.LogoPositionSet = false;
+			legacy.MenuPositionSet = false;
+			legacy.LogoScale = 1f;
+			legacy.CustomLogoId = "";
+			legacy.CustomWallpaperId = "";
+			legacy.ForeignLogoId = "";
+			legacy.ForeignWallpaperId = "";
+			legacy.VanillaBgStyle = -1;
+			legacy.TmlWallpaper = false;
+			legacy.OrphanStyleKey = "";
+			DieWithASmileSave.Save();
+
+			ClientChrome.Reset();
+			WePackedMusic.ForceExtract(ModContent.GetInstance<DieWithASmileCalamitasMenu>()?.Mod);
+			WeNestedPacks.ApplyPackLook();
+			WeSplash.Show();
+			WrenchToolbar.OnThemeSelected();
+			LayoutEditor.Reset();
+			WePanels.Close();
+			WeArt.Scan();
+			CalamitasMenuUserArt.Scan();
+			WeType.Scan();
+			WePresets.Refresh();
+			WeLibrary.ScanIntoSave();
+			CalamitasMenuLibrary.ScanIntoSave();
+			WeSave.Data.Wallpaper = WallpaperKind.Nested;
+			WeSave.Data.WallpaperId = WeNestedPacks.NestFreedom;
+			WeSave.Data.Music = MusicKind.Custom;
+			WeSave.Data.LastTrackId = WeNestedPacks.DefaultTrackId;
+			WeNestedPacks.ApplyScene(WeNestedPacks.NestFreedom);
+			WeSave.Save();
+			WePlaylist.RestartPacked(WeNestedPacks.DefaultTrackId);
+			CalamitasMenuBackgroundStyle.ResetFade();
 		}
 
 		internal static Color CaptionColor => new(Current.CaptionR, Current.CaptionG, Current.CaptionB);

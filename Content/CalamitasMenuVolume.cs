@@ -32,11 +32,6 @@ namespace DieWithASmile.Content
 
 		public override void Load()
 		{
-			DieWithASmileSave.EnsureLoaded();
-			On_IngameOptions.Draw += DrawOptionsHook;
-			On_IngameOptions.DrawRightSide += DrawRightSideHook;
-			On_IngameOptions.DrawValueBar += DrawValueBarHook;
-			On_Main.DrawMenu += DrawMenuHook;
 		}
 
 		public override void Unload()

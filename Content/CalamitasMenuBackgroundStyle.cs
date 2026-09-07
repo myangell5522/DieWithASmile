@@ -4,6 +4,8 @@ using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using Terraria;
 using Terraria.ModLoader;
+using DieWithASmile.Engine.Content;
+using DieWithASmile.Engine.Core;
 
 namespace DieWithASmile.Content
 {
@@ -34,7 +36,20 @@ namespace DieWithASmile.Content
 			CalamitasMenuMeadow.Reset();
 			CalamitasMenuYharim.Reset();
 			CalamitasMenuWitch.Reset();
-			CalamitasMenuSoul.Reset();
+			CalamitasMenuFreedom.Reset();
+			SnapLockedScenes();
+			if (WeSave.Data.Wallpaper == WallpaperKind.Nested)
+				FadeAlpha = 1f;
+		}
+
+		internal static void SnapLockedScenes()
+		{
+			CalamitasMenuHearts.Snap(DieWithASmileSettings.UseDontForgetScene);
+			CalamitasMenuLetter.Snap(DieWithASmileSettings.UseComeAlongScene);
+			CalamitasMenuMeadow.Snap(DieWithASmileSettings.UseMeadowScene);
+			CalamitasMenuYharim.Snap(DieWithASmileSettings.UseYharimScene);
+			CalamitasMenuWitch.Snap(DieWithASmileSettings.UseWitchScene);
+			CalamitasMenuFreedom.Snap(DieWithASmileSettings.UseFreedomScene);
 		}
 
 		internal static void UpdateFade()
@@ -45,7 +60,7 @@ namespace DieWithASmile.Content
 			CalamitasMenuMeadow.Update();
 			CalamitasMenuYharim.Update();
 			CalamitasMenuWitch.Update();
-			CalamitasMenuSoul.Update();
+			CalamitasMenuFreedom.Update();
 		}
 
 		public override void Load()
@@ -58,7 +73,7 @@ namespace DieWithASmile.Content
 			CalamitasMenuMeadow.Load();
 			CalamitasMenuYharim.Load();
 			CalamitasMenuWitch.Load();
-			CalamitasMenuSoul.Load();
+			CalamitasMenuFreedom.Load();
 		}
 
 		public override void Unload()
@@ -69,7 +84,7 @@ namespace DieWithASmile.Content
 			CalamitasMenuMeadow.Unload();
 			CalamitasMenuYharim.Unload();
 			CalamitasMenuWitch.Unload();
-			CalamitasMenuSoul.Unload();
+			CalamitasMenuFreedom.Unload();
 			CalamitasMenuUserArt.Unload();
 			CalamitasMenuForeign.Unload();
 			CalamitasMenuPlayerUI.Unload();
@@ -141,9 +156,12 @@ namespace DieWithASmile.Content
 			float meadow = CalamitasMenuMeadow.SceneEase;
 			float yharim = CalamitasMenuYharim.SceneEase;
 			float witch = CalamitasMenuWitch.SceneEase;
-			float soul = CalamitasMenuSoul.SceneEase;
-			float special = MathHelper.Clamp(hearts + letter + meadow + yharim + witch + soul, 0f, 1f);
-			spriteBatch.Draw(texture, destination, Color.White * (FadeAlpha * (1f - special)));
+			float freedom = CalamitasMenuFreedom.SceneEase;
+			float special = MathHelper.Clamp(hearts + letter + meadow + yharim + witch + freedom, 0f, 1f);
+			bool skipCalamitas = WeSave.Data.Wallpaper == WallpaperKind.Nested &&
+			                    (WeSave.Data.WallpaperId ?? "") != WeNestedPacks.NestCalamitas;
+			if (!skipCalamitas)
+				spriteBatch.Draw(texture, destination, Color.White * (FadeAlpha * (1f - special)));
 
 			if (hearts > 0.02f && _deltaruneTexture?.Value != null)
 				spriteBatch.Draw(_deltaruneTexture.Value, destination, Color.White * (FadeAlpha * hearts));
@@ -154,10 +172,10 @@ namespace DieWithASmile.Content
 			CalamitasMenuMeadow.Draw(spriteBatch, FadeAlpha);
 			CalamitasMenuYharim.Draw(spriteBatch, FadeAlpha);
 			CalamitasMenuWitch.Draw(spriteBatch, FadeAlpha);
-			CalamitasMenuSoul.Draw(spriteBatch, FadeAlpha);
+			CalamitasMenuFreedom.Draw(spriteBatch, FadeAlpha);
 			CalamitasMenuHearts.DrawBehind(spriteBatch, FadeAlpha);
 
-			if (letter < 0.98f && meadow < 0.98f && yharim < 0.98f && witch < 0.98f && soul < 0.98f) {
+			if (letter < 0.98f && meadow < 0.98f && yharim < 0.98f && witch < 0.98f && freedom < 0.98f) {
 				Vector2 ruby = GetScreenPoint(RubyTexX, RubyTexY);
 				float pulse = 0.55f + 0.45f * MathF.Sin(Main.GlobalTimeWrappedHourly * 3.2f);
 				CalamitasMenuShine.Draw(spriteBatch, ruby, scale * 1.05f, FadeAlpha * (1f - letter), pulse);

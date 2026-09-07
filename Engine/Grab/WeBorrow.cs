@@ -49,7 +49,7 @@ namespace DieWithASmile.Engine.Grab
 
 				if (!painted && offer.UseStyle)
 					painted = DrawStyle(spriteBatch, id, WeCatalog.StyleOf(id));
-				if (!painted && !live && offer.UseMenuScene)
+				if (!painted && offer.UseMenuScene)
 					painted = DrawCover(spriteBatch, WeCatalog.MenuScene(id));
 			}
 			catch {

@@ -45,7 +45,7 @@ UI: {
 	SceneMeadow: Last meeting
 	SceneYharim: Yharim Never Die
 	SceneWitch: Witch of Supreme Memories
-	SceneSoul: The Soul of the Universe
+	SceneFreedom: Entropy of Freedom
 	VanillaForest: 森林
 	VanillaCorruption: 腐化
 	VanillaCrimson: 猩红
@@ -82,7 +82,7 @@ UI: {
 	WePromoBody: 全新模组，无限制，功能更全：壁纸、音乐、标志和小组件。
 	WePromoButton: 创意工坊
 	Wrench: Customize menu
-	BtnLogoPos: Move logo
+	BtnLogoPos: 仅移动标志
 	BtnWallpaper: Change wallpaper
 	BtnMusic: Change music
 	BtnWidgets: Widgets
@@ -94,10 +94,13 @@ UI: {
 	Splash1: It starts as regular tModLoader. Everything you change is optional.
 	Splash2: The circle between the menu buttons and Switch Menu Theme opens wallpapers, music, logo, widgets, and layout.
 	Splash3: Add a music player, clock, greeting, moon phase, or Discord server. One tap hides version clutter. Drag, resize, or hide any element.
+	Splash4: 不再屏蔽 Calamity Entropy。两个模组可以同时保持启用。
 	GotIt: Got it
 	DontShow: Don't show this again
 	CancelLayout: Cancel
 	ResetVanilla: Reset to vanilla
+	ResetLogo: 重置标志
+	LogoEditHint: 只拖动标志。滚轮缩放。其他元素保持不动。
 	SnapCenter: Center
 	HiddenLayers: Hidden elements
 	Restore: Restore
@@ -154,8 +157,8 @@ UI: {
 	OpenFolder: Open folder
 	VanillaLogo: tModLoader logo
 	HideLogo: Hide logo
-	LogoWatermelon1: Watermelon 1
-	LogoWatermelon2: Watermelon 2
+	LogoWatermelon1: Watermelono Punches
+	LogoWatermelon2: Watermelono Mouth
 	LogoBlueArchive: Blue Archive Style
 	LogoFromPack: Die With A Smile
 	CenterImage: Center image
@@ -281,4 +284,8 @@ UI: {
 	ToastFont: Font applied
 	ToastFontFail: Could not load that font
 	ToastFontGone: Font removed
+	ResetFactory: 将模组重置为初始设置
+	ResetFactoryHint: 恢复 Entropy of Freedom、模组标志、左侧菜单、底部工具栏和内置播放列表。将删除你的图片、上传的音乐、字体和外观预设。
+	ResetFactorySure: 再点一次以确认
+	ToastFactoryReset: 模组已重置为初始设置
 }

@@ -4,6 +4,7 @@ using System.IO;
 using System.Text.Json;
 using Terraria;
 using Terraria.ModLoader;
+using DieWithASmile.Engine.Content;
 
 namespace DieWithASmile.Content
 {
@@ -26,10 +27,10 @@ namespace DieWithASmile.Content
 	internal sealed class DieWithASmileSaveData
 	{
 		public bool PlayerEnabled { get; set; } = true;
-		public bool FollowMusic { get; set; } = true;
+		public bool FollowMusic { get; set; }
 		public bool ShuffleScenes { get; set; }
 		public bool ShuffleLogos { get; set; }
-		public MenuScene LockedScene { get; set; } = MenuScene.Calamitas;
+		public MenuScene LockedScene { get; set; } = MenuScene.Freedom;
 		public bool LoopEnabled { get; set; }
 		public bool ShuffleEnabled { get; set; }
 		public string LoopedTrackId { get; set; } = "";
@@ -142,6 +143,14 @@ namespace DieWithASmile.Content
 				_data.ShuffleScenePool ??= new List<int>();
 				_data.ShuffleWallpaperPool ??= new List<string>();
 				_data.HiddenWallpapers ??= new List<string>();
+				_data.HiddenWallpapers.RemoveAll(key =>
+					key == WeNestedPacks.NestSoul || key == CalamitasMenuWallpaper.Scene(6));
+				if (_data.ShuffleWallpaperPool != null) {
+					for (int i = 0; i < _data.ShuffleWallpaperPool.Count; i++) {
+						if (_data.ShuffleWallpaperPool[i] == WeNestedPacks.NestSoul)
+							_data.ShuffleWallpaperPool[i] = WeNestedPacks.NestFreedom;
+					}
+				}
 				if (_data.ShuffleWallpaperPool.Count == 0 && _data.ShuffleScenePool.Count > 0) {
 					foreach (int id in _data.ShuffleScenePool) {
 						if (id >= 0 && id <= 5)
@@ -158,10 +167,7 @@ namespace DieWithASmile.Content
 					_data.AccentIndex = 0;
 				if (_data.VanillaBgStyle >= 0 && !CalamitasMenuVanilla.IsKnown(_data.VanillaBgStyle))
 					_data.VanillaBgStyle = -1;
-				_data.MenuMusicVolume = Math.Clamp(_data.MenuMusicVolume, 0f, 1f);
-				bool menuVolumeWasZero = _data.MenuMusicVolume <= 0.0005f;
-				if (menuVolumeWasZero)
-					_data.MenuMusicVolume = 1f;
+				_data.MenuMusicVolume = 1f;
 				if (_data.ShuffleSceneSeconds < 0f || _data.ShuffleSceneSeconds > 15f)
 					_data.ShuffleSceneSeconds = 10f;
 				if ((int)_data.MenuLogo < 0 || (int)_data.MenuLogo > 4)
@@ -180,9 +186,6 @@ namespace DieWithASmile.Content
 					wall.PanX = Math.Clamp(wall.PanX, 0f, 1f);
 					wall.PanY = Math.Clamp(wall.PanY, 0f, 1f);
 				}
-
-				if (menuVolumeWasZero)
-					Save();
 			}
 			catch {
 			}

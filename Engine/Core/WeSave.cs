@@ -107,8 +107,8 @@ namespace DieWithASmile.Engine.Core
 		public bool WrenchOpened { get; set; }
 		public bool KeepMenuSelected { get; set; }
 		public int AccentIndex { get; set; }
-		public WallpaperKind Wallpaper { get; set; }
-		public string WallpaperId { get; set; } = "";
+		public WallpaperKind Wallpaper { get; set; } = WallpaperKind.Nested;
+		public string WallpaperId { get; set; } = "nest-freedom";
 		public int WallpaperColorR { get; set; } = 18;
 		public int WallpaperColorG { get; set; } = 22;
 		public int WallpaperColorB { get; set; } = 38;
@@ -123,7 +123,7 @@ namespace DieWithASmile.Engine.Core
 		public string SelectedLayerId { get; set; } = "";
 		public LogoKind Logo { get; set; }
 		public string LogoId { get; set; } = "";
-		public MusicKind Music { get; set; }
+		public MusicKind Music { get; set; } = MusicKind.Custom;
 		public bool LoopEnabled { get; set; }
 		public bool ShuffleEnabled { get; set; }
 		public string LoopedTrackId { get; set; } = "";
@@ -167,6 +167,8 @@ namespace DieWithASmile.Engine.Core
 		public float FontScaleX { get; set; } = 1f;
 		public float FontScaleY { get; set; } = 1f;
 		public bool PackedHosted { get; set; }
+		public int PackLook { get; set; }
+		public string LastTrackId { get; set; } = "freedom";
 	}
 
 	internal static class WeSave
@@ -250,7 +252,10 @@ namespace DieWithASmile.Engine.Core
 			_data.Layers ??= new List<WeLayerRecord>();
 			_data.WallpaperId ??= "";
 			_data.LogoId ??= "";
+			_data.WallpaperId = WeNestedPacks.MigrateWallpaperId(_data.WallpaperId);
+			_data.LogoId = WeNestedPacks.MigrateLogoId(_data.LogoId);
 			_data.LoopedTrackId ??= "";
+			_data.LastTrackId ??= "";
 			_data.WindowIconFile ??= "";
 			_data.FontFile ??= "";
 			_data.SelectedLayerId ??= "";
@@ -271,9 +276,7 @@ namespace DieWithASmile.Engine.Core
 				_data.Logo = LogoKind.Vanilla;
 			if (_data.Wallpaper == WallpaperKind.Borrowed && string.IsNullOrEmpty(_data.WallpaperId))
 				_data.Wallpaper = WallpaperKind.Vanilla;
-			if (_data.Wallpaper == WallpaperKind.Nested &&
-			    (string.IsNullOrEmpty(_data.WallpaperId) || !WeNestedPacks.IsWallpaper(_data.WallpaperId)))
-				_data.Wallpaper = WallpaperKind.Vanilla;
+			WeNestedPacks.EnsureWallpaper();
 			if (_data.AccentIndex < 0 || _data.AccentIndex >= WeAccent.Palettes.Length)
 				_data.AccentIndex = 0;
 			if (_data.WrenchStyle < 0 || _data.WrenchStyle > 1)
