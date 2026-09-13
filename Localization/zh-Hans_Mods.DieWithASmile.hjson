@@ -81,213 +81,217 @@ UI: {
 	WePromoTitle: Wallpaper Engine
 	WePromoBody: 全新模组，无限制，功能更全：壁纸、音乐、标志和小组件。
 	WePromoButton: 创意工坊
-	Wrench: Customize menu
+	Wrench: 自定义菜单
 	BtnLogoPos: 仅移动标志
-	BtnWallpaper: Change wallpaper
-	BtnMusic: Change music
-	BtnWidgets: Widgets
-	BtnLogo: Change logo
-	BtnLayout: Move elements
-	BtnClient: Client settings
-	BtnClean: Hide version clutter
-	SplashTitle: This is your menu
-	Splash1: It starts as regular tModLoader. Everything you change is optional.
-	Splash2: The circle between the menu buttons and Switch Menu Theme opens wallpapers, music, logo, widgets, and layout.
-	Splash3: Add a music player, clock, greeting, moon phase, or Discord server. One tap hides version clutter. Drag, resize, or hide any element.
+	BtnWallpaper: 更换壁纸
+	BtnMusic: 更换音乐
+	BtnWidgets: 小组件
+	BtnLogo: 更换标志
+	BtnLayout: 移动元素
+	BtnClient: 客户端设置
+	BtnClean: 隐藏版本信息
+	SplashTitle: 这是你的菜单
+	Splash1: 一开始就是普通的 tModLoader。你改的每一项都是可选的。
+	Splash2: 菜单按钮和「切换菜单主题」之间的圆钮可以打开壁纸、音乐、标志、小组件和布局。
+	Splash3: 可添加音乐播放器、时钟、问候、月相或 Discord 服务器。点一下即可隐藏版本信息。任意元素都能拖动、缩放或隐藏。
 	Splash4: 不再屏蔽 Calamity Entropy。两个模组可以同时保持启用。
-	GotIt: Got it
-	DontShow: Don't show this again
-	CancelLayout: Cancel
-	ResetVanilla: Reset to vanilla
+	GotIt: 知道了
+	DontShow: 不再显示
+	CancelLayout: 取消
+	ResetVanilla: 重置为原版
 	ResetLogo: 重置标志
 	LogoEditHint: 只拖动标志。滚轮缩放。其他元素保持不动。
-	SnapCenter: Center
-	HiddenLayers: Hidden elements
-	Restore: Restore
-	CannotHide: This element can only be moved
-	VanillaSky: Vanilla sky
-	SolidColor: Solid color
-	Gradient: Gradient
-	FitCover: Fill screen
-	FitContain: Fit inside
-	FitStretch: Stretch
-	WallpaperParallax: Mouse parallax
-	WallpaperDim: Dim
-	WallpaperVignette: Vignette
-	LivePreview: The menu is a live preview. Drag the mouse to feel parallax.
-	BorrowMix: Logo and sky are separate. A borrowed sky keeps that theme's own background effects.
-	FromMods: From other mods
-	BorrowEmpty: No other menu themes loaded
-	BorrowPending: Still loading...
-	BorrowKindLogo: logo
-	BorrowKindSky: sky + effects
-	BorrowKindStill: sky (still)
-	ToastBorrowGone: That mod is no longer loaded. Restored vanilla.
-	ToastBorrowFail: That menu theme failed to draw, so it was skipped.
-	SceneLayers: Layers  ·  back to front
-	AddImageLayer: Add image layer
-	AddEffectLayer: Add effect
-	ImageLayer: Image layer
-	LayerForeground: Draw in front
-	LayerOpacity: Opacity
-	LayerParallax: Parallax
-	LayerZoom: Zoom
-	LayerUp: Move back
-	LayerDown: Move front
-	RemoveLayer: Remove layer
-	FxStars: Stars
-	FxDust: Dust
-	FxFog: Fog
-	FxGrain: Grain
-	FxScan: Scanlines
-	FxFlies: Fireflies
-	FxClouds: Clouds
-	FxRain: Rain
-	FxBeat: Pulse to music
-	ImportImage: Import image
-	AnimHint: GIFs play on the menu. Click a file to use it; right-click deletes.
-	SectionSky: Sky
-	SectionLayers: Layers
-	SectionImages: Your images
-	SectionPack: From this pack
-	EmptyLayers: Import a picture or add a layer.
-	SkyVanilla: Vanilla
-	SkyColor: Color
-	SkyGradient: Gradient
-	OpenFolder: Open folder
-	VanillaLogo: tModLoader logo
-	HideLogo: Hide logo
+	SnapCenter: 居中
+	HiddenLayers: 已隐藏元素
+	Restore: 恢复
+	CannotHide: 此元素只能移动
+	VanillaSky: 原版天空
+	SolidColor: 纯色
+	Gradient: 渐变
+	FitCover: 铺满屏幕
+	FitContain: 完整放入
+	FitStretch: 拉伸
+	WallpaperParallax: 鼠标视差
+	WallpaperDim: 变暗
+	WallpaperVignette: 暗角
+	LivePreview: 菜单即实时预览。移动鼠标可感受视差。
+	BorrowMix: 标志和天空是分开的。借用的天空会保留该主题自己的背景效果。
+	FromMods: 来自其他模组
+	BorrowEmpty: 未加载其他菜单主题
+	BorrowPending: 仍在加载…
+	BorrowKindLogo: 标志
+	BorrowKindSky: 天空 + 效果
+	BorrowKindStill: 天空（静态）
+	ToastBorrowGone: 该模组已卸载。已恢复原版。
+	ToastBorrowFail: 该菜单主题绘制失败，已跳过。
+	SceneLayers: 图层  ·  从后到前
+	AddImageLayer: 添加图片图层
+	AddEffectLayer: 添加效果
+	ImageLayer: 图片图层
+	LayerForeground: 绘制在最前
+	LayerOpacity: 不透明度
+	LayerParallax: 视差
+	LayerZoom: 缩放
+	LayerUp: 后移
+	LayerDown: 前移
+	RemoveLayer: 移除图层
+	FxStars: 星星
+	FxDust: 尘埃
+	FxFog: 雾
+	FxGrain: 噪点
+	FxScan: 扫描线
+	FxFlies: 萤火虫
+	FxClouds: 云
+	FxRain: 雨
+	FxBeat: 随音乐脉冲
+	ImportImage: 导入图片
+	AnimHint: GIF 会在菜单上播放。点击文件即可使用；右键删除。
+	PlaceHint: 图片图层可拖动、缩放并放到任意位置。「移动元素」同样适用于标志和小组件。
+	SectionSky: 天空
+	SectionLayers: 图层
+	SectionImages: 你的图片
+	SectionPack: 来自本包
+	EmptyLayers: 导入图片或添加图层。
+	SkyVanilla: 原版
+	SkyColor: 颜色
+	SkyGradient: 渐变
+	OpenFolder: 打开文件夹
+	VanillaLogo: tModLoader 标志
+	HideLogo: 隐藏标志
 	LogoWatermelon1: Watermelono Punches
 	LogoWatermelon2: Watermelono Mouth
 	LogoBlueArchive: Blue Archive Style
 	LogoFromPack: Die With A Smile
-	CenterImage: Center image
-	VanillaMusic: Vanilla title music
-	Silence: Silence
-	ImportSong: Import song
-	NoTracks: No custom tracks yet
-	TrackHint: Click a track to play it. The bin removes it from the library.
-	DeleteTrack: Remove track
-	AddPlayer: Music player
-	AddClock: Clock
-	AddQuote: Greeting / quote
-	AddMoon: Moon phase
-	AddDiscord: Discord server
-	WidgetHoverSettings: Hover for settings
-	OpenQuotes: Edit quotes
-	Clock24h: 24-hour time
-	Clock12h: 12-hour time
-	ClockAnalog: Analog
-	ClockDigital: Digital
-	ClockDate: Show date
-	DiscordHint1: 1. Developer Mode on → right-click the server → Copy Server ID
-	DiscordHint2: 2. Server Settings → Widget → turn on Server Widget
-	DiscordStyleCompact: Compact card
-	DiscordStyleBanner: Wide banner
-	DiscordStyleRoster: Member list
-	DiscordJoin: Join Voice
-	DiscordJoinShort: Join
-	DiscordVoice: Voice
-	DiscordVoiceEmpty: Empty
-	DiscordOnline: %n online
-	DiscordInVoice: %n in voice
-	DiscordNeedWidgetShort: Enable Server Widget
-	DiscordLoading: Looking up the server…
-	DiscordNeedWidget: Turn on Server Widget in Discord (Server Settings → Widget)
-	DiscordBadId: That ID wasn't found
-	DiscordNetError: Can't reach Discord right now
-	DiscordEmpty: Click the field and paste the server ID (Ctrl+V)
-	DiscordNeedDigits: Server IDs are 17–20 digits
-	DiscordIdPlaceholder: Paste server ID here
-	DiscordTapToSet: Click to set the server
-	DiscordChangeId: Change server ID
-	GreetingMorning: Good morning
-	GreetingAfternoon: Good afternoon
-	GreetingEvening: Good evening
-	GreetingNight: Good night
-	MoonPhase0: Full moon
-	MoonPhase1: Waning gibbous
-	MoonPhase2: Third quarter
-	MoonPhase3: Waning crescent
-	MoonPhase4: New moon
-	MoonPhase5: Waxing crescent
-	MoonPhase6: First quarter
-	MoonPhase7: Waxing gibbous
-	Layer_logo: Logo
-	Layer_menuButtons: Menu buttons
-	Layer_themeSwap: Theme switch
-	Layer_socialTerraria: Terraria links
-	Layer_socialTml: tModLoader links
-	Layer_version: Version
-	Layer_news: News
-	Layer_sunMoon: Sun / moon
-	Layer_wrench: Customize
-	Layer_widget_player: Music player
-	Layer_widget_clock: Clock
-	Layer_widget_quote: Greeting
-	Layer_widget_moon: Moon
+	CenterImage: 居中图片
+	VanillaMusic: 原版标题音乐
+	Silence: 静音
+	ImportSong: 导入歌曲
+	NoTracks: 还没有自定义曲目
+	TrackHint: 点击曲目即可播放。垃圾桶可隐藏内置歌曲或删除你上传的歌曲。
+	DeleteTrack: 移除曲目
+	HidePackedTrack: 隐藏内置歌曲
+	RestorePackedTrack: 显示内置歌曲
+	ShowHiddenPacked: 已隐藏的内置歌曲（{0}）
+	AddPlayer: 音乐播放器
+	AddClock: 时钟
+	AddQuote: 问候 / 引言
+	AddMoon: 月相
+	AddDiscord: Discord 服务器
+	WidgetHoverSettings: 悬停查看设置
+	OpenQuotes: 编辑引言
+	Clock24h: 24 小时制
+	Clock12h: 12 小时制
+	ClockAnalog: 模拟时钟
+	ClockDigital: 数字时钟
+	ClockDate: 显示日期
+	DiscordHint1: 1. 打开开发者模式 → 右键服务器 → 复制服务器 ID
+	DiscordHint2: 2. 服务器设置 → 小组件 → 打开服务器小组件
+	DiscordStyleCompact: 紧凑卡片
+	DiscordStyleBanner: 宽幅横幅
+	DiscordStyleRoster: 成员列表
+	DiscordJoin: 加入语音
+	DiscordJoinShort: 加入
+	DiscordVoice: 语音
+	DiscordVoiceEmpty: 空闲
+	DiscordOnline: %n 在线
+	DiscordInVoice: %n 在语音中
+	DiscordNeedWidgetShort: 请启用服务器小组件
+	DiscordLoading: 正在查找服务器…
+	DiscordNeedWidget: 请在 Discord 中打开服务器小组件（服务器设置 → 小组件）
+	DiscordBadId: 未找到该 ID
+	DiscordNetError: 暂时无法连接 Discord
+	DiscordEmpty: 点击输入框并粘贴服务器 ID（Ctrl+V）
+	DiscordNeedDigits: 服务器 ID 为 17–20 位数字
+	DiscordIdPlaceholder: 在此粘贴服务器 ID
+	DiscordTapToSet: 点击设置服务器
+	DiscordChangeId: 更改服务器 ID
+	GreetingMorning: 早上好
+	GreetingAfternoon: 下午好
+	GreetingEvening: 晚上好
+	GreetingNight: 晚安
+	MoonPhase0: 满月
+	MoonPhase1: 亏凸月
+	MoonPhase2: 下弦月
+	MoonPhase3: 残月
+	MoonPhase4: 新月
+	MoonPhase5: 蛾眉月
+	MoonPhase6: 上弦月
+	MoonPhase7: 盈凸月
+	Layer_logo: 标志
+	Layer_menuButtons: 菜单按钮
+	Layer_themeSwap: 主题切换
+	Layer_socialTerraria: Terraria 链接
+	Layer_socialTml: tModLoader 链接
+	Layer_version: 版本
+	Layer_news: 新闻
+	Layer_sunMoon: 太阳 / 月亮
+	Layer_wrench: 自定义
+	Layer_widget_player: 音乐播放器
+	Layer_widget_clock: 时钟
+	Layer_widget_quote: 问候
+	Layer_widget_moon: 月亮
 	Layer_widget_discord: Discord
-	CaptionColor: Title bar color
-	BorderColor: Border color
-	TitleTextColor: Title text color
-	DarkTitleBar: Dark title bar
-	PickIcon: Change window icon
-	ResetChrome: Reset window chrome
-	ShowHelp: Show tutorial
-	BorderlessHint: Title bar colors show in windowed mode.
-	HubStyle: Customize hub style
-	HubStyleRadial: Circle
-	HubStyleDock: Bar
-	ToastHubStyle: Hub style applied
-	ToastWallpaper: Wallpaper applied
-	ToastLogo: Logo applied
-	ToastMusic: Music applied
-	ToastIcon: Window icon applied
-	ToastChrome: Window colors applied
-	ToastReset: Reset to vanilla
-	ToastWidgetOn: Widget added
-	ToastWidgetOff: Widget removed
-	ToastDiscordId: Paste the server ID in the field — that's it
-	ToastTrackDeleted: Track removed
-	ToastLayerGone: Layer removed
-	ToastCleanOn: Version clutter hidden
-	ToastCleanOff: Version clutter restored
-	Red: Red
-	Green: Green
-	Blue: Blue
-	Accent: Accent color
-	LogoPulse: Logo grow / shrink
-	MuteUnfocused: Mute player when Terraria is in the background
-	Looks: Looks
-	SaveLook: Save current look
-	LookHint: Click a look to load it. Right-click deletes it.
-	ToastLookSaved: Look saved
-	ToastLookLoaded: Look applied
-	ToastLookGone: Look deleted
-	MenuTextColor: Menu text color
-	MenuTextCustom: Custom menu text color
-	BtnVanilla: Vanilla
-	BtnOutline: Outline
-	BtnAccent: Accent
-	BtnPlate: Plate
-	GroupWindow: Window
-	GroupMenu: Menu buttons
-	MenuPreview: Single Player
-	FontVanilla: tModLoader font
-	ImportFont: Import font
-	FontHint: TTF or OTF. Click to use. Right-click deletes.
-	FontOsHint: TTF or OTF files save here. Custom font drawing is Windows-only.
-	FontWidth: Width
-	FontHeight: Height
-	ChipCaption: Bar
-	ChipBorder: Border
-	ChipTitle: Text
-	ToastFont: Font applied
-	ToastFontFail: Could not load that font
-	ToastFontGone: Font removed
-	ToastFontOs: Custom fonts draw on Windows. The file is saved for later.
-	ChromeOsHint: Window colors and icon are Windows-only. Everything else works here.
-	ToastChromeOs: Saved. Window colors apply on Windows.
+	CaptionColor: 标题栏颜色
+	BorderColor: 边框颜色
+	TitleTextColor: 标题文字颜色
+	DarkTitleBar: 深色标题栏
+	PickIcon: 更换窗口图标
+	ResetChrome: 重置窗口外观
+	ShowHelp: 显示教程
+	BorderlessHint: 标题栏颜色在窗口模式下显示。
+	HubStyle: 自定义中心样式
+	HubStyleRadial: 圆形
+	HubStyleDock: 条栏
+	ToastHubStyle: 已应用中心样式
+	ToastWallpaper: 已应用壁纸
+	ToastLogo: 已应用标志
+	ToastMusic: 已应用音乐
+	ToastIcon: 已应用窗口图标
+	ToastChrome: 已应用窗口颜色
+	ToastReset: 已重置为原版
+	ToastWidgetOn: 已添加小组件
+	ToastWidgetOff: 已移除小组件
+	ToastDiscordId: 把服务器 ID 粘贴进输入框即可
+	ToastTrackDeleted: 已移除曲目
+	ToastLayerGone: 已移除图层
+	ToastCleanOn: 已隐藏版本信息
+	ToastCleanOff: 已恢复版本信息
+	Red: 红
+	Green: 绿
+	Blue: 蓝
+	Accent: 强调色
+	LogoPulse: 标志放大 / 缩小
+	MuteUnfocused: Terraria 在后台时静音播放器
+	Looks: 外观预设
+	SaveLook: 保存当前外观
+	LookHint: 点击预设以加载。右键删除。
+	ToastLookSaved: 已保存外观
+	ToastLookLoaded: 已应用外观
+	ToastLookGone: 已删除外观
+	MenuTextColor: 菜单文字颜色
+	MenuTextCustom: 自定义菜单文字颜色
+	BtnVanilla: 原版
+	BtnOutline: 描边
+	BtnAccent: 强调
+	BtnPlate: 底板
+	GroupWindow: 窗口
+	GroupMenu: 菜单按钮
+	MenuPreview: 单人游戏
+	FontVanilla: tModLoader 字体
+	ImportFont: 导入字体
+	FontHint: TTF 或 OTF。点击使用。右键删除。
+	FontOsHint: TTF 或 OTF 文件会保存在这里。自定义字体绘制仅限 Windows。
+	FontWidth: 宽度
+	FontHeight: 高度
+	ChipCaption: 栏
+	ChipBorder: 边框
+	ChipTitle: 文字
+	ToastFont: 已应用字体
+	ToastFontFail: 无法加载该字体
+	ToastFontGone: 已移除字体
+	ToastFontOs: 自定义字体在 Windows 上绘制。文件已保存。
+	ChromeOsHint: 窗口颜色和图标仅限 Windows。其余功能在此正常。
+	ToastChromeOs: 已保存。窗口颜色在 Windows 上生效。
 	ResetFactory: 将模组重置为初始设置
 	ResetFactoryHint: 恢复 Entropy of Freedom、模组标志、左侧菜单、底部工具栏和内置播放列表。将删除你的图片、上传的音乐、字体和外观预设。
 	ResetFactorySure: 再点一次以确认

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Terraria;
+using DieWithASmile.Engine.Content;
 
 namespace DieWithASmile.Content
 {
@@ -108,6 +109,8 @@ namespace DieWithASmile.Content
 				if (key != null && key.Length > 6)
 					int.TryParse(key.AsSpan(6), out index);
 				index = Math.Clamp(index, 0, (int)MenuScene.Freedom);
+				if (WeNestedPacks.IsRestrictedGalleryIndex(index))
+					index = (int)MenuScene.Freedom;
 				data.LockedScene = (MenuScene)index;
 			}
 			else if (key == Tml) {
@@ -170,6 +173,7 @@ namespace DieWithASmile.Content
 			}
 
 			pool.RemoveAll(IsHidden);
+			pool.RemoveAll(key => RestrictedGalleryKey(key));
 			if (pool.Count == 0)
 				pool = DefaultScenes();
 			return pool;
@@ -179,14 +183,25 @@ namespace DieWithASmile.Content
 		{
 			var list = new List<string>(7);
 			for (int i = 0; i <= (int)MenuScene.Freedom; i++) {
+				if (WeNestedPacks.IsRestrictedGalleryIndex(i))
+					continue;
 				string key = Scene(i);
 				if (!IsHidden(key))
 					list.Add(key);
 			}
 
 			if (list.Count == 0)
-				list.Add(Scene(0));
+				list.Add(Scene((int)MenuScene.Freedom));
 			return list;
+		}
+
+		private static bool RestrictedGalleryKey(string key)
+		{
+			if (string.IsNullOrEmpty(key) || !key.StartsWith("scene:", StringComparison.Ordinal))
+				return false;
+			if (!int.TryParse(key.AsSpan(6), out int index))
+				return false;
+			return WeNestedPacks.IsRestrictedGalleryIndex(index);
 		}
 
 		private static bool IsDefaultScenePool(List<string> pool)

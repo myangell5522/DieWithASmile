@@ -1,3 +1,23 @@
+Version 3.0.8
+
+Title
+- The mods-list info button is a question mark again. The animated logo only draws on the mod icon.
+
+Version 3.0.7
+
+Title
+- Mods / Workshop row plays the logo GIF, scaled to the icon and the row.
+- Hide / show packed-song tooltips sit beside the bin instead of getting clipped by the panel.
+- Workshop and in-mod descriptions are shorter. Credits are grouped.
+
+Version 3.0.6
+
+Title
+- New animated mod icon (face + floating wing) in the Mods / Workshop list while this mod is enabled.
+- Packed playlist songs can be hidden with the bin; a toggle brings them back. Uploads still delete.
+- Chinese (简体中文) covers the wrench UI, splash, wallpaper, widgets, and client settings.
+- Image layers already pan/zoom/place; the wallpaper panel now says so, matching Move elements.
+
 Version 3.0.5
 
 Title

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using Terraria.ModLoader;
@@ -29,6 +30,23 @@ namespace DieWithASmile.Engine.Content
 		{
 			NestCalamitas, NestDontForget, NestComeAlong, NestMeadow, NestYharim, NestWitch, NestFreedom
 		};
+
+		internal static IEnumerable<string> VisibleWallpaperIds()
+		{
+			foreach (string id in WallpaperIds) {
+				if (!IsRestrictedId(id))
+					yield return id;
+			}
+		}
+
+		internal static bool IsRestrictedId(string id) =>
+			WeSteam.HidesArtistScenes && (id == NestCalamitas || id == NestDontForget);
+
+		internal static bool IsRestrictedScene(MenuScene scene) =>
+			WeSteam.HidesArtistScenes && (scene == MenuScene.Calamitas || scene == MenuScene.DontForget);
+
+		internal static bool IsRestrictedGalleryIndex(int index) =>
+			WeSteam.HidesArtistScenes && (index == 0 || index == 1);
 
 		internal static readonly string[] LogoIds =
 		{
@@ -129,6 +147,8 @@ namespace DieWithASmile.Engine.Content
 
 		internal static void ApplyScene(string id)
 		{
+			if (IsRestrictedId(id))
+				id = NestFreedom;
 			if (TryScene(id, out MenuScene scene))
 				DieWithASmileSettings.SetLockedScene(scene);
 		}
@@ -195,10 +215,17 @@ namespace DieWithASmile.Engine.Content
 		internal static void EnsureWallpaper()
 		{
 			WeSaveData data = WeSave.Data;
-			if (data.Wallpaper != WallpaperKind.Nested)
+			if (data.Wallpaper == WallpaperKind.Nested) {
+				if (string.IsNullOrEmpty(data.WallpaperId) || !IsWallpaper(data.WallpaperId) || IsRestrictedId(data.WallpaperId))
+					data.WallpaperId = NestFreedom;
+			}
+
+			if (!WeSteam.HidesArtistScenes)
 				return;
-			if (string.IsNullOrEmpty(data.WallpaperId) || !IsWallpaper(data.WallpaperId))
-				data.WallpaperId = NestFreedom;
+
+			DieWithASmileSaveData legacy = DieWithASmileSave.Data;
+			if (legacy.LockedScene is MenuScene.Calamitas or MenuScene.DontForget)
+				legacy.LockedScene = MenuScene.Freedom;
 		}
 
 		internal static void EnsureHostedDefaults()

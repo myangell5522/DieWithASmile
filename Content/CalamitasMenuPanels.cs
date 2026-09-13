@@ -14,6 +14,7 @@ using Terraria.GameInput;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.UI.Chat;
+using DieWithASmile.Engine.Content;
 
 namespace DieWithASmile.Content
 {
@@ -1269,8 +1270,11 @@ namespace DieWithASmile.Content
 			if (!hiddenView)
 				list.Add(new GItem(GKind.Follow));
 
-			for (int i = 0; i < ScenePaths.Length; i++)
+			for (int i = 0; i < ScenePaths.Length; i++) {
+				if (WeNestedPacks.IsRestrictedGalleryIndex(i))
+					continue;
 				add(GKind.Scene, i, CalamitasMenuWallpaper.Scene(i));
+			}
 
 			if (!hiddenView)
 				list.Add(new GItem(GKind.Shuffle));

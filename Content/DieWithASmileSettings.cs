@@ -202,6 +202,8 @@ namespace DieWithASmile.Content
 		{
 			get
 			{
+				if (WeSteam.HidesArtistScenes)
+					return false;
 				if (UsingCustomWallpaper)
 					return false;
 				if (WeSave.Data.Wallpaper == WallpaperKind.Nested)
@@ -264,6 +266,9 @@ namespace DieWithASmile.Content
 			{
 				if (UsingCustomWallpaper)
 					return false;
+				if (WeSteam.HidesArtistScenes &&
+				    !UseComeAlongScene && !UseMeadowScene && !UseYharimScene && !UseWitchScene)
+					return true;
 				if (WeSave.Data.Wallpaper == WallpaperKind.Nested) {
 					if (string.IsNullOrEmpty(WeSave.Data.WallpaperId) || !WeNestedPacks.IsWallpaper(WeSave.Data.WallpaperId))
 						return true;
@@ -356,6 +361,8 @@ namespace DieWithASmile.Content
 
 		internal static void SetLockedScene(MenuScene scene)
 		{
+			if (WeNestedPacks.IsRestrictedScene(scene))
+				scene = MenuScene.Freedom;
 			Current.FollowMusic = false;
 			Current.ShuffleScenes = false;
 			Current.LockedScene = scene;

@@ -69,6 +69,8 @@ namespace DieWithASmile.Engine.Core
 
 		internal static void SetWallpaperNested(string id)
 		{
+			if (WeNestedPacks.IsRestrictedId(id))
+				id = WeNestedPacks.NestFreedom;
 			if (!WeNestedPacks.IsWallpaper(id)) {
 				SetWallpaperVanilla();
 				return;

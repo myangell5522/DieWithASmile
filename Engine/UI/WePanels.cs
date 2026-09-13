@@ -30,6 +30,7 @@ namespace DieWithASmile.Engine.UI
 
 	internal static partial class WePanels
 	{
+		private static bool _showPackedHidden;
 		private static WePanelId _id;
 		private static float _fade;
 		private static float _scroll;
@@ -298,8 +299,14 @@ namespace DieWithASmile.Engine.UI
 			DrawCard(spriteBatch, panel, ref y, WeText.UI("MuteUnfocused"), WeSave.Data.MuteWhenUnfocused);
 			DrawButtonRow(spriteBatch, panel, ref y, WeText.UI("ImportSong"), WeText.UI("OpenFolder"));
 			DrawHint(spriteBatch, panel, ref y, WeText.UI(WeSave.Data.Tracks.Count == 0 && WePackedMusic.Tracks.Count == 0 ? "NoTracks" : "TrackHint"));
-			foreach (MenuTrack packed in WePackedMusic.Tracks)
+			foreach (MenuTrack packed in WePackedMusic.Tracks) {
+				if (!PackedVisible(packed))
+					continue;
 				DrawPackedTrack(spriteBatch, panel, ref y, packed);
+			}
+			int hiddenPacked = HiddenPackedCount();
+			if (hiddenPacked > 0)
+				DrawCard(spriteBatch, panel, ref y, string.Format(WeText.UI("ShowHiddenPacked"), hiddenPacked), _showPackedHidden);
 			foreach (WeTrackRecord track in WeSave.Data.Tracks)
 				DrawTrack(spriteBatch, panel, ref y, track);
 		}
@@ -337,8 +344,14 @@ namespace DieWithASmile.Engine.UI
 
 			SkipHint(ref y);
 			foreach (MenuTrack packed in WePackedMusic.Tracks) {
+				if (!PackedVisible(packed))
+					continue;
 				if (ClickPackedTrack(panel, ref y, packed))
 					return;
+			}
+			if (HiddenPackedCount() > 0 && ClickCard(panel, ref y)) {
+				_showPackedHidden = !_showPackedHidden;
+				return;
 			}
 			foreach (WeTrackRecord track in WeSave.Data.Tracks.ToArray()) {
 				if (ClickTrack(panel, ref y, track))
@@ -995,36 +1008,63 @@ namespace DieWithASmile.Engine.UI
 		private static void DrawPackedTrack(SpriteBatch spriteBatch, Rectangle panel, ref int y, MenuTrack track)
 		{
 			Rectangle hit = Row(panel, y, 36);
+			Rectangle trash = TrashRect(hit);
+			Rectangle body = new(hit.X, hit.Y, Math.Max(8, trash.X - hit.X - 8), hit.Height);
 			bool on = !WeSave.Data.DisabledTrackIds.Contains(track.Id);
 			bool playing = WeSave.Data.Music == MusicKind.Custom && WePlaylist.Current?.Id == track.Id;
-			bool hover = hit.Contains(Main.mouseX, Main.mouseY);
-			WeDraw.Fill(spriteBatch, hit, ((playing || on) ? WeAccent.Deep : new Color(28, 30, 38)) * ((hover || playing ? 0.95f : 0.8f) * _fade));
-			WeDraw.Border(spriteBatch, hit, (playing || on || hover ? WeAccent.Light : WeAccent.Mid) * _fade);
+			bool hover = body.Contains(Main.mouseX, Main.mouseY);
+			WeDraw.Fill(spriteBatch, body, ((playing || on) ? WeAccent.Deep : new Color(28, 30, 38)) * ((hover || playing ? 0.95f : 0.8f) * _fade));
+			WeDraw.Border(spriteBatch, body, (playing || on || hover ? WeAccent.Light : WeAccent.Mid) * _fade);
 
-			var badge = new Rectangle(hit.X + 8, hit.Y + 6, 24, 24);
+			var badge = new Rectangle(body.X + 8, hit.Y + 6, 24, 24);
 			Texture2D icon = WePresetLogos.PackIcon();
-			int textX = hit.X + 12;
+			int textX = body.X + 12;
 			if (icon != null) {
 				float scale = Math.Min(badge.Width / (float)icon.Width, badge.Height / (float)icon.Height);
-				spriteBatch.Draw(icon, badge.Center.ToVector2(), null, Color.White * _fade, 0f, icon.Size() * 0.5f, scale, SpriteEffects.None, 0f);
+				spriteBatch.Draw(icon, badge.Center.ToVector2(), null, Color.White * ((on ? 1f : 0.45f) * _fade), 0f, icon.Size() * 0.5f, scale, SpriteEffects.None, 0f);
 				textX = badge.Right + 8;
 			}
 
 			ChatManager.DrawColorCodedStringWithShadow(
-				spriteBatch, FontAssets.MouseText.Value, Ellipsize(track.Title + "  ·  " + track.Artist, 28),
-				new Vector2(textX, hit.Y + 8), Color.White * _fade, 0f, Vector2.Zero, new Vector2(0.82f));
+				spriteBatch, FontAssets.MouseText.Value, Ellipsize(track.Title + "  ·  " + track.Artist, 26),
+				new Vector2(textX, hit.Y + 8), Color.White * ((on ? 1f : 0.5f) * _fade), 0f, Vector2.Zero, new Vector2(0.82f));
+			RoundButton.DrawIcon(spriteBatch, trash.Center.ToVector2(), 12f, WeIcons.Get(WeIcons.Trash), 0f, _fade);
+			RoundButton.Tooltip(spriteBatch, trash.Center.ToVector2(), 12f, WeText.UI(on ? "HidePackedTrack" : "RestorePackedTrack"), _fade);
 			y += 42;
 		}
 
 		private static bool ClickPackedTrack(Rectangle panel, ref int y, MenuTrack track)
 		{
 			Rectangle hit = Row(panel, y, 36);
+			Rectangle trash = TrashRect(hit);
+			Rectangle body = new(hit.X, hit.Y, Math.Max(8, trash.X - hit.X - 8), hit.Height);
 			y += 42;
-			if (!hit.Contains(Main.mouseX, Main.mouseY))
+			if (trash.Contains(Main.mouseX, Main.mouseY)) {
+				bool hide = !WeSave.Data.DisabledTrackIds.Contains(track.Id);
+				WePlaylist.SetPackedEnabled(track, !hide);
+				WeToast.Show(hide ? "HidePackedTrack" : "RestorePackedTrack");
+				return true;
+			}
+
+			if (!body.Contains(Main.mouseX, Main.mouseY))
 				return false;
 
 			WePlaylist.PlayPacked(track);
 			return true;
+		}
+
+		private static bool PackedVisible(MenuTrack track) =>
+			_showPackedHidden || !WeSave.Data.DisabledTrackIds.Contains(track.Id);
+
+		private static int HiddenPackedCount()
+		{
+			int n = 0;
+			foreach (MenuTrack packed in WePackedMusic.Tracks) {
+				if (WeSave.Data.DisabledTrackIds.Contains(packed.Id))
+					n++;
+			}
+
+			return n;
 		}
 
 		private static bool ClickTrack(Rectangle panel, ref int y, WeTrackRecord track)

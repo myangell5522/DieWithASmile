@@ -158,8 +158,9 @@ namespace DieWithASmile.Content
 			float witch = CalamitasMenuWitch.SceneEase;
 			float freedom = CalamitasMenuFreedom.SceneEase;
 			float special = MathHelper.Clamp(hearts + letter + meadow + yharim + witch + freedom, 0f, 1f);
-			bool skipCalamitas = WeSave.Data.Wallpaper == WallpaperKind.Nested &&
-			                    (WeSave.Data.WallpaperId ?? "") != WeNestedPacks.NestCalamitas;
+			bool skipCalamitas = WeSteam.HidesArtistScenes ||
+			                    (WeSave.Data.Wallpaper == WallpaperKind.Nested &&
+			                     (WeSave.Data.WallpaperId ?? "") != WeNestedPacks.NestCalamitas);
 			if (!skipCalamitas)
 				spriteBatch.Draw(texture, destination, Color.White * (FadeAlpha * (1f - special)));
 

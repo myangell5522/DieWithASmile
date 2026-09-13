@@ -8,6 +8,8 @@ using Microsoft.Xna.Framework.Audio;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ModLoader;
+using DieWithASmile.Engine.Audio;
+using DieWithASmile.Engine.Core;
 
 namespace DieWithASmile.Content
 {
@@ -259,6 +261,15 @@ namespace DieWithASmile.Content
 				bucket.Remove(track.Id);
 			else if (!bucket.Contains(track.Id))
 				bucket.Add(track.Id);
+
+			if (!track.IsCustom) {
+				if (enabled)
+					WeSave.Data.DisabledTrackIds.Remove(track.Id);
+				else if (!WeSave.Data.DisabledTrackIds.Contains(track.Id))
+					WeSave.Data.DisabledTrackIds.Add(track.Id);
+				WeSave.Save();
+				WePlaylist.Rebuild(play: false);
+			}
 
 			DieWithASmileSave.Save();
 			Rebuild();

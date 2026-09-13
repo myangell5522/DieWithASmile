@@ -119,16 +119,31 @@ namespace DieWithASmile.Engine.UI
 			if (!Hover(center, radius) || string.IsNullOrEmpty(text) || alpha < 0.4f)
 				return;
 
+			WeDraw.WithoutClip(spriteBatch, () => PaintTooltip(spriteBatch, center, radius, text, alpha, dir));
+		}
+
+		private static void PaintTooltip(SpriteBatch spriteBatch, Vector2 center, float radius, string text, float alpha, Vector2 dir)
+		{
 			var font = FontAssets.MouseText.Value;
 			Vector2 size = font.MeasureString(text) * 0.82f;
-			Vector2 tip = dir.LengthSquared() > 0.01f
-				? center + dir * (radius + 12f + size.Length() * 0.12f)
-				: new Vector2(center.X, center.Y - radius - 18f - size.Y * 0.5f);
-			var rect = new Rectangle(
-				(int)(tip.X - size.X * 0.5f - 10f),
-				(int)(tip.Y - size.Y * 0.5f - 5f),
-				(int)size.X + 20,
-				(int)size.Y + 10);
+			Rectangle rect;
+			if (dir.LengthSquared() > 0.01f) {
+				Vector2 tip = center + dir * (radius + 12f + size.Length() * 0.12f);
+				rect = new Rectangle(
+					(int)(tip.X - size.X * 0.5f - 10f),
+					(int)(tip.Y - size.Y * 0.5f - 5f),
+					(int)size.X + 20,
+					(int)size.Y + 10);
+			}
+			else {
+				int width = (int)size.X + 20;
+				int height = (int)size.Y + 10;
+				int x = (int)(center.X - radius - 16f - width);
+				if (x < 8)
+					x = (int)(center.X + radius + 16f);
+				rect = new Rectangle(x, (int)(center.Y - height * 0.5f), width, height);
+			}
+
 			rect.X = (int)MathHelper.Clamp(rect.X, 8, Main.screenWidth - rect.Width - 8);
 			rect.Y = (int)MathHelper.Clamp(rect.Y, 8, Main.screenHeight - rect.Height - 8);
 			WeDraw.Fill(spriteBatch, rect, new Color(22, 24, 30) * (0.92f * alpha));

@@ -235,6 +235,29 @@ namespace DieWithASmile.Engine.UI
 			BeginUi(spriteBatch);
 		}
 
+		internal static void WithoutClip(SpriteBatch spriteBatch, Action draw)
+		{
+			if (spriteBatch == null || draw == null)
+				return;
+			if (!Scissor.HasValue) {
+				draw();
+				return;
+			}
+
+			GraphicsDevice gd = Main.instance.GraphicsDevice;
+			Rectangle? previous = Scissor;
+			Rectangle old = gd.ScissorRectangle;
+			spriteBatch.End();
+			Scissor = null;
+			gd.ScissorRectangle = gd.Viewport.Bounds;
+			BeginUi(spriteBatch);
+			draw();
+			spriteBatch.End();
+			Scissor = previous;
+			gd.ScissorRectangle = previous ?? old;
+			BeginUi(spriteBatch);
+		}
+
 		internal static void WithClip(SpriteBatch spriteBatch, Rectangle uiClip, Action draw)
 		{
 			GraphicsDevice gd = Main.instance.GraphicsDevice;

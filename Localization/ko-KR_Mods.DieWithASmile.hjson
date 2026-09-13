@@ -146,6 +146,7 @@ UI: {
 	FxBeat: Pulse to music
 	ImportImage: Import image
 	AnimHint: GIFs play on the menu. Click a file to use it; right-click deletes.
+	PlaceHint: Image layers can be panned, zoomed, and placed anywhere. Move elements does the same for logos and widgets.
 	SectionSky: Sky
 	SectionLayers: Layers
 	SectionImages: Your images
@@ -166,8 +167,11 @@ UI: {
 	Silence: Silence
 	ImportSong: Import song
 	NoTracks: No custom tracks yet
-	TrackHint: Click a track to play it. The bin removes it from the library.
+	TrackHint: Click a track to play it. The bin hides pack songs or deletes your uploads.
 	DeleteTrack: Remove track
+	HidePackedTrack: Hide song
+	RestorePackedTrack: Show song
+	ShowHiddenPacked: Hidden pack songs ({0})
 	AddPlayer: Music player
 	AddClock: Clock
 	AddQuote: Greeting / quote

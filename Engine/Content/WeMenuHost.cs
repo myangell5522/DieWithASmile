@@ -62,6 +62,7 @@ namespace DieWithASmile.Engine.Content
 			WeFx.Update();
 			WeCatalog.Pulse();
 			WeBorrowFx.Tick();
+			WeNestedPacks.EnsureWallpaper();
 			WeBackgroundStyle.DrewThisFrame = false;
 		}
 

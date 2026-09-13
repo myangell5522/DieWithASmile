@@ -35,7 +35,7 @@ namespace DieWithASmile.Engine.UI
 			DrawSection(spriteBatch, panel, ref y, WeText.UI("SectionSky"));
 			DrawSkyChips(spriteBatch, panel, ref y);
 			DrawSection(spriteBatch, panel, ref y, WeText.UI("SectionPack"));
-			foreach (string id in WeNestedPacks.WallpaperIds)
+			foreach (string id in WeNestedPacks.VisibleWallpaperIds())
 				DrawNestedCard(spriteBatch, panel, ref y, id);
 			if (WeSave.Data.Wallpaper is WallpaperKind.Color or WallpaperKind.Gradient) {
 				DrawRgbArmed(spriteBatch, panel, ref y, "wallA", WeSettings.WallpaperColorA);
@@ -51,6 +51,7 @@ namespace DieWithASmile.Engine.UI
 			});
 
 			DrawSection(spriteBatch, panel, ref y, WeText.UI("SectionLayers"));
+			DrawHint(spriteBatch, panel, ref y, WeText.UI("PlaceHint"));
 			DrawTwin(spriteBatch, panel, ref y, WeText.UI("AddImageLayer"), WeText.UI("AddEffectLayer"),
 				() => WeSettings.AddImageLayer(WeSave.Data.Wallpaper == WallpaperKind.Image ? WeSave.Data.WallpaperId : ""),
 				() => WeSettings.AddEffectLayer(WeFxKind.Stars));

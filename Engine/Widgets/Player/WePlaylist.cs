@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Terraria;
+using DieWithASmile.Content;
 using DieWithASmile.Engine.Content;
 using DieWithASmile.Engine.Core;
 using DieWithASmile.Engine.UI;
@@ -317,9 +318,31 @@ namespace DieWithASmile.Engine.Audio
 			if (packed == null)
 				return;
 			WeSave.Data.DisabledTrackIds.Remove(packed.Id);
+			DieWithASmileSave.Data.DisabledBuiltInIds.Remove(packed.Id);
 			WeSave.Data.Music = MusicKind.Custom;
 			WeSave.Save();
+			DieWithASmileSave.Save();
 			Rebuild(playId: packed.Id, play: true);
+		}
+
+		internal static void SetPackedEnabled(MenuTrack packed, bool enabled)
+		{
+			if (packed == null)
+				return;
+			if (enabled)
+				WeSave.Data.DisabledTrackIds.Remove(packed.Id);
+			else if (!WeSave.Data.DisabledTrackIds.Contains(packed.Id))
+				WeSave.Data.DisabledTrackIds.Add(packed.Id);
+
+			DieWithASmileSaveData legacy = DieWithASmileSave.Data;
+			if (enabled)
+				legacy.DisabledBuiltInIds.Remove(packed.Id);
+			else if (!legacy.DisabledBuiltInIds.Contains(packed.Id))
+				legacy.DisabledBuiltInIds.Add(packed.Id);
+
+			WeSave.Save();
+			DieWithASmileSave.Save();
+			Rebuild(play: false);
 		}
 
 		internal static void SetEnabled(WeTrackRecord record, bool enabled)
