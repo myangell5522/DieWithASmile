@@ -8,6 +8,7 @@ using DieWithASmile.Engine.Content;
 using DieWithASmile.Engine.Core;
 using DieWithASmile.Engine.Layout;
 using DieWithASmile.Engine.UI;
+using DieWithASmile.Engine.Settings;
 
 namespace DieWithASmile.Engine.Chrome
 {
@@ -63,7 +64,7 @@ namespace DieWithASmile.Engine.Chrome
 			if (!WeModMenu.OnTitle)
 				return;
 
-			if (WePanels.Covering) {
+			if (WePanels.Covering || WeNeoMenu.Covering) {
 				_hover = -1;
 				Main.blockMouse = true;
 				return;

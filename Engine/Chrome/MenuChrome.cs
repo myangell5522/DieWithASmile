@@ -16,6 +16,7 @@ using Terraria.UI.Chat;
 using DieWithASmile.Engine.Content;
 using DieWithASmile.Engine.Layout;
 using DieWithASmile.Engine.UI;
+using DieWithASmile.Engine.Settings;
 
 namespace DieWithASmile.Engine.Chrome
 {
@@ -67,7 +68,7 @@ namespace DieWithASmile.Engine.Chrome
 		private static bool Active => WeModMenu.OnTitle;
 
 		internal static bool HideSwap =>
-			WePanels.Covering || WeSplash.Visible || LayoutEditor.ShouldBlockThemeSwap;
+			WePanels.Covering || WeNeoMenu.Covering || WeSplash.Visible || LayoutEditor.ShouldBlockThemeSwap;
 
 		private static void DrawTerrariaSocialHook(Action<Color, float> orig, Color color, float upBump)
 		{
@@ -76,7 +77,7 @@ namespace DieWithASmile.Engine.Chrome
 				return;
 			}
 
-			if (WePanels.Covering || WeSplash.Visible)
+			if (WePanels.Covering || WeNeoMenu.Covering || WeSplash.Visible)
 				return;
 
 			if (!SceneGraph.Visible(SceneGraph.SocialTerraria))
@@ -95,7 +96,7 @@ namespace DieWithASmile.Engine.Chrome
 				return;
 			}
 
-			if (WePanels.Covering || WeSplash.Visible)
+			if (WePanels.Covering || WeNeoMenu.Covering || WeSplash.Visible)
 				return;
 
 			if (!SceneGraph.Visible(SceneGraph.SocialTml))
@@ -114,7 +115,7 @@ namespace DieWithASmile.Engine.Chrome
 				return;
 			}
 
-			if (WePanels.Covering || WeSplash.Visible)
+			if (WePanels.Covering || WeNeoMenu.Covering || WeSplash.Visible)
 				return;
 
 			if (!SceneGraph.Visible(SceneGraph.Version) || LayoutEditor.Editing)
@@ -140,7 +141,7 @@ namespace DieWithASmile.Engine.Chrome
 				return;
 			}
 
-			if (WePanels.Covering || WeSplash.Visible)
+			if (WePanels.Covering || WeNeoMenu.Covering || WeSplash.Visible)
 				return;
 
 			if (!SceneGraph.Visible(SceneGraph.News) || LayoutEditor.Editing)

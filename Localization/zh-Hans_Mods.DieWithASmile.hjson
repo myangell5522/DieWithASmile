@@ -296,4 +296,22 @@ UI: {
 	ResetFactoryHint: 恢复 Entropy of Freedom、模组标志、左侧菜单、底部工具栏和内置播放列表。将删除你的图片、上传的音乐、字体和外观预设。
 	ResetFactorySure: 再点一次以确认
 	ToastFactoryReset: 模组已重置为初始设置
+	NeoSearch: 搜索...
+	NeoApply: 应用
+	NeoCatGame: 游戏
+	NeoCatVideo: 视频
+	NeoCatAudio: 音频
+	NeoCatInterface: 界面
+	NeoCatCursor: 光标
+	NeoCatControls: 操作
+	NeoCatMods: 模组
+	NeoCatClient: 客户端
+	NeoSectionGeneral: 常规
+	NeoSectionQuality: 画质
+	NeoOpenKeybinds: 按键绑定
+	NeoOpenMods: 管理模组
+	NeoOpenPacks: 资源包
+	NeoOpenTml: tModLoader 设置
+	NeoOpenCursorColor: 光标颜色
+	NeoOpenCursorBorder: 光标描边
 }

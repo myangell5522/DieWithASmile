@@ -15,6 +15,7 @@ using DieWithASmile.Engine.Layout;
 using DieWithASmile.Engine.Widgets;
 using DieWithASmile.Engine.Audio;
 using DieWithASmile.Engine.Grab;
+using DieWithASmile.Engine.Settings;
 
 namespace DieWithASmile.Engine.UI
 {
@@ -63,6 +64,10 @@ namespace DieWithASmile.Engine.UI
 
 		internal static void Open(WePanelId id)
 		{
+			if (id == WePanelId.Client) {
+				WeNeoMenu.Open(WeNeoCat.Client);
+				return;
+			}
 			LayoutEditor.Cancel(false);
 			_id = id;
 			_scroll = 0f;

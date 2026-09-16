@@ -1,3 +1,8 @@
+Version 3.0.9
+
+Title
+- Settings (title and pause) is a Sodium-style overlay: search, categories, compact rows. Terraria / tModLoader options live there; Client settings moved in. Keybinds, mods, and resource packs still open the vanilla screens.
+
 Version 3.0.8
 
 Title

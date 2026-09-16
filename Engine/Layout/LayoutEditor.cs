@@ -13,6 +13,7 @@ using DieWithASmile.Engine.Content;
 using DieWithASmile.Engine.Core;
 using DieWithASmile.Engine.UI;
 using DieWithASmile.Engine.Audio;
+using DieWithASmile.Engine.Settings;
 
 namespace DieWithASmile.Engine.Layout
 {
@@ -204,7 +205,7 @@ namespace DieWithASmile.Engine.Layout
 				return;
 			}
 
-			if (WePanels.Covering || WeSplash.Visible)
+			if (WePanels.Covering || WeNeoMenu.Covering || WeSplash.Visible)
 				return;
 
 			if (pressed) {

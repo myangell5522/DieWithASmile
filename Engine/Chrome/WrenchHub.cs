@@ -4,6 +4,7 @@ using DieWithASmile.Engine.Content;
 using DieWithASmile.Engine.Core;
 using DieWithASmile.Engine.Layout;
 using DieWithASmile.Engine.UI;
+using DieWithASmile.Engine.Settings;
 
 namespace DieWithASmile.Engine.Chrome
 {
@@ -61,7 +62,8 @@ namespace DieWithASmile.Engine.Chrome
 					WrenchToolbar.Collapse();
 					break;
 				case WrenchAction.Client:
-					WePanels.Open(WePanelId.Client);
+					WeNeoMenu.Open(WeNeoCat.Client);
+					WrenchToolbar.Collapse();
 					break;
 				case WrenchAction.Clean:
 					WeSettings.ToggleCleanChrome();
@@ -72,6 +74,7 @@ namespace DieWithASmile.Engine.Chrome
 
 		internal static bool IsOn(WrenchAction action) => action switch {
 			WrenchAction.Clean => WeSave.Data.CleanChrome,
+			WrenchAction.Client => WeNeoMenu.IsOpen && WeNeoMenu.Category == WeNeoCat.Client,
 			_ => WePanels.Is(PanelOf(action))
 		};
 

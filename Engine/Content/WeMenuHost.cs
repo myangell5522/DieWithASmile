@@ -10,6 +10,7 @@ using DieWithASmile.Engine.UI;
 using DieWithASmile.Engine.Widgets;
 using DieWithASmile.Engine.Audio;
 using DieWithASmile.Engine.Grab;
+using DieWithASmile.Engine.Settings;
 using DieWithASmile.Content;
 
 namespace DieWithASmile.Engine.Content
@@ -58,6 +59,7 @@ namespace DieWithASmile.Engine.Content
 			WrenchToolbar.Update();
 			WePanels.Update();
 			WeSplash.Update();
+			WeNeoMenu.Tick();
 			WidgetHost.Update();
 			WeFx.Update();
 			WeCatalog.Pulse();
@@ -87,6 +89,7 @@ namespace DieWithASmile.Engine.Content
 			WePlayerUI.EndFrame();
 			WrenchToolbar.EndFrame();
 			WePanels.EndFrame();
+			WeNeoMenu.EndFrame();
 		}
 
 		private static void DrawTitleChrome()
@@ -99,8 +102,10 @@ namespace DieWithASmile.Engine.Content
 			try {
 				WeDraw.BeginUi(spriteBatch);
 				LayoutEditor.Draw(spriteBatch, 1f);
-				WrenchToolbar.Draw(spriteBatch);
+				if (!WeNeoMenu.Covering)
+					WrenchToolbar.Draw(spriteBatch);
 				WePanels.Draw(spriteBatch);
+				WeNeoMenu.Draw(spriteBatch);
 				WeSplash.Draw(spriteBatch);
 				WeToast.Draw(spriteBatch);
 			}
@@ -182,11 +187,14 @@ namespace DieWithASmile.Engine.Content
 			bool remapY = false;
 			bool savedMouseLeft = Main.mouseLeft;
 
+			WeNeoMenu.CatchTitleHub();
+			WeNeoMenu.CatchReturn();
+
 			if (WeModMenu.OnTitle) {
 				WeAnim.Pulse();
 				HandleInput();
 				releaseAfterInput = Main.mouseLeftRelease;
-				steal = WeSplash.Visible || WePanels.Covering || WePanels.AteInput || WrenchToolbar.Busy || LayoutEditor.Editing || WidgetHost.Busy;
+				steal = WeSplash.Visible || WePanels.Covering || WePanels.AteInput || WeNeoMenu.Covering || WeNeoMenu.AteInput || WrenchToolbar.Busy || LayoutEditor.Editing || WidgetHost.Busy;
 				if (steal) {
 					Main.blockMouse = true;
 					Main.mouseLeftRelease = false;
@@ -195,7 +203,7 @@ namespace DieWithASmile.Engine.Content
 
 				MenuButtonHooks.BeginFrame();
 				int dy = MenuButtonHooks.MouseRemapY;
-				if (dy != 0 && !WePanels.Covering && !WeSplash.Visible && SceneGraph.Visible(SceneGraph.MenuButtons)) {
+				if (dy != 0 && !WePanels.Covering && !WeNeoMenu.Covering && !WeSplash.Visible && SceneGraph.Visible(SceneGraph.MenuButtons)) {
 					Main.mouseY -= dy;
 					remapY = true;
 				}
@@ -230,6 +238,8 @@ namespace DieWithASmile.Engine.Content
 			if (esc && !_esc) {
 				if (WeSplash.Visible)
 					WeSplash.Dismiss(savePreference: false);
+				else if (WeNeoMenu.IsOpen)
+					WeNeoMenu.Close();
 				else if (WePanels.IsOpen)
 					WePanels.Close();
 				else if (LayoutEditor.Editing)
@@ -241,6 +251,10 @@ namespace DieWithASmile.Engine.Content
 			_esc = esc;
 			WeSplash.HandleInput();
 			if (WeSplash.Visible)
+				return;
+
+			WeNeoMenu.HandleInput();
+			if (WeNeoMenu.Covering)
 				return;
 
 			WePanels.HandleInput();

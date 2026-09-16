@@ -296,4 +296,22 @@ UI: {
 	ResetFactoryHint: Entropy of Freedom, 팩 로고, 왼쪽 메뉴, 하단 독, 내장 재생목록을 되돌립니다. 직접 넣은 그림, 올린 음악, 글꼴, 프리셋을 삭제합니다.
 	ResetFactorySure: 확인하려면 한 번 더 누르세요
 	ToastFactoryReset: 모드가 초기 설정으로 재설정되었습니다
+	NeoSearch: 검색...
+	NeoApply: 적용
+	NeoCatGame: 게임
+	NeoCatVideo: 비디오
+	NeoCatAudio: 오디오
+	NeoCatInterface: 인터페이스
+	NeoCatCursor: 커서
+	NeoCatControls: 조작
+	NeoCatMods: 모드
+	NeoCatClient: 클라이언트
+	NeoSectionGeneral: 일반
+	NeoSectionQuality: 품질
+	NeoOpenKeybinds: 키 설정
+	NeoOpenMods: 모드 관리
+	NeoOpenPacks: 리소스 팩
+	NeoOpenTml: tModLoader 설정
+	NeoOpenCursorColor: 커서 색
+	NeoOpenCursorBorder: 커서 테두리
 }

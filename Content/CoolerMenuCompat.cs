@@ -17,6 +17,7 @@ using Terraria.UI;
 using Terraria.UI.Chat;
 using DieWithASmile.Engine.Content;
 using DieWithASmile.Engine.UI;
+using DieWithASmile.Engine.Settings;
 
 namespace DieWithASmile.Content
 {
@@ -304,7 +305,7 @@ namespace DieWithASmile.Content
 		}
 
 		private static bool HideCoolerMenuButtons() =>
-			WeModMenu.IsActive && (WePanels.Covering || WeSplash.Visible);
+			WeModMenu.IsActive && (WePanels.Covering || WeNeoMenu.Covering || WeSplash.Visible);
 
 		private static Color GetButtonHoverColor()
 		{

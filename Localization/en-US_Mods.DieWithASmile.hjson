@@ -296,4 +296,22 @@ UI: {
 	ResetFactoryHint: Restores Entropy of Freedom, the pack logo, left menu, dock bar, and packed playlist. Deletes your pictures, uploaded music, fonts, and looks.
 	ResetFactorySure: Click again to confirm
 	ToastFactoryReset: Mod reset to starter settings
+	NeoSearch: Search...
+	NeoApply: Apply
+	NeoCatGame: Game
+	NeoCatVideo: Video
+	NeoCatAudio: Audio
+	NeoCatInterface: Interface
+	NeoCatCursor: Cursor
+	NeoCatControls: Controls
+	NeoCatMods: Mods
+	NeoCatClient: Client
+	NeoSectionGeneral: General
+	NeoSectionQuality: Quality
+	NeoOpenKeybinds: Keybindings
+	NeoOpenMods: Manage mods
+	NeoOpenPacks: Resource packs
+	NeoOpenTml: tModLoader settings
+	NeoOpenCursorColor: Cursor color
+	NeoOpenCursorBorder: Cursor border
 }

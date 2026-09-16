@@ -10,6 +10,7 @@ using DieWithASmile.Engine.Content;
 using DieWithASmile.Engine.Core;
 using DieWithASmile.Engine.Layout;
 using DieWithASmile.Engine.UI;
+using DieWithASmile.Engine.Settings;
 
 namespace DieWithASmile.Engine.Audio
 {
@@ -124,7 +125,7 @@ namespace DieWithASmile.Engine.Audio
 		private static void UpdateInput()
 		{
 			bool pressed = WeInput.Edge(ref _mouseHeld, ref _holdLock);
-			if (!Enabled || WePanels.Covering || WeSplash.Visible || LayoutEditor.Editing) {
+			if (!Enabled || WePanels.Covering || WeNeoMenu.Covering || WeSplash.Visible || LayoutEditor.Editing) {
 				_expand = MathHelper.Lerp(_expand, 0f, 0.22f);
 				_draggingSeek = false;
 				return;

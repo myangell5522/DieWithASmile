@@ -9,6 +9,7 @@ using DieWithASmile.Engine.Content;
 using DieWithASmile.Engine.Core;
 using DieWithASmile.Engine.Layout;
 using DieWithASmile.Engine.UI;
+using DieWithASmile.Engine.Settings;
 
 namespace DieWithASmile.Engine.Chrome
 {
@@ -65,6 +66,13 @@ namespace DieWithASmile.Engine.Chrome
 				return;
 			}
 
+			if (WeNeoMenu.Covering) {
+				_expanded = false;
+				_open = MathHelper.Lerp(_open, 0f, 0.28f);
+				TickSparks();
+				return;
+			}
+
 			if (WrenchHub.UseDock) {
 				_expanded = false;
 				_open = MathHelper.Lerp(_open, 0f, 0.28f);
@@ -83,7 +91,7 @@ namespace DieWithASmile.Engine.Chrome
 
 		internal static void HandleInput()
 		{
-			if (_frameInput || LayoutEditor.Editing || WeSplash.Visible)
+			if (_frameInput || LayoutEditor.Editing || WeSplash.Visible || WeNeoMenu.Covering)
 				return;
 
 			_frameInput = true;

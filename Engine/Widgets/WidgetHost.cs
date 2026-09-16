@@ -4,6 +4,7 @@ using DieWithASmile.Engine.Content;
 using DieWithASmile.Engine.Core;
 using DieWithASmile.Engine.Audio;
 using DieWithASmile.Engine.UI;
+using DieWithASmile.Engine.Settings;
 
 namespace DieWithASmile.Engine.Widgets
 {
@@ -30,7 +31,7 @@ namespace DieWithASmile.Engine.Widgets
 		{
 			if (!WeModMenu.OnTitle)
 				return;
-			if (WePanels.Covering || WePanels.AteInput)
+			if (WePanels.Covering || WePanels.AteInput || WeNeoMenu.Covering)
 				return;
 			WePlayerUI.HandleInput();
 			DiscordWidget.HandleInput();

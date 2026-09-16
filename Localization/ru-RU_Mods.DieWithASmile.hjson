@@ -296,4 +296,22 @@ UI: {
 	ResetFactoryHint: Вернёт Entropy of Freedom, логотип пака, левое меню, нижнюю панель и встроенный плейлист. Удалит ваши картинки, загруженную музыку, шрифты и пресеты.
 	ResetFactorySure: Нажми ещё раз для подтверждения
 	ToastFactoryReset: Мод сброшен к начальным настройкам
+	NeoSearch: Поиск...
+	NeoApply: Применить
+	NeoCatGame: Игра
+	NeoCatVideo: Видео
+	NeoCatAudio: Звук
+	NeoCatInterface: Интерфейс
+	NeoCatCursor: Курсор
+	NeoCatControls: Управление
+	NeoCatMods: Моды
+	NeoCatClient: Клиент
+	NeoSectionGeneral: Основное
+	NeoSectionQuality: Качество
+	NeoOpenKeybinds: Клавиши
+	NeoOpenMods: Список модов
+	NeoOpenPacks: Пакеты ресурсов
+	NeoOpenTml: Настройки tModLoader
+	NeoOpenCursorColor: Цвет курсора
+	NeoOpenCursorBorder: Обводка курсора
 }
