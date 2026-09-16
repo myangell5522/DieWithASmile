@@ -46,8 +46,15 @@ namespace DieWithASmile.Engine.Settings
 		private static float _fade;
 		private static float _pageFade = 1f;
 		private static float _scroll;
+		private static float _scrollWant;
+		private static float _scrollVel;
 		private static float _contentH;
+		private static int _chrome;
+		private static int _viewH;
 		private static int _lastWheel;
+		private static int _dragY;
+		private static int _dragStartY;
+		private static bool _panned;
 		private static int _clientChip;
 		private static int _cursorChip;
 		private static bool _factoryArmed;
@@ -71,6 +78,8 @@ namespace DieWithASmile.Engine.Settings
 		internal static int CursorChip => _cursorChip;
 		internal static bool FactoryArmed => _factoryArmed;
 		internal static float Scroll => _scroll;
+		internal static int Chrome => _chrome;
+		internal static bool Panned => _panned;
 		internal static bool InGame => _inGame;
 
 		internal static void SetContentHeight(float h) => _contentH = h;
@@ -82,16 +91,38 @@ namespace DieWithASmile.Engine.Settings
 		internal static void SetPage(WeNeoPage page)
 		{
 			_leaf = page;
-			_scroll = 0f;
+			SetScroll(0f);
 			_pageFade = 0f;
+			_chrome = 0;
 			WeTml.Touch();
 		}
 
 		internal static void SetFactoryArmed(bool armed) => _factoryArmed = armed;
 
-		internal static void SetDrag(string id) => _drag = id;
+		internal static void SetDrag(string id)
+		{
+			_drag = id;
+			_dragY = Main.mouseY;
+			_dragStartY = Main.mouseY;
+			_panned = false;
+		}
 
-		internal static void SetScroll(float value) => _scroll = value;
+		internal static void SetChrome(int h) => _chrome = Math.Max(0, h);
+
+		internal static void SetViewHeight(int h) => _viewH = Math.Max(1, h);
+
+		internal static void SetScroll(float value)
+		{
+			float max = MaxScroll();
+			_scroll = MathHelper.Clamp(value, 0f, max);
+			_scrollWant = _scroll;
+			_scrollVel = 0f;
+		}
+
+		internal static void AddScroll(float delta)
+		{
+			_scrollWant = MathHelper.Clamp(_scrollWant + delta, 0f, MaxScroll());
+		}
 
 		internal static void SetSearch(string value) => _search = value ?? "";
 
@@ -262,7 +293,7 @@ namespace DieWithASmile.Engine.Settings
 			_open = true;
 			_inGame = game;
 			_cat = cat;
-			_scroll = 0f;
+			SetScroll(0f);
 			_pageFade = 1f;
 			_leaf = WeNeoPage.Hub;
 			_drag = null;
@@ -365,6 +396,7 @@ namespace DieWithASmile.Engine.Settings
 			CatchReturn();
 			_fade = MathHelper.Lerp(_fade, _open ? 1f : 0f, 0.28f);
 			_pageFade = MathHelper.Lerp(_pageFade, 1f, 0.22f);
+			StepScroll();
 			if (!_open && _fade < 0.02f)
 				_fade = 0f;
 			if (_open && _inGame)
@@ -378,15 +410,106 @@ namespace DieWithASmile.Engine.Settings
 			WeNeoShell.Draw(spriteBatch);
 		}
 
-		internal static float MaxScroll(Rectangle view) =>
-			Math.Max(0f, _contentH - view.Height);
+		internal static float MaxScroll() =>
+			Math.Max(0f, _contentH - Math.Max(1, _viewH));
+
+		internal static float MaxScroll(Rectangle view)
+		{
+			_viewH = Math.Max(1, view.Height);
+			return MaxScroll();
+		}
+
+		internal static void StepScroll()
+		{
+			float max = MaxScroll();
+			_scrollWant = MathHelper.Clamp(_scrollWant, 0f, max);
+			_scrollVel *= 0.82f;
+			if (Math.Abs(_scrollVel) < 0.15f)
+				_scrollVel = 0f;
+			_scrollWant = MathHelper.Clamp(_scrollWant + _scrollVel, 0f, max);
+			_scroll = MathHelper.Lerp(_scroll, _scrollWant, 0.34f);
+			if (Math.Abs(_scroll - _scrollWant) < 0.35f && _scrollVel == 0f)
+				_scroll = _scrollWant;
+			_scroll = MathHelper.Clamp(_scroll, 0f, max);
+		}
 
 		internal static void Wheel(Rectangle view)
 		{
+			_viewH = Math.Max(1, view.Height);
 			int wheel = Mouse.GetState().ScrollWheelValue;
-			if (view.Contains(Main.mouseX, Main.mouseY))
-				_scroll = MathHelper.Clamp(_scroll - (wheel - _lastWheel) / 120f * 48f, 0f, MaxScroll(view));
+			int delta = wheel - _lastWheel;
 			_lastWheel = wheel;
+			if (delta == 0 || !view.Contains(Main.mouseX, Main.mouseY))
+				return;
+			float notches = delta / 120f;
+			_scrollVel -= notches * 22f;
+			_scrollWant = MathHelper.Clamp(_scrollWant - notches * 64f, 0f, MaxScroll());
+		}
+
+		internal static Rectangle ListBox(Rectangle view) =>
+			new(view.X, view.Y + _chrome, Math.Max(1, view.Width - 12), Math.Max(1, view.Height - _chrome));
+
+		internal static Rectangle ScrollTrack(Rectangle view)
+		{
+			Rectangle list = ListBox(view);
+			return new Rectangle(view.Right - 10, list.Y, 8, list.Height);
+		}
+
+		internal static Rectangle ScrollThumb(Rectangle view)
+		{
+			Rectangle track = ScrollTrack(view);
+			float max = MaxScroll();
+			if (max < 1f || track.Height < 8)
+				return Rectangle.Empty;
+			int thumbH = Math.Max(28, (int)(track.Height * track.Height / (track.Height + max)));
+			thumbH = Math.Min(track.Height, thumbH);
+			float t = _scroll / max;
+			int thumbY = track.Y + (int)((track.Height - thumbH) * t);
+			return new Rectangle(track.X, thumbY, track.Width, thumbH);
+		}
+
+		internal static bool PumpDrag(Rectangle view)
+		{
+			if (string.IsNullOrEmpty(_drag) || !_drag.StartsWith("neo", StringComparison.Ordinal))
+				return false;
+
+			if (_drag == "neo-hold") {
+				if (Math.Abs(Main.mouseY - _dragStartY) > 8) {
+					if (WeNeoShop.TryBeginPackDrag()) {
+						_drag = "neo-pack";
+						_panned = true;
+					}
+					else {
+						_drag = "neo-pan";
+						_panned = true;
+						_dragY = Main.mouseY;
+					}
+				}
+			}
+
+			if (_drag == "neo-pan") {
+				AddScroll(_dragY - Main.mouseY);
+				_scroll = _scrollWant;
+				_dragY = Main.mouseY;
+				_panned = true;
+			}
+			else if (_drag == "neo-scroll") {
+				Rectangle track = ScrollTrack(view);
+				Rectangle thumb = ScrollThumb(view);
+				float span = Math.Max(1f, track.Height - Math.Max(1, thumb.Height));
+				float t = (Main.mouseY - track.Y - thumb.Height * 0.5f) / span;
+				SetScroll(MathHelper.Clamp(t, 0f, 1f) * MaxScroll());
+			}
+			else if (_drag != null && _drag.StartsWith("neo-pack", StringComparison.Ordinal))
+				WeNeoShop.DragPack(view, Main.mouseY);
+
+			if (!WeInput.LeftDown) {
+				bool fire = _drag == "neo-hold" && !_panned;
+				_drag = null;
+				return fire;
+			}
+
+			return false;
 		}
 
 		internal static void SelectCat(WeNeoCat cat)
@@ -394,10 +517,11 @@ namespace DieWithASmile.Engine.Settings
 			if (_cat == cat)
 				return;
 			_cat = cat;
-			_scroll = 0f;
+			SetScroll(0f);
 			_pageFade = 0f;
 			_leaf = WeNeoPage.Hub;
 			_factoryArmed = false;
+			_chrome = 0;
 			SoundEngine.PlaySound(SoundID.MenuTick);
 		}
 

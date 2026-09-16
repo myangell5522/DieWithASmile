@@ -34,7 +34,7 @@ namespace DieWithASmile.Engine.Core
 
 		internal Texture2D Current()
 		{
-			if (_gpu == null || _gpu.Length < 2)
+			if (_gpu == null || _gpu.Length < 1)
 				return null;
 			int want = IndexAt(Tick());
 			want = Math.Clamp(want, 0, _gpu.Length - 1);
@@ -60,7 +60,7 @@ namespace DieWithASmile.Engine.Core
 
 		private void Bake()
 		{
-			if (_baked != null || Frames == null || Frames.Length < 2 || Width < 1 || Height < 1)
+			if (_baked != null || Frames == null || Frames.Length < 1 || Width < 1 || Height < 1)
 				return;
 			_canvas = new Color[Width * Height];
 			_baked = new Color[Frames.Length][];
@@ -76,7 +76,7 @@ namespace DieWithASmile.Engine.Core
 
 		private void Upload()
 		{
-			if (_gpu != null || _baked == null || _baked.Length < 2 || !WeAnim.CanUpload)
+			if (_gpu != null || _baked == null || _baked.Length < 1 || !WeAnim.CanUpload)
 				return;
 			GraphicsDevice device = Main.instance?.GraphicsDevice ?? Main.graphics?.GraphicsDevice;
 			if (device == null)

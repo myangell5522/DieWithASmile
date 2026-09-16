@@ -70,6 +70,7 @@ namespace DieWithASmile.Engine.Settings
 			WeDraw.Fill(spriteBatch, new Rectangle(panel.X + SideW + 12, panel.Y + 58, 1, panel.Height - 128), WeAccent.Mid * (0.35f * fade));
 			Rectangle view = View(panel);
 			WeDraw.WithClip(spriteBatch, view, () => DrawBody(spriteBatch, view, fade));
+			DrawScroll(spriteBatch, view, fade);
 			if (WeNeoBind.NeedApply)
 				DrawBtn(spriteBatch, ApplyBox(panel), WeText.UI("NeoApply"), fade);
 			DrawBtn(spriteBatch, DoneBox(panel), WeText.UI("Done"), fade);
@@ -79,9 +80,19 @@ namespace DieWithASmile.Engine.Settings
 		{
 			Rectangle panel = Panel();
 			Rectangle view = View(panel);
+			WeNeoMenu.SetViewHeight(view.Height);
 			WeNeoMenu.Wheel(view);
 
 			if (WeNeoMenu.Drag != null) {
+				if (WeNeoMenu.Drag.StartsWith("neo", StringComparison.Ordinal)) {
+					if (WeNeoMenu.PumpDrag(view)) {
+						int fireY = view.Y - (int)WeNeoMenu.Scroll;
+						WeNeoBind.Click(view, ref fireY, true, false);
+					}
+
+					return;
+				}
+
 				if (WeInput.LeftDown)
 					WeNeoBind.Slide(WeNeoMenu.Drag);
 				else
@@ -141,8 +152,32 @@ namespace DieWithASmile.Engine.Settings
 			if (!view.Contains(Main.mouseX, Main.mouseY))
 				return;
 
+			if (pressed && WeNeoMenu.ScrollTrack(view).Contains(Main.mouseX, Main.mouseY)) {
+				WeNeoMenu.SetDrag("neo-scroll");
+				WeNeoMenu.PumpDrag(view);
+				return;
+			}
+
+			if (pressed && WeNeoMenu.Chrome > 0 && Main.mouseY >= view.Y + WeNeoMenu.Chrome) {
+				WeNeoMenu.SetDrag("neo-hold");
+				return;
+			}
+
 			int y = view.Y - (int)WeNeoMenu.Scroll;
 			WeNeoBind.Click(view, ref y, pressed, right);
+		}
+
+		private static void DrawScroll(SpriteBatch spriteBatch, Rectangle view, float fade)
+		{
+			if (WeNeoMenu.MaxScroll(view) < 8f)
+				return;
+			Rectangle track = WeNeoMenu.ScrollTrack(view);
+			Rectangle thumb = WeNeoMenu.ScrollThumb(view);
+			if (track.Height < 8 || thumb.Height < 4)
+				return;
+			WeDraw.Fill(spriteBatch, track, new Color(16, 18, 22) * (0.7f * fade));
+			bool hover = thumb.Contains(Main.mouseX, Main.mouseY) || WeNeoMenu.Drag == "neo-scroll";
+			WeDraw.Fill(spriteBatch, thumb, (hover ? WeAccent.Light : WeAccent.Mid) * (0.85f * fade));
 		}
 
 		private static void DrawSearch(SpriteBatch spriteBatch, Rectangle panel, float fade)
@@ -205,6 +240,7 @@ namespace DieWithASmile.Engine.Settings
 
 		private static void DrawBody(SpriteBatch spriteBatch, Rectangle view, float fade)
 		{
+			WeNeoMenu.SetViewHeight(view.Height);
 			float page = WeNeoMenu.PageFade;
 			int y = view.Y - (int)WeNeoMenu.Scroll + (int)((1f - page) * 12f);
 			WeNeoBind.Draw(spriteBatch, view, ref y, fade * MathHelper.Clamp(page, 0.15f, 1f));

@@ -38,51 +38,91 @@ namespace DieWithASmile.Engine.Settings
 		private const int IconPx = 64;
 		private static string _info;
 		private static string _infoTitle;
+		private static string _selected;
+		private static string _clickName;
+		private static int _clickTick;
+		private static int _packDrag = -1;
 		private static int _filter;
 
 		internal static void Draw(SpriteBatch spriteBatch, Rectangle view, ref int y, float fade)
 		{
+			int origin = y + (int)WeNeoMenu.Scroll;
+			int cy = origin;
 			if (WeNeoMenu.Page != WeNeoPage.Hub)
-				DrawBack(spriteBatch, view, ref y, fade);
+				DrawBack(spriteBatch, view, ref cy, fade);
 
-			switch (WeNeoMenu.Page) {
-				case WeNeoPage.Mods:
-					DrawMods(spriteBatch, view, ref y, fade);
-					break;
-				case WeNeoPage.Browser:
-					DrawBrowser(spriteBatch, view, ref y, fade);
-					break;
-				case WeNeoPage.ModPacks:
-					DrawModPacks(spriteBatch, view, ref y, fade);
-					break;
-				case WeNeoPage.Resources:
-					DrawResources(spriteBatch, view, ref y, fade);
-					break;
-				case WeNeoPage.Develop:
-					DrawDevelop(spriteBatch, view, ref y, fade);
-					break;
-				case WeNeoPage.Worlds:
-					DrawWorlds(spriteBatch, view, ref y, fade);
-					break;
-				case WeNeoPage.Logs:
-					DrawLogs(spriteBatch, view, ref y, fade);
-					break;
-				default:
-					DrawHub(spriteBatch, view, ref y, fade);
-					break;
+			if (WeNeoMenu.Page != WeNeoPage.Hub) {
+				switch (WeNeoMenu.Page) {
+					case WeNeoPage.Mods:
+						DrawModsChrome(spriteBatch, view, ref cy, fade);
+						y = DrawClippedList(spriteBatch, view, origin, cy, fade, DrawModsList);
+						break;
+					case WeNeoPage.Browser:
+						DrawBrowserChrome(spriteBatch, view, ref cy, fade);
+						y = DrawClippedList(spriteBatch, view, origin, cy, fade, DrawBrowserList);
+						break;
+					case WeNeoPage.ModPacks:
+						DrawModPacksChrome(spriteBatch, view, ref cy, fade);
+						y = DrawClippedList(spriteBatch, view, origin, cy, fade, DrawModPacksList);
+						break;
+					case WeNeoPage.Resources:
+						DrawResourcesChrome(spriteBatch, view, ref cy, fade);
+						y = DrawClippedList(spriteBatch, view, origin, cy, fade, DrawResourcesList);
+						break;
+					case WeNeoPage.Develop:
+						DrawDevelopChrome(spriteBatch, view, ref cy, fade);
+						y = DrawClippedList(spriteBatch, view, origin, cy, fade, DrawDevelopList);
+						break;
+					case WeNeoPage.Worlds:
+						DrawWorlds(spriteBatch, view, ref cy, fade);
+						y = cy - (int)WeNeoMenu.Scroll;
+						WeNeoMenu.SetChrome(cy - origin);
+						break;
+					case WeNeoPage.Logs:
+						DrawLogs(spriteBatch, view, ref cy, fade);
+						y = cy - (int)WeNeoMenu.Scroll;
+						WeNeoMenu.SetChrome(Math.Min(cy - origin, 40));
+						break;
+					default:
+						DrawHub(spriteBatch, view, ref y, fade);
+						WeNeoMenu.SetChrome(0);
+						break;
+				}
+
+				return;
 			}
+
+			DrawHub(spriteBatch, view, ref y, fade);
+			WeNeoMenu.SetChrome(0);
+		}
+
+		private delegate void WeListDraw(SpriteBatch spriteBatch, Rectangle view, ref int y, float fade);
+
+		private static int DrawClippedList(SpriteBatch spriteBatch, Rectangle view, int origin, int chromeBottom, float fade, WeListDraw drawList)
+		{
+			WeNeoMenu.SetChrome(chromeBottom - origin);
+			var list = new Rectangle(view.X, chromeBottom, Math.Max(1, view.Width - 12), Math.Max(1, view.Bottom - chromeBottom));
+			int end = chromeBottom - (int)WeNeoMenu.Scroll;
+			WeDraw.WithClip(spriteBatch, list, () => {
+				int yy = chromeBottom - (int)WeNeoMenu.Scroll;
+				drawList(spriteBatch, view, ref yy, fade);
+				end = yy;
+			});
+			return end;
 		}
 
 		internal static void Click(Rectangle view, ref int y, bool left, bool right)
 		{
+			int origin = y + (int)WeNeoMenu.Scroll;
 			if (WeNeoMenu.Page != WeNeoPage.Hub) {
-				var back = BackBox(view, y);
-				y += 36;
+				var back = BackBox(view, origin);
 				if (left && back.Contains(Main.mouseX, Main.mouseY)) {
 					WeNeoMenu.SetPage(WeNeoPage.Hub);
 					Tick();
 					return;
 				}
+
+				y = origin + 36;
 			}
 
 			switch (WeNeoMenu.Page) {
@@ -277,7 +317,7 @@ namespace DieWithASmile.Engine.Settings
 			return bar;
 		}
 
-		private static void DrawMods(SpriteBatch spriteBatch, Rectangle view, ref int y, float fade)
+		private static void DrawModsChrome(SpriteBatch spriteBatch, Rectangle view, ref int y, float fade)
 		{
 			bool live = WeNeoMenu.InGame;
 			ChatManager.DrawColorCodedStringWithShadow(
@@ -301,9 +341,8 @@ namespace DieWithASmile.Engine.Settings
 			for (int i = 0; i < 4; i++)
 				DrawChip(spriteBatch, bar.Filters[i], WeText.UI(filters[i]), _filter == i, fade);
 
-			List<WeLocalMod> shown = ShownMods();
-			int on = 0;
 			List<WeLocalMod> all = WeTml.LocalMods();
+			int on = 0;
 			for (int i = 0; i < all.Count; i++) {
 				if (all[i].Enabled)
 					on++;
@@ -313,7 +352,7 @@ namespace DieWithASmile.Engine.Settings
 			Vector2 cs = FontAssets.MouseText.Value.MeasureString(count) * WeNeoShell.TypeSmall;
 			ChatManager.DrawColorCodedStringWithShadow(
 				spriteBatch, FontAssets.MouseText.Value, count,
-				new Vector2(view.Right - 10 - cs.X, bar.Filters[0].Y + 4), Color.White * (0.6f * fade), 0f, Vector2.Zero, new Vector2(WeNeoShell.TypeSmall));
+				new Vector2(view.Right - 22 - cs.X, bar.Filters[0].Y + 4), Color.White * (0.6f * fade), 0f, Vector2.Zero, new Vector2(WeNeoShell.TypeSmall));
 
 			if (bar.Info.Width > 0) {
 				WeDraw.Fill(spriteBatch, bar.Info, new Color(18, 20, 26) * fade);
@@ -325,7 +364,11 @@ namespace DieWithASmile.Engine.Settings
 					spriteBatch, FontAssets.MouseText.Value, Wrap(_info, 54),
 					new Vector2(bar.Info.X + 10, bar.Info.Y + 24), Color.White * (0.82f * fade), 0f, Vector2.Zero, new Vector2(0.62f));
 			}
+		}
 
+		private static void DrawModsList(SpriteBatch spriteBatch, Rectangle view, ref int y, float fade)
+		{
+			List<WeLocalMod> shown = ShownMods();
 			if (shown.Count == 0) {
 				DrawEmpty(spriteBatch, view, ref y, WeText.UI("NeoEmptyMods"), fade);
 				return;
@@ -338,68 +381,69 @@ namespace DieWithASmile.Engine.Settings
 		private static void ClickMods(Rectangle view, ref int y, bool left)
 		{
 			ModsBar bar = LayoutMods(view, ref y);
-			if (!left)
-				return;
+			int chromeBottom = y;
+			if (left && Main.mouseY < chromeBottom) {
+				if (!WeNeoMenu.InGame) {
+					if (bar.Tools[0].Contains(Main.mouseX, Main.mouseY)) {
+						WeTml.SetAll(true);
+						Tick();
+						return;
+					}
 
-			if (!WeNeoMenu.InGame) {
-				if (bar.Tools[0].Contains(Main.mouseX, Main.mouseY)) {
-					WeTml.SetAll(true);
+					if (bar.Tools[1].Contains(Main.mouseX, Main.mouseY)) {
+						WeTml.SetAll(false);
+						Tick();
+						return;
+					}
+
+					if (bar.Tools[2].Contains(Main.mouseX, Main.mouseY)) {
+						WeTml.Reload();
+						return;
+					}
+
+					if (bar.Tools[4].Contains(Main.mouseX, Main.mouseY)) {
+						WeTml.SavePack();
+						Tick();
+						return;
+					}
+				}
+
+				if (bar.Tools[3].Contains(Main.mouseX, Main.mouseY)) {
+					WeFiles.OpenFolder(WeTml.ModsFolder());
 					Tick();
 					return;
 				}
 
-				if (bar.Tools[1].Contains(Main.mouseX, Main.mouseY)) {
-					WeTml.SetAll(false);
+				if (bar.Tools[5].Contains(Main.mouseX, Main.mouseY)) {
+					WeFiles.OpenFolder(WeTml.ConfigsFolder());
 					Tick();
 					return;
 				}
 
-				if (bar.Tools[2].Contains(Main.mouseX, Main.mouseY)) {
-					WeTml.Reload();
-					return;
-				}
-
-				if (bar.Tools[4].Contains(Main.mouseX, Main.mouseY)) {
-					WeTml.SavePack();
+				for (int i = 0; i < 4; i++) {
+					if (!bar.Filters[i].Contains(Main.mouseX, Main.mouseY))
+						continue;
+					_filter = i;
 					Tick();
 					return;
 				}
-			}
 
-			if (bar.Tools[3].Contains(Main.mouseX, Main.mouseY)) {
-				WeFiles.OpenFolder(WeTml.ModsFolder());
-				Tick();
 				return;
 			}
 
-			if (bar.Tools[5].Contains(Main.mouseX, Main.mouseY)) {
-				WeFiles.OpenFolder(WeTml.ConfigsFolder());
-				Tick();
-				return;
-			}
-
-			for (int i = 0; i < 4; i++) {
-				if (!bar.Filters[i].Contains(Main.mouseX, Main.mouseY))
-					continue;
-				_filter = i;
-				Tick();
-				return;
-			}
-
+			int ly = chromeBottom - (int)WeNeoMenu.Scroll;
 			List<WeLocalMod> shown = ShownMods();
 			if (shown.Count == 0) {
-				SkipEmpty(view, ref y);
+				SkipEmpty(view, ref ly);
 				return;
 			}
 
 			foreach (WeLocalMod mod in shown) {
-				ModCard card = NextModCard(view, ref y);
+				ModCard card = NextModCard(view, ref ly);
+				if (!left || !card.Hit.Contains(Main.mouseX, Main.mouseY))
+					continue;
 				if (card.Pill.Contains(Main.mouseX, Main.mouseY)) {
-					if (!WeNeoMenu.InGame) {
-						WeTml.SetEnabled(mod, !mod.Enabled);
-						Tick();
-					}
-
+					ToggleMod(mod);
 					return;
 				}
 
@@ -409,7 +453,7 @@ namespace DieWithASmile.Engine.Settings
 					return;
 				}
 
-				if (card.Ask.Contains(Main.mouseX, Main.mouseY) || card.Hit.Contains(Main.mouseX, Main.mouseY)) {
+				if (card.Ask.Contains(Main.mouseX, Main.mouseY)) {
 					if (_infoTitle == mod.Display && !string.IsNullOrEmpty(_info)) {
 						_info = null;
 						_infoTitle = null;
@@ -422,7 +466,28 @@ namespace DieWithASmile.Engine.Settings
 					Tick();
 					return;
 				}
+
+				int now = (int)Main.GameUpdateCount;
+				bool dbl = _clickName == mod.Name && now - _clickTick < 24;
+				_clickName = mod.Name;
+				_clickTick = now;
+				_selected = mod.Name;
+				if (dbl) {
+					ToggleMod(mod);
+					return;
+				}
+
+				Tick();
+				return;
 			}
+		}
+
+		private static void ToggleMod(WeLocalMod mod)
+		{
+			if (WeNeoMenu.InGame)
+				return;
+			WeTml.SetEnabled(mod, !mod.Enabled);
+			Tick();
 		}
 
 		private static List<WeLocalMod> ShownMods()
@@ -447,9 +512,15 @@ namespace DieWithASmile.Engine.Settings
 		private static void DrawModCard(SpriteBatch spriteBatch, Rectangle view, ref int y, WeLocalMod mod, float fade)
 		{
 			ModCard card = NextModCard(view, ref y);
-			bool hover = card.Hit.Contains(Main.mouseX, Main.mouseY);
+			bool hover = card.Hit.Contains(Main.mouseX, Main.mouseY) || _selected == mod.Name;
 			Color edge = mod.Edge.A == 0 ? WeAccent.Mid : mod.Edge;
+			Texture2D art = PlayModArt(mod);
 			WeDraw.Fill(spriteBatch, card.Hit, (hover ? WeAccent.Deep : new Color(22, 24, 30)) * fade);
+			if (art != null)
+				WeDraw.DrawCover(spriteBatch, art, card.Hit, Color.White * (0.22f * fade));
+			else
+				Shimmer(spriteBatch, card.Hit, edge, fade);
+			WeDraw.Fill(spriteBatch, card.Hit, new Color(12, 14, 18) * (0.35f * fade));
 			if (hover)
 				WeDraw.Fill(spriteBatch, new Rectangle(card.Hit.X, card.Hit.Y, 4, card.Hit.Height), edge * fade);
 			WeDraw.Border(spriteBatch, card.Hit, (hover ? edge : edge * 0.7f) * fade);
@@ -475,6 +546,31 @@ namespace DieWithASmile.Engine.Settings
 					new Vector2(card.Hit.X + 80, card.Hit.Y + 52), WeAccent.Light * (0.8f * fade), 0f, Vector2.Zero, new Vector2(0.58f));
 		}
 
+		private static void Shimmer(SpriteBatch spriteBatch, Rectangle hit, Color edge, float fade)
+		{
+			float wave = 0.5f + 0.5f * MathF.Sin(Main.GlobalTimeWrappedHourly * 2.2f);
+			WeDraw.Fill(spriteBatch, new Rectangle(hit.X, hit.Y, hit.Width, hit.Height), edge * (0.08f * wave * fade));
+		}
+
+		private static Texture2D PlayModArt(WeLocalMod mod)
+		{
+			if (mod.Gif == null)
+				return mod.Icon != null && !mod.Icon.IsDisposed ? mod.Icon : null;
+			bool prev = WeAnim.CanUpload;
+			WeAnim.CanUpload = true;
+			try {
+				mod.Gif.Present();
+			}
+			finally {
+				WeAnim.CanUpload = prev;
+			}
+
+			Texture2D cur = mod.Gif.Current();
+			if (cur != null && !cur.IsDisposed)
+				return cur;
+			return mod.Icon != null && !mod.Icon.IsDisposed ? mod.Icon : null;
+		}
+
 		private static ModCard NextModCard(Rectangle view, ref int y)
 		{
 			var hit = new Rectangle(view.X + 4, y, view.Width - 8, CardH);
@@ -491,10 +587,8 @@ namespace DieWithASmile.Engine.Settings
 			if (mod.Name == "DieWithASmile" && WeModListLook.DrawIcon(spriteBatch, dest, fade))
 				return;
 
-			Texture2D tex = mod.Gif?.Current();
-			if (tex == null || tex.IsDisposed)
-				tex = mod.Icon;
-			if (tex != null && !tex.IsDisposed) {
+			Texture2D tex = PlayModArt(mod);
+			if (tex != null) {
 				WeDraw.DrawCover(spriteBatch, tex, dest, Color.White * fade);
 				return;
 			}
@@ -531,7 +625,7 @@ namespace DieWithASmile.Engine.Settings
 		private static bool IsClient(string side) =>
 			!string.IsNullOrEmpty(side) && side.IndexOf("client", StringComparison.OrdinalIgnoreCase) >= 0;
 
-		private static void DrawBrowser(SpriteBatch spriteBatch, Rectangle view, ref int y, float fade)
+		private static void DrawBrowserChrome(SpriteBatch spriteBatch, Rectangle view, ref int y, float fade)
 		{
 			ChatManager.DrawColorCodedStringWithShadow(
 				spriteBatch, FontAssets.MouseText.Value, WeText.UI("NeoBrowserHint"),
@@ -539,6 +633,10 @@ namespace DieWithASmile.Engine.Settings
 			y += 22;
 			DrawBtn(spriteBatch, new Rectangle(view.X + 4, y, view.Width - 8, 32), WeText.UI("NeoOpenSteam"), fade);
 			y += 40;
+		}
+
+		private static void DrawBrowserList(SpriteBatch spriteBatch, Rectangle view, ref int y, float fade)
+		{
 			int n = 0;
 			foreach (WeLocalMod mod in WeTml.LocalMods()) {
 				if (!mod.Workshop || !WeNeoShell.Matches(WeNeoMenu.Search, mod.Display, mod.Name, "workshop", "steam"))
@@ -576,14 +674,15 @@ namespace DieWithASmile.Engine.Settings
 				return;
 			}
 
+			int ly = y - (int)WeNeoMenu.Scroll;
 			int n = 0;
 			foreach (WeLocalMod mod in WeTml.LocalMods()) {
 				if (!mod.Workshop || !WeNeoShell.Matches(WeNeoMenu.Search, mod.Display, mod.Name, "workshop", "steam"))
 					continue;
 				n++;
-				var hit = new Rectangle(view.X + 4, y, view.Width - 8, 56);
+				var hit = new Rectangle(view.X + 4, ly, view.Width - 8, 56);
 				var page = new Rectangle(hit.Right - 118, hit.Y + 14, 108, 28);
-				y += 62;
+				ly += 62;
 				if (left && page.Contains(Main.mouseX, Main.mouseY) && !string.IsNullOrEmpty(mod.Steam)) {
 					WeTml.OpenSteamPage(mod.Steam);
 					Tick();
@@ -592,10 +691,10 @@ namespace DieWithASmile.Engine.Settings
 			}
 
 			if (n == 0)
-				SkipEmpty(view, ref y);
+				SkipEmpty(view, ref ly);
 		}
 
-		private static void DrawModPacks(SpriteBatch spriteBatch, Rectangle view, ref int y, float fade)
+		private static void DrawModPacksChrome(SpriteBatch spriteBatch, Rectangle view, ref int y, float fade)
 		{
 			ChatManager.DrawColorCodedStringWithShadow(
 				spriteBatch, FontAssets.MouseText.Value, WeText.UI("NeoPacksHint"),
@@ -603,6 +702,10 @@ namespace DieWithASmile.Engine.Settings
 			y += 22;
 			DrawBtn(spriteBatch, new Rectangle(view.X + 4, y, view.Width - 8, 32), WeText.UI("NeoPacksFolder"), fade);
 			y += 40;
+		}
+
+		private static void DrawModPacksList(SpriteBatch spriteBatch, Rectangle view, ref int y, float fade)
+		{
 			List<WePackFile> packs = WeTml.ModPackItems();
 			if (packs.Count == 0) {
 				DrawEmpty(spriteBatch, view, ref y, WeText.UI("NeoEmptyPacks"), fade);
@@ -638,18 +741,19 @@ namespace DieWithASmile.Engine.Settings
 				return;
 			}
 
+			int ly = y - (int)WeNeoMenu.Scroll;
 			List<WePackFile> packs = WeTml.ModPackItems();
 			if (packs.Count == 0) {
-				SkipEmpty(view, ref y);
+				SkipEmpty(view, ref ly);
 				return;
 			}
 
 			foreach (WePackFile pack in packs) {
-				var hit = new Rectangle(view.X + 4, y, view.Width - 8, 56);
+				var hit = new Rectangle(view.X + 4, ly, view.Width - 8, 56);
 				int bw = 72;
 				var load = new Rectangle(hit.Right - bw * 2 - 16, hit.Y + 14, bw, 28);
 				var del = new Rectangle(hit.Right - bw - 8, hit.Y + 14, bw, 28);
-				y += 62;
+				ly += 62;
 				if (!left)
 					continue;
 				if (load.Contains(Main.mouseX, Main.mouseY) && !WeNeoMenu.InGame) {
@@ -666,7 +770,7 @@ namespace DieWithASmile.Engine.Settings
 			}
 		}
 
-		private static void DrawResources(SpriteBatch spriteBatch, Rectangle view, ref int y, float fade)
+		private static void DrawResourcesChrome(SpriteBatch spriteBatch, Rectangle view, ref int y, float fade)
 		{
 			ChatManager.DrawColorCodedStringWithShadow(
 				spriteBatch, FontAssets.MouseText.Value, WeText.UI("NeoResHint"),
@@ -675,6 +779,10 @@ namespace DieWithASmile.Engine.Settings
 			DrawBtn(spriteBatch, new Rectangle(view.X + 4, y, (view.Width - 16) / 2 - 4, 32), WeText.UI("NeoApplyPacks"), fade);
 			DrawBtn(spriteBatch, new Rectangle(view.X + view.Width / 2 + 4, y, (view.Width - 16) / 2 - 4, 32), WeText.UI("NeoResFolder"), fade);
 			y += 40;
+		}
+
+		private static void DrawResourcesList(SpriteBatch spriteBatch, Rectangle view, ref int y, float fade)
+		{
 			List<WeResPack> packs = WeTml.ResourcePacks();
 			if (packs.Count == 0) {
 				DrawEmpty(spriteBatch, view, ref y, WeText.UI("NeoEmptyRes"), fade);
@@ -731,10 +839,11 @@ namespace DieWithASmile.Engine.Settings
 				return;
 			}
 
+			int ly = y - (int)WeNeoMenu.Scroll;
 			List<WeResPack> packs = WeTml.ResourcePacks();
 			if (packs.Count == 0) {
-				SkipEmpty(view, ref y);
-				y += 22;
+				SkipEmpty(view, ref ly);
+				ly += 22;
 				return;
 			}
 
@@ -743,7 +852,7 @@ namespace DieWithASmile.Engine.Settings
 				WeResPack pack = packs[i];
 				if (!WeNeoShell.Matches(WeNeoMenu.Search, pack.Name))
 					continue;
-				ResCard card = NextResCard(view, ref y);
+				ResCard card = NextResCard(view, ref ly);
 				if (!left)
 					continue;
 				if (card.Pill.Contains(Main.mouseX, Main.mouseY)) {
@@ -768,6 +877,47 @@ namespace DieWithASmile.Engine.Settings
 			}
 		}
 
+		internal static bool TryBeginPackDrag()
+		{
+			if (WeNeoMenu.Page != WeNeoPage.Resources)
+				return false;
+			_packDrag = PackAtMouse();
+			return _packDrag >= 0;
+		}
+
+		internal static void DragPack(Rectangle view, int mouseY)
+		{
+			if (_packDrag < 0)
+				TryBeginPackDrag();
+			int over = PackAt(view, mouseY);
+			if (_packDrag < 0 || over < 0 || over == _packDrag)
+				return;
+			int step = over > _packDrag ? 1 : -1;
+			while (_packDrag != over) {
+				WeTml.MovePack(_packDrag, step);
+				_packDrag += step;
+			}
+		}
+
+		private static int PackAtMouse() => PackAt(WeNeoShell.View(WeNeoShell.Panel()), Main.mouseY);
+
+		private static int PackAt(Rectangle view, int mouseY)
+		{
+			int y = WeNeoMenu.ListBox(view).Y - (int)WeNeoMenu.Scroll;
+			List<WeResPack> packs = WeTml.ResourcePacks();
+			int shown = 0;
+			for (int i = 0; i < packs.Count; i++) {
+				if (!WeNeoShell.Matches(WeNeoMenu.Search, packs[i].Name))
+					continue;
+				ResCard card = NextResCard(view, ref y);
+				if (card.Hit.Contains(Main.mouseX, mouseY) || (mouseY >= card.Hit.Y && mouseY < card.Hit.Bottom))
+					return shown;
+				shown++;
+			}
+
+			return -1;
+		}
+
 		private static ResCard NextResCard(Rectangle view, ref int y)
 		{
 			var hit = new Rectangle(view.X + 4, y, view.Width - 8, 64);
@@ -779,7 +929,7 @@ namespace DieWithASmile.Engine.Settings
 			return new ResCard { Hit = hit, Pill = pill, Up = up, Down = down };
 		}
 
-		private static void DrawDevelop(SpriteBatch spriteBatch, Rectangle view, ref int y, float fade)
+		private static void DrawDevelopChrome(SpriteBatch spriteBatch, Rectangle view, ref int y, float fade)
 		{
 			ChatManager.DrawColorCodedStringWithShadow(
 				spriteBatch, FontAssets.MouseText.Value, WeText.UI("NeoDevelopHint"),
@@ -787,6 +937,10 @@ namespace DieWithASmile.Engine.Settings
 			y += 22;
 			DrawBtn(spriteBatch, new Rectangle(view.X + 4, y, view.Width - 8, 32), WeText.UI("NeoOpenSources"), fade);
 			y += 40;
+		}
+
+		private static void DrawDevelopList(SpriteBatch spriteBatch, Rectangle view, ref int y, float fade)
+		{
 			List<WeDevItem> items = WeTml.DevItems();
 			if (items.Count == 0) {
 				DrawEmpty(spriteBatch, view, ref y, WeText.UI("NeoEmptyDev"), fade);
@@ -822,17 +976,18 @@ namespace DieWithASmile.Engine.Settings
 				return;
 			}
 
+			int ly = y - (int)WeNeoMenu.Scroll;
 			List<WeDevItem> items = WeTml.DevItems();
 			if (items.Count == 0) {
-				SkipEmpty(view, ref y);
+				SkipEmpty(view, ref ly);
 				return;
 			}
 
 			foreach (WeDevItem item in items) {
 				if (!WeNeoShell.Matches(WeNeoMenu.Search, item.Display, item.Name))
 					continue;
-				var hit = new Rectangle(view.X + 4, y, view.Width - 8, 56);
-				y += 62;
+				var hit = new Rectangle(view.X + 4, ly, view.Width - 8, 56);
+				ly += 62;
 				if (left && hit.Contains(Main.mouseX, Main.mouseY)) {
 					WeFiles.OpenFolder(item.Folder);
 					Tick();
@@ -1271,15 +1426,30 @@ namespace DieWithASmile.Engine.Settings
 			if (mod.Gif != null || mod.Icon != null)
 				return;
 
-			byte[] data = FileBytes(file, "icon.gif") ?? FileBytes(file, "icon.png")
-				?? FileBytes(file, "Icon.gif") ?? FileBytes(file, "Icon.png")
-				?? LoadedBytes(loaded, "icon.gif") ?? LoadedBytes(loaded, "icon.png");
-			if (data == null || data.Length < 8)
-				return;
-
-			if (WeGif.LooksLike(data)) {
+			byte[] gifBytes = null;
+			byte[] pngBytes = null;
+			IDisposable lease = null;
+			try {
+				lease = OpenTmod(file);
+				gifBytes = BytesOpened(file, "icon.gif") ?? BytesOpened(file, "Icon.gif");
+				pngBytes = BytesOpened(file, "icon.png") ?? BytesOpened(file, "Icon.png");
+			}
+			catch {
+			}
+			finally {
 				try {
-					WeClip clip = WeGif.Decode(data);
+					lease?.Dispose();
+				}
+				catch {
+				}
+			}
+
+			gifBytes ??= LoadedBytes(loaded, "icon.gif");
+			pngBytes ??= LoadedBytes(loaded, "icon.png");
+
+			if (gifBytes != null && WeGif.LooksLike(gifBytes)) {
+				try {
+					WeClip clip = WeGif.Decode(gifBytes);
 					if (clip != null) {
 						clip.KeepDelays();
 						bool prev = WeAnim.CanUpload;
@@ -1304,8 +1474,8 @@ namespace DieWithASmile.Engine.Settings
 				}
 			}
 
-			if (mod.Icon == null) {
-				Texture2D tex = TexFrom(data);
+			if (mod.Icon == null && pngBytes != null) {
+				Texture2D tex = TexFrom(pngBytes);
 				if (tex != null) {
 					mod.Icon = tex;
 					Icons[mod.Name] = tex;
@@ -1332,12 +1502,27 @@ namespace DieWithASmile.Engine.Settings
 			return null;
 		}
 
-		private static byte[] FileBytes(object file, string name)
+		private static IDisposable OpenTmod(object file)
+		{
+			if (file == null)
+				return null;
+			try {
+				MethodInfo open = file.GetType().GetMethod("Open", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, Type.EmptyTypes, null);
+				object result = open?.Invoke(file, null);
+				if (result is IDisposable d && !ReferenceEquals(d, file))
+					return d;
+			}
+			catch {
+			}
+
+			return null;
+		}
+
+		private static byte[] BytesOpened(object file, string name)
 		{
 			if (file == null || string.IsNullOrEmpty(name))
 				return null;
 			Type type = file.GetType();
-			TryOpen(file);
 			try {
 				MethodInfo has = type.GetMethod("HasFile", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(string) }, null);
 				if (has != null && has.Invoke(file, new object[] { name }) is false)
@@ -1356,36 +1541,7 @@ namespace DieWithASmile.Engine.Settings
 				}
 			}
 
-			foreach (string method in new[] { "OpenStream", "GetStream", "GetFileStream" }) {
-				try {
-					MethodInfo open = type.GetMethod(method, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(string) }, null);
-					if (open?.Invoke(file, new object[] { name }) is Stream stream) {
-						using (stream) {
-							using var ms = new MemoryStream();
-							stream.CopyTo(ms);
-							byte[] data = ms.ToArray();
-							if (data.Length > 0)
-								return data;
-						}
-					}
-				}
-				catch {
-				}
-			}
-
 			return null;
-		}
-
-		private static void TryOpen(object file)
-		{
-			if (file == null)
-				return;
-			try {
-				MethodInfo open = file.GetType().GetMethod("Open", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, Type.EmptyTypes, null);
-				open?.Invoke(file, null);
-			}
-			catch {
-			}
 		}
 
 		private static Texture2D TexFrom(byte[] data)
@@ -1462,8 +1618,6 @@ namespace DieWithASmile.Engine.Settings
 						if (mods.Any(m => string.Equals(m.Name, name, StringComparison.OrdinalIgnoreCase)))
 							want.Add(name);
 					}
-
-					return want;
 				}
 				catch {
 				}
@@ -1477,8 +1631,6 @@ namespace DieWithASmile.Engine.Settings
 						if (n != null)
 							want.Add(n.ToString());
 					}
-
-					return want;
 				}
 			}
 			catch {
@@ -1491,16 +1643,16 @@ namespace DieWithASmile.Engine.Settings
 						if (n != null)
 							want.Add(n.ToString());
 					}
-
-					if (want.Count > 0)
-						return want;
 				}
 			}
 			catch {
 			}
 
-			foreach (string name in loaded)
-				want.Add(name);
+			if (want.Count == 0) {
+				foreach (string name in loaded)
+					want.Add(name);
+			}
+
 			return want;
 		}
 
@@ -1542,6 +1694,8 @@ namespace DieWithASmile.Engine.Settings
 
 		private static void WriteWant()
 		{
+			if (_want == null)
+				return;
 			try {
 				object em = WeNeoFld.Get(typeof(ModLoader), "EnabledMods") ?? WeNeoFld.Get(typeof(ModLoader), "enabledMods");
 				if (em is ICollection<string> set) {
@@ -1582,6 +1736,12 @@ namespace DieWithASmile.Engine.Settings
 
 		internal static void Reload()
 		{
+			try {
+				WeNeoMenu.Close();
+			}
+			catch {
+			}
+
 			try {
 				typeof(ModLoader).GetMethod("Reload", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)?.Invoke(null, null);
 			}

@@ -1,3 +1,8 @@
+Version 3.0.13
+
+Title
+- Mods overlay: Force reload no longer crashes on open .tmod files. GIF icons animate (even when Off), double-click enables, toolbar stays put, scrolling is smooth.
+
 Version 3.0.12
 
 Title
