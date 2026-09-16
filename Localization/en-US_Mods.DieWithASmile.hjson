@@ -376,6 +376,7 @@ UI: {
 	NeoLightWhite: White
 	NeoLightRetro: Retro
 	NeoLightTrippy: Trippy
+	NeoLightHint: Color is default. White is flat. Retro is classic. Trippy is rainbow.
 	NeoLow: Low
 	NeoMedium: Medium
 	NeoHigh: High
@@ -421,13 +422,17 @@ UI: {
 	NeoFilterClient: Client
 	NeoEnabledCount: "{0} enabled / {1}"
 	NeoEmptyMods: No mods found in the Mods folder.
-	NeoEmptyBrowser: No workshop mods installed yet. Open Steam Workshop to browse.
+	NeoEmptyBrowser: Nothing from Workshop yet. Steam may be offline — open the Workshop page.
 	NeoEmptyPacks: No saved mod packs. Save one from Manage mods, or open the packs folder.
 	NeoEmptyRes: No resource packs found. Put packs in this folder, then Apply.
 	NeoEmptyDev: No projects in ModSources yet.
 	NeoResFolder: Packs folder
 	NeoActive: Active
 	NeoInstalled: Installed
+	NeoSubscribe: Subscribe
+	NeoSubscribed: Subscribed
+	NeoSearching: Searching Steam Workshop…
+	NeoWorkshopPending: Downloaded, not in list
 	NeoOpenPage: Steam page
 	NeoHasCsproj: .csproj
 	NeoDeletePack: Delete
@@ -438,7 +443,7 @@ UI: {
 	NeoConfigMark: Config
 	NeoMoveUp: Up
 	NeoMoveDown: Down
-	NeoBrowserHint: Installed workshop mods are listed here. Open Steam for more.
+	NeoBrowserHint: Search Steam Workshop here. Subscribe downloads through Steam, same as the tModLoader browser.
 	NeoOpenSteam: Open Steam Workshop
 	NeoPacksHint: Saved packs of enabled mods. Click a pack to load it on the title.
 	NeoPacksFolder: Packs folder

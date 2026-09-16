@@ -376,6 +376,7 @@ UI: {
 	NeoLightWhite: 흰색
 	NeoLightRetro: 레트로
 	NeoLightTrippy: 환각
+	NeoLightHint: 컬러는 기본 조명, 흰색은 평면, 레트로는 클래식, 환각은 무지개입니다.
 	NeoLow: 낮음
 	NeoMedium: 중간
 	NeoHigh: 높음
@@ -421,13 +422,17 @@ UI: {
 	NeoFilterClient: 클라이언트
 	NeoEnabledCount: "{0} 켜짐 / {1}"
 	NeoEmptyMods: Mods 폴더에 모드가 없습니다.
-	NeoEmptyBrowser: 설치된 창작마당 모드가 없습니다. Steam에서 찾아보세요.
+	NeoEmptyBrowser: 창작마당 결과가 없습니다. Steam이 오프라인일 수 있습니다. 페이지를 여세요.
 	NeoEmptyPacks: 저장된 모드 팩이 없습니다. 모드 관리에서 저장하거나 폴더를 여세요.
 	NeoEmptyRes: 리소스 팩이 없습니다. 이 폴더에 넣은 뒤 적용하세요.
 	NeoEmptyDev: ModSources에 프로젝트가 없습니다.
 	NeoResFolder: 팩 폴더
 	NeoActive: 활성
 	NeoInstalled: 설치됨
+	NeoSubscribe: 구독
+	NeoSubscribed: 구독됨
+	NeoSearching: Steam 창작마당 검색 중…
+	NeoWorkshopPending: 다운됨, 목록에 없음
 	NeoOpenPage: Steam 페이지
 	NeoHasCsproj: .csproj
 	NeoDeletePack: 삭제
@@ -438,7 +443,7 @@ UI: {
 	NeoConfigMark: 설정
 	NeoMoveUp: 위로
 	NeoMoveDown: 아래로
-	NeoBrowserHint: 설치된 창작마당 모드입니다. 더 보려면 Steam을 여세요.
+	NeoBrowserHint: 여기서 Steam 창작마당을 검색합니다. 구독은 tModLoader 브라우저와 같이 Steam으로 받습니다.
 	NeoOpenSteam: Steam 창작마당 열기
 	NeoPacksHint: 켜 둔 모드 묶음입니다. 타이틀에서 클릭하면 불러옵니다.
 	NeoPacksFolder: 팩 폴더

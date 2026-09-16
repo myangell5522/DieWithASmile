@@ -376,6 +376,7 @@ UI: {
 	NeoLightWhite: 白光
 	NeoLightRetro: 复古
 	NeoLightTrippy: 迷幻
+	NeoLightHint: 彩色为默认光照。白光为平面。复古为经典。迷幻为彩虹。
 	NeoLow: 低
 	NeoMedium: 中
 	NeoHigh: 高
@@ -421,13 +422,17 @@ UI: {
 	NeoFilterClient: 客户端
 	NeoEnabledCount: "{0} 已启用 / {1}"
 	NeoEmptyMods: Mods 文件夹里没有模组。
-	NeoEmptyBrowser: 还没有安装工坊模组。打开 Steam 工坊浏览。
+	NeoEmptyBrowser: 工坊没有结果。Steam 可能离线 — 打开工坊页面。
 	NeoEmptyPacks: 没有已保存的模组包。在管理模组里保存，或打开文件夹。
 	NeoEmptyRes: 没有资源包。把资源包放到该文件夹后点应用。
 	NeoEmptyDev: ModSources 里还没有工程。
 	NeoResFolder: 资源包文件夹
 	NeoActive: 启用中
 	NeoInstalled: 已安装
+	NeoSubscribe: 订阅
+	NeoSubscribed: 已订阅
+	NeoSearching: 正在搜索 Steam 工坊…
+	NeoWorkshopPending: 已下载，未在列表中
 	NeoOpenPage: Steam 页面
 	NeoHasCsproj: .csproj
 	NeoDeletePack: 删除
@@ -438,7 +443,7 @@ UI: {
 	NeoConfigMark: 配置
 	NeoMoveUp: 上移
 	NeoMoveDown: 下移
-	NeoBrowserHint: 这里列出已安装的工坊模组。更多请打开 Steam。
+	NeoBrowserHint: 在此搜索 Steam 工坊。订阅会通过 Steam 下载，和 tModLoader 浏览器一样。
 	NeoOpenSteam: 打开 Steam 工坊
 	NeoPacksHint: 已启用模组的打包。点击可在标题画面加载。
 	NeoPacksFolder: 模组包文件夹

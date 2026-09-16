@@ -336,29 +336,39 @@ namespace DieWithASmile.Engine.Settings
 		internal static void LightPreview(SpriteBatch spriteBatch, Rectangle view, int y, float fade)
 		{
 			int mode = (int)Lighting.Mode;
-			int w = 52;
+			string[] keys = { "NeoLightColor", "NeoLightWhite", "NeoLightRetro", "NeoLightTrippy" };
 			for (int i = 0; i < 4; i++) {
-				var cell = new Rectangle(view.X + 10 + i * (w + 8), y + 4, w, 24);
+				Rectangle cell = LightCell(view, y, i);
 				Color fill = i switch {
 					0 => new Color(70, 150, 255),
 					1 => Color.White,
 					2 => new Color(186, 140, 88),
 					_ => new Color(214, 72, 214)
 				};
-				WeDraw.Fill(spriteBatch, cell, fill * fade);
+				WeDraw.Fill(spriteBatch, cell, fill * (0.35f * fade));
+				WeDraw.Fill(spriteBatch, new Rectangle(cell.X, cell.Y, 6, cell.Height), fill * fade);
 				if (i == mode)
 					WeDraw.Border(spriteBatch, cell, WeAccent.Light * fade);
+				else
+					WeDraw.Border(spriteBatch, cell, Color.White * (0.18f * fade));
+				string label = WeText.UI(keys[i]);
+				Vector2 size = FontAssets.MouseText.Value.MeasureString(label) * TypeSmall;
+				ChatManager.DrawColorCodedStringWithShadow(
+					spriteBatch, FontAssets.MouseText.Value, label,
+					new Vector2(cell.X + 10, cell.Y + (cell.Height - size.Y) * 0.5f), Color.White * fade, 0f, Vector2.Zero, new Vector2(TypeSmall));
 			}
+
+			ChatManager.DrawColorCodedStringWithShadow(
+				spriteBatch, FontAssets.MouseText.Value, WeText.UI("NeoLightHint"),
+				new Vector2(view.X + 10, y + 34), Color.White * (0.5f * fade), 0f, Vector2.Zero, new Vector2(0.58f));
 		}
 
 		internal static bool LightPreviewClick(Rectangle view, int y, bool left)
 		{
 			if (!left)
 				return false;
-			int w = 52;
 			for (int i = 0; i < 4; i++) {
-				var cell = new Rectangle(view.X + 10 + i * (w + 8), y + 4, w, 24);
-				if (!cell.Contains(Main.mouseX, Main.mouseY))
+				if (!LightCell(view, y, i).Contains(Main.mouseX, Main.mouseY))
 					continue;
 				Lighting.Mode = (LightMode)i;
 				try {
@@ -371,6 +381,13 @@ namespace DieWithASmile.Engine.Settings
 			}
 
 			return false;
+		}
+
+		private static Rectangle LightCell(Rectangle view, int y, int i)
+		{
+			int gap = 6;
+			int w = Math.Max(64, (view.Width - 20 - gap * 3) / 4);
+			return new Rectangle(view.X + 10 + i * (w + gap), y + 2, w, 28);
 		}
 
 		internal static void CursorPreview(SpriteBatch spriteBatch, Rectangle view, int y, float fade)

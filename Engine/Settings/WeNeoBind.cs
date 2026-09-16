@@ -339,7 +339,7 @@ namespace DieWithASmile.Engine.Settings
 					Lighting.Mode = (LightMode)(((int)Lighting.Mode + 1) % 4);
 					PersistSoft();
 				});
-			light.ExtraH = 36;
+			light.ExtraH = 52;
 			light.ExtraDraw = WeNeoShell.LightPreview;
 			light.ExtraClick = (view, y, left, right) => WeNeoShell.LightPreviewClick(view, y, left);
 			Cycle(list, WeNeoCat.Video, qlt, "qual", () => T("NeoQuality"),
@@ -573,7 +573,9 @@ namespace DieWithASmile.Engine.Settings
 				return T("NeoSubtle");
 			if (s.Contains("Gamepad", StringComparison.OrdinalIgnoreCase))
 				return T("NeoGamepad");
-			if (s.Contains("Trippy", StringComparison.OrdinalIgnoreCase))
+			if (s.Contains("Trippy", StringComparison.OrdinalIgnoreCase) ||
+			    s.Contains("Psych", StringComparison.OrdinalIgnoreCase) ||
+			    s.Contains("Psyche", StringComparison.OrdinalIgnoreCase))
 				return T("NeoLightTrippy");
 			if (s.Contains("Retro", StringComparison.OrdinalIgnoreCase))
 				return T("NeoLightRetro");

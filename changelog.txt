@@ -1,3 +1,8 @@
+Version 3.0.14
+
+Title
+- Workshop overlay: real Steam browser (search + subscribe), GIF row art without stretching PNG logos, labeled lighting chips, resource packs from folders and zips.
+
 Version 3.0.13
 
 Title

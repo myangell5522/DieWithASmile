@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -272,13 +273,9 @@ namespace DieWithASmile.Engine.Settings
 					case WeNeoPage.Develop:
 						return WeTml.DevItems().Count.ToString();
 					case WeNeoPage.Browser: {
-						int n = 0;
-						foreach (WeLocalMod mod in WeTml.LocalMods()) {
-							if (mod.Workshop)
-								n++;
-						}
-
-						return n.ToString();
+						if (WeWorkshop.Busy && WeWorkshop.Items(WeNeoMenu.Search).Count == 0)
+							return "…";
+						return WeWorkshop.Items(WeNeoMenu.Search).Count.ToString();
 					}
 				}
 			}
@@ -514,10 +511,10 @@ namespace DieWithASmile.Engine.Settings
 			ModCard card = NextModCard(view, ref y);
 			bool hover = card.Hit.Contains(Main.mouseX, Main.mouseY) || _selected == mod.Name;
 			Color edge = mod.Edge.A == 0 ? WeAccent.Mid : mod.Edge;
-			Texture2D art = PlayModArt(mod);
+			Texture2D gif = PlayGif(mod);
 			WeDraw.Fill(spriteBatch, card.Hit, (hover ? WeAccent.Deep : new Color(22, 24, 30)) * fade);
-			if (art != null)
-				WeDraw.DrawCover(spriteBatch, art, card.Hit, Color.White * (0.22f * fade));
+			if (gif != null)
+				WeDraw.DrawCover(spriteBatch, gif, card.Hit, Color.White * (0.22f * fade));
 			else
 				Shimmer(spriteBatch, card.Hit, edge, fade);
 			WeDraw.Fill(spriteBatch, card.Hit, new Color(12, 14, 18) * (0.35f * fade));
@@ -552,10 +549,10 @@ namespace DieWithASmile.Engine.Settings
 			WeDraw.Fill(spriteBatch, new Rectangle(hit.X, hit.Y, hit.Width, hit.Height), edge * (0.08f * wave * fade));
 		}
 
-		private static Texture2D PlayModArt(WeLocalMod mod)
+		private static Texture2D PlayGif(WeLocalMod mod)
 		{
 			if (mod.Gif == null)
-				return mod.Icon != null && !mod.Icon.IsDisposed ? mod.Icon : null;
+				return null;
 			bool prev = WeAnim.CanUpload;
 			WeAnim.CanUpload = true;
 			try {
@@ -566,9 +563,7 @@ namespace DieWithASmile.Engine.Settings
 			}
 
 			Texture2D cur = mod.Gif.Current();
-			if (cur != null && !cur.IsDisposed)
-				return cur;
-			return mod.Icon != null && !mod.Icon.IsDisposed ? mod.Icon : null;
+			return cur != null && !cur.IsDisposed ? cur : null;
 		}
 
 		private static ModCard NextModCard(Rectangle view, ref int y)
@@ -587,7 +582,7 @@ namespace DieWithASmile.Engine.Settings
 			if (mod.Name == "DieWithASmile" && WeModListLook.DrawIcon(spriteBatch, dest, fade))
 				return;
 
-			Texture2D tex = PlayModArt(mod);
+			Texture2D tex = mod.Icon != null && !mod.Icon.IsDisposed ? mod.Icon : PlayGif(mod);
 			if (tex != null) {
 				WeDraw.DrawCover(spriteBatch, tex, dest, Color.White * fade);
 				return;
@@ -637,30 +632,39 @@ namespace DieWithASmile.Engine.Settings
 
 		private static void DrawBrowserList(SpriteBatch spriteBatch, Rectangle view, ref int y, float fade)
 		{
-			int n = 0;
-			foreach (WeLocalMod mod in WeTml.LocalMods()) {
-				if (!mod.Workshop || !WeNeoShell.Matches(WeNeoMenu.Search, mod.Display, mod.Name, "workshop", "steam"))
-					continue;
-				n++;
-				var hit = new Rectangle(view.X + 4, y, view.Width - 8, 56);
-				bool hover = hit.Contains(Main.mouseX, Main.mouseY);
-				WeDraw.Fill(spriteBatch, hit, (hover ? WeAccent.Deep : new Color(22, 24, 30)) * fade);
-				WeDraw.Border(spriteBatch, hit, (hover ? WeAccent.Light : WeAccent.Mid) * fade);
-				var icon = new Rectangle(hit.X + 8, hit.Y + 8, 40, 40);
-				DrawModIcon(spriteBatch, icon, mod, fade);
-				ChatManager.DrawColorCodedStringWithShadow(
-					spriteBatch, FontAssets.MouseText.Value, Trim(mod.Display, 28),
-					new Vector2(hit.X + 56, hit.Y + 8), Color.White * fade, 0f, Vector2.Zero, new Vector2(0.78f));
-				ChatManager.DrawColorCodedStringWithShadow(
-					spriteBatch, FontAssets.MouseText.Value, WeText.UI("NeoInstalled"),
-					new Vector2(hit.X + 56, hit.Y + 30), WeAccent.Light * fade, 0f, Vector2.Zero, new Vector2(WeNeoShell.TypeSmall));
-				if (!string.IsNullOrEmpty(mod.Steam))
-					DrawBtn(spriteBatch, new Rectangle(hit.Right - 118, hit.Y + 14, 108, 28), WeText.UI("NeoOpenPage"), fade);
-				y += 62;
+			List<WeWorkshopItem> items = WeWorkshop.Items(WeNeoMenu.Search);
+			if (items.Count == 0) {
+				DrawEmpty(spriteBatch, view, ref y, WeText.UI(WeWorkshop.Busy ? "NeoSearching" : "NeoEmptyBrowser"), fade);
+				return;
 			}
 
-			if (n == 0)
-				DrawEmpty(spriteBatch, view, ref y, WeText.UI("NeoEmptyBrowser"), fade);
+			foreach (WeWorkshopItem item in items) {
+				if (item.Pending && item.Installed)
+					continue;
+				if (!WeNeoShell.Matches(WeNeoMenu.Search, item.Name, item.Internal, item.Author, item.Id))
+					continue;
+				ShopCard card = NextShopCard(view, ref y, item);
+				bool hover = card.Hit.Contains(Main.mouseX, Main.mouseY);
+				WeDraw.Fill(spriteBatch, card.Hit, (hover ? WeAccent.Deep : new Color(22, 24, 30)) * fade);
+				WeDraw.Border(spriteBatch, card.Hit, (hover ? WeAccent.Light : WeAccent.Mid) * fade);
+				WeDraw.Fill(spriteBatch, new Rectangle(card.Hit.X + 8, card.Hit.Y + 10, 36, 36), new Color(40, 44, 52) * fade);
+				ChatManager.DrawColorCodedStringWithShadow(
+					spriteBatch, FontAssets.MouseText.Value, Trim(item.Name, 26),
+					new Vector2(card.Hit.X + 52, card.Hit.Y + 8), Color.White * fade, 0f, Vector2.Zero, new Vector2(0.78f));
+				string meta = item.Pending && !item.Installed
+					? WeText.UI("NeoWorkshopPending")
+					: (string.IsNullOrEmpty(item.Meta) ? item.Id : item.Meta);
+				ChatManager.DrawColorCodedStringWithShadow(
+					spriteBatch, FontAssets.MouseText.Value, Trim(meta, 42),
+					new Vector2(card.Hit.X + 52, card.Hit.Y + 30), Color.White * (0.55f * fade), 0f, Vector2.Zero, new Vector2(WeNeoShell.TypeSmall));
+				if (item.Installed)
+					ChatManager.DrawColorCodedStringWithShadow(
+						spriteBatch, FontAssets.MouseText.Value, WeText.UI("NeoInstalled"),
+						new Vector2(card.Hit.X + 52, card.Hit.Y + 46), WeAccent.Light * fade, 0f, Vector2.Zero, new Vector2(0.58f));
+				if (!item.Installed)
+					DrawBtn(spriteBatch, card.Sub, WeText.UI(item.Subscribed ? "NeoSubscribed" : "NeoSubscribe"), fade);
+				DrawBtn(spriteBatch, card.Page, WeText.UI("NeoOpenPage"), fade);
+			}
 		}
 
 		private static void ClickBrowser(Rectangle view, ref int y, bool left)
@@ -675,23 +679,49 @@ namespace DieWithASmile.Engine.Settings
 			}
 
 			int ly = y - (int)WeNeoMenu.Scroll;
-			int n = 0;
-			foreach (WeLocalMod mod in WeTml.LocalMods()) {
-				if (!mod.Workshop || !WeNeoShell.Matches(WeNeoMenu.Search, mod.Display, mod.Name, "workshop", "steam"))
+			List<WeWorkshopItem> items = WeWorkshop.Items(WeNeoMenu.Search);
+			if (items.Count == 0) {
+				SkipEmpty(view, ref ly);
+				return;
+			}
+
+			foreach (WeWorkshopItem item in items) {
+				if (item.Pending && item.Installed)
 					continue;
-				n++;
-				var hit = new Rectangle(view.X + 4, ly, view.Width - 8, 56);
-				var page = new Rectangle(hit.Right - 118, hit.Y + 14, 108, 28);
-				ly += 62;
-				if (left && page.Contains(Main.mouseX, Main.mouseY) && !string.IsNullOrEmpty(mod.Steam)) {
-					WeTml.OpenSteamPage(mod.Steam);
+				if (!WeNeoShell.Matches(WeNeoMenu.Search, item.Name, item.Internal, item.Author, item.Id))
+					continue;
+				ShopCard card = NextShopCard(view, ref ly, item);
+				if (!left || !card.Hit.Contains(Main.mouseX, Main.mouseY))
+					continue;
+				if (!item.Installed && card.Sub.Contains(Main.mouseX, Main.mouseY)) {
+					WeWorkshop.Subscribe(item);
+					Tick();
+					return;
+				}
+
+				if (card.Page.Contains(Main.mouseX, Main.mouseY) || card.Hit.Contains(Main.mouseX, Main.mouseY)) {
+					WeTml.OpenSteamPage(item.Id);
 					Tick();
 					return;
 				}
 			}
+		}
 
-			if (n == 0)
-				SkipEmpty(view, ref ly);
+		private static ShopCard NextShopCard(Rectangle view, ref int y, WeWorkshopItem item)
+		{
+			var hit = new Rectangle(view.X + 4, y, view.Width - 8, 64);
+			int right = hit.Right - 10;
+			var page = new Rectangle(right - 108, hit.Y + 18, 108, 28);
+			var sub = item.Installed ? Rectangle.Empty : new Rectangle(page.X - 112, hit.Y + 18, 104, 28);
+			y += 70;
+			return new ShopCard { Hit = hit, Page = page, Sub = sub };
+		}
+
+		private struct ShopCard
+		{
+			internal Rectangle Hit;
+			internal Rectangle Page;
+			internal Rectangle Sub;
 		}
 
 		private static void DrawModPacksChrome(SpriteBatch spriteBatch, Rectangle view, ref int y, float fade)
@@ -1423,7 +1453,7 @@ namespace DieWithASmile.Engine.Settings
 				mod.Icon = icon;
 			if (Edges.TryGetValue(mod.Name, out Color edge))
 				mod.Edge = edge;
-			if (mod.Gif != null || mod.Icon != null)
+			if (mod.Gif != null && mod.Icon != null)
 				return;
 
 			byte[] gifBytes = null;
@@ -1431,8 +1461,8 @@ namespace DieWithASmile.Engine.Settings
 			IDisposable lease = null;
 			try {
 				lease = OpenTmod(file);
-				gifBytes = BytesOpened(file, "icon.gif") ?? BytesOpened(file, "Icon.gif");
-				pngBytes = BytesOpened(file, "icon.png") ?? BytesOpened(file, "Icon.png");
+				gifBytes = IconBytes(file, loaded, true);
+				pngBytes = IconBytes(file, loaded, false);
 			}
 			catch {
 			}
@@ -1444,10 +1474,7 @@ namespace DieWithASmile.Engine.Settings
 				}
 			}
 
-			gifBytes ??= LoadedBytes(loaded, "icon.gif");
-			pngBytes ??= LoadedBytes(loaded, "icon.png");
-
-			if (gifBytes != null && WeGif.LooksLike(gifBytes)) {
+			if (mod.Gif == null && gifBytes != null && WeGif.LooksLike(gifBytes)) {
 				try {
 					WeClip clip = WeGif.Decode(gifBytes);
 					if (clip != null) {
@@ -1463,11 +1490,6 @@ namespace DieWithASmile.Engine.Settings
 
 						mod.Gif = clip;
 						Gifs[mod.Name] = clip;
-						Texture2D cur = clip.Current();
-						if (cur != null) {
-							mod.Icon = cur;
-							Icons[mod.Name] = cur;
-						}
 					}
 				}
 				catch {
@@ -1482,16 +1504,126 @@ namespace DieWithASmile.Engine.Settings
 				}
 			}
 
-			if (mod.Icon != null) {
+			if (mod.Icon != null && mod.Edge.A == 0) {
 				mod.Edge = Mean(mod.Icon);
 				Edges[mod.Name] = mod.Edge;
+			}
+			else if (mod.Edge.A == 0 && mod.Gif != null) {
+				try {
+					Texture2D frame = mod.Gif.Current();
+					if (frame != null && !frame.IsDisposed) {
+						mod.Edge = Mean(frame);
+						Edges[mod.Name] = mod.Edge;
+					}
+				}
+				catch {
+				}
+			}
+		}
+
+		private static byte[] IconBytes(object file, Mod loaded, bool gif)
+		{
+			string[] names = gif
+				? new[] { "icon.gif", "Icon.gif", "icon.GIF", "Icon.GIF" }
+				: new[] { "icon.png", "Icon.png", "icon.PNG", "Icon.png" };
+			foreach (string name in names) {
+				byte[] data = BytesOpened(file, name) ?? LoadedBytes(loaded, name);
+				if (data != null && data.Length > 0)
+					return data;
+			}
+
+			foreach (string name in TmodNames(file)) {
+				if (!LooksIcon(name, gif))
+					continue;
+				byte[] data = BytesOpened(file, name);
+				if (data != null && data.Length > 0)
+					return data;
+			}
+
+			if (loaded == null)
+				return null;
+			try {
+				foreach (string name in loaded.GetFileNames()) {
+					if (!LooksIcon(name, gif))
+						continue;
+					byte[] data = LoadedBytes(loaded, name);
+					if (data != null && data.Length > 0)
+						return data;
+				}
+			}
+			catch {
+			}
+
+			return null;
+		}
+
+		private static bool LooksIcon(string name, bool gif)
+		{
+			if (string.IsNullOrEmpty(name))
+				return false;
+			string n = name.Replace('\\', '/');
+			int slash = n.LastIndexOf('/');
+			string leaf = slash < 0 ? n : n[(slash + 1)..];
+			if (leaf.IndexOf("icon", StringComparison.OrdinalIgnoreCase) < 0)
+				return false;
+			return gif
+				? leaf.EndsWith(".gif", StringComparison.OrdinalIgnoreCase)
+				: leaf.EndsWith(".png", StringComparison.OrdinalIgnoreCase);
+		}
+
+		private static IEnumerable<string> TmodNames(object file)
+		{
+			if (file == null)
+				yield break;
+			Type type = file.GetType();
+			foreach (string method in new[] { "GetFileNames", "GetFiles" }) {
+				MethodInfo get = type.GetMethod(method, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, Type.EmptyTypes, null);
+				if (get?.Invoke(file, null) is IEnumerable en) {
+					foreach (object o in en) {
+						if (o is string s)
+							yield return s;
+						else if (o is DictionaryEntry de)
+							yield return de.Key?.ToString();
+						else if (o != null)
+							yield return o.ToString();
+					}
+
+					yield break;
+				}
+			}
+
+			object files = Prop(file, "files") ?? Prop(file, "Files");
+			if (files is IDictionary dict) {
+				foreach (object key in dict.Keys) {
+					if (key != null)
+						yield return key.ToString();
+				}
+
+				yield break;
+			}
+
+			if (files is IEnumerable list) {
+				foreach (object o in list) {
+					if (o is string s)
+						yield return s;
+					else if (o is DictionaryEntry de)
+						yield return de.Key?.ToString();
+				}
 			}
 		}
 
 		private static byte[] LoadedBytes(Mod mod, string name)
 		{
-			if (mod == null)
+			if (mod == null || string.IsNullOrEmpty(name))
 				return null;
+			try {
+				byte[] data = mod.GetFileBytes(name);
+				if (data != null && data.Length > 0)
+					return data;
+			}
+			catch {
+			}
+
 			try {
 				if (mod.FileExists(name))
 					return mod.GetFileBytes(name);
@@ -1523,14 +1655,6 @@ namespace DieWithASmile.Engine.Settings
 			if (file == null || string.IsNullOrEmpty(name))
 				return null;
 			Type type = file.GetType();
-			try {
-				MethodInfo has = type.GetMethod("HasFile", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(string) }, null);
-				if (has != null && has.Invoke(file, new object[] { name }) is false)
-					return null;
-			}
-			catch {
-			}
-
 			foreach (string method in new[] { "GetBytes", "GetFileBytes" }) {
 				try {
 					MethodInfo get = type.GetMethod(method, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(string) }, null);
@@ -1876,7 +2000,7 @@ namespace DieWithASmile.Engine.Settings
 				return _res;
 			var map = new Dictionary<string, WeResPack>(StringComparer.OrdinalIgnoreCase);
 			try {
-				object ctrl = typeof(Main).GetProperty("AssetSourceController")?.GetValue(Main.instance);
+				object ctrl = PackController();
 				if (ctrl != null) {
 					object list = Prop(ctrl, "ActiveResourcePackList") ?? Prop(ctrl, "AllPacks");
 					AddPackEnum(map, Prop(list, "AllPacks") ?? list, null);
@@ -1888,7 +2012,7 @@ namespace DieWithASmile.Engine.Settings
 			}
 
 			foreach (string folder in ResourceRoots())
-				ScanPackDir(map, folder);
+				ScanPackTree(map, folder, 2);
 
 			_res = map.Values.ToList();
 			_resWant ??= new HashSet<string>(_res.Where(p => p.Enabled).Select(p => p.Name), StringComparer.OrdinalIgnoreCase);
@@ -1897,12 +2021,59 @@ namespace DieWithASmile.Engine.Settings
 			return _res;
 		}
 
+		private static object PackController()
+		{
+			Type main = typeof(Main);
+			const BindingFlags all = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+			try {
+				PropertyInfo p = main.GetProperty("AssetSourceController", all);
+				if (p != null) {
+					object target = p.GetGetMethod(true)?.IsStatic == true ? null : Main.instance;
+					object v = p.GetValue(target);
+					if (v != null)
+						return v;
+				}
+			}
+			catch {
+			}
+
+			try {
+				FieldInfo f = main.GetField("AssetSourceController", all);
+				if (f != null) {
+					object target = f.IsStatic ? null : Main.instance;
+					object v = f.GetValue(target);
+					if (v != null)
+						return v;
+				}
+			}
+			catch {
+			}
+
+			return WeNeoFld.Get(typeof(Main), "AssetSourceController");
+		}
+
+		private static string PackNameOf(object p)
+		{
+			object branding = Prop(p, "Branding");
+			return FirstText(Str(branding, "Name"), Str(p, "Name"), Str(p, "FileName"), Str(p, "FolderName"));
+		}
+
+		private static string FirstText(params string[] bits)
+		{
+			foreach (string s in bits) {
+				if (!string.IsNullOrWhiteSpace(s))
+					return s.Trim();
+			}
+
+			return "";
+		}
+
 		private static void AddPackEnum(Dictionary<string, WeResPack> map, object src, bool? enabled)
 		{
 			if (src is not IEnumerable en)
 				return;
 			foreach (object p in en) {
-				string name = Str(p, "Name") ?? Str(p, "FileName") ?? Str(p, "FolderName") ?? "";
+				string name = PackNameOf(p);
 				if (string.IsNullOrEmpty(name))
 					continue;
 				if (!map.TryGetValue(name, out WeResPack pack)) {
@@ -1911,7 +2082,7 @@ namespace DieWithASmile.Engine.Settings
 				}
 
 				pack.Raw ??= p;
-				pack.Path = Str(p, "FullPath") ?? Str(p, "Path") ?? Str(p, "Directory") ?? pack.Path;
+				pack.Path = Str(p, "FullPath") ?? Str(p, "Path") ?? Str(p, "Directory") ?? Str(p, "FileName") ?? pack.Path;
 				if (enabled.HasValue)
 					pack.Enabled = enabled.Value;
 				else
@@ -1920,44 +2091,157 @@ namespace DieWithASmile.Engine.Settings
 			}
 		}
 
-		private static void ScanPackDir(Dictionary<string, WeResPack> map, string root)
+		private static void ScanPackTree(Dictionary<string, WeResPack> map, string root, int depth)
 		{
-			if (string.IsNullOrEmpty(root) || !Directory.Exists(root))
+			if (string.IsNullOrEmpty(root) || depth < 0 || !Directory.Exists(root))
 				return;
+			try {
+				foreach (string zip in Directory.GetFiles(root, "*.zip"))
+					AddZipPack(map, zip);
+			}
+			catch {
+			}
+
 			try {
 				foreach (string dir in Directory.GetDirectories(root)) {
 					string json = Path.Combine(dir, "pack.json");
 					string icon = Path.Combine(dir, "icon.png");
-					if (!File.Exists(json) && !File.Exists(icon))
-						continue;
-					string name = Path.GetFileName(dir);
-					if (File.Exists(json)) {
-						try {
-							foreach (string quoted in Quoted(File.ReadAllText(json))) {
-								if (!string.Equals(quoted, "Name", StringComparison.OrdinalIgnoreCase) &&
-								    !string.Equals(quoted, "Description", StringComparison.OrdinalIgnoreCase) &&
-								    quoted.Length > 1) {
-									name = quoted;
-									break;
-								}
-							}
-						}
-						catch {
-						}
+					bool hasJson = File.Exists(json);
+					bool hasIcon = File.Exists(icon);
+					bool hasTmod = false;
+					try {
+						hasTmod = Directory.GetFiles(dir, "*.tmod", SearchOption.TopDirectoryOnly).Length > 0;
+					}
+					catch {
 					}
 
-					if (!map.TryGetValue(name, out WeResPack pack)) {
-						pack = new WeResPack { Name = name, Path = dir };
-						map[name] = pack;
-					}
-
-					if (string.IsNullOrEmpty(pack.Path))
-						pack.Path = dir;
-					FillPackIcon(pack);
+					if (hasJson || (hasIcon && !hasTmod))
+						AddFolderPack(map, dir, json);
+					if (depth > 0 && !hasTmod)
+						ScanPackTree(map, dir, depth - 1);
 				}
 			}
 			catch {
 			}
+		}
+
+		private static void AddFolderPack(Dictionary<string, WeResPack> map, string dir, string json)
+		{
+			string name = Path.GetFileName(dir);
+			if (File.Exists(json))
+				name = NameFromPackJson(json, name);
+			if (!map.TryGetValue(name, out WeResPack pack)) {
+				pack = new WeResPack { Name = name, Path = dir };
+				map[name] = pack;
+			}
+
+			if (string.IsNullOrEmpty(pack.Path))
+				pack.Path = dir;
+			FillPackIcon(pack);
+		}
+
+		private static void AddZipPack(Dictionary<string, WeResPack> map, string zip)
+		{
+			if (!ZipLooksPack(zip, out string jsonText, out byte[] icon))
+				return;
+			string name = Path.GetFileNameWithoutExtension(zip);
+			if (!string.IsNullOrEmpty(jsonText))
+				name = NameFromPackJsonText(jsonText, name);
+			if (!map.TryGetValue(name, out WeResPack pack)) {
+				pack = new WeResPack { Name = name, Path = zip };
+				map[name] = pack;
+			}
+
+			if (string.IsNullOrEmpty(pack.Path))
+				pack.Path = zip;
+			if (pack.Icon == null && icon != null) {
+				Texture2D tex = TexFrom(icon);
+				if (tex != null) {
+					pack.Icon = tex;
+					PackIcons[pack.Name] = tex;
+					pack.Edge = Mean(tex);
+				}
+			}
+
+			FillPackIcon(pack);
+		}
+
+		private static bool ZipLooksPack(string zip, out string jsonText, out byte[] icon)
+		{
+			jsonText = null;
+			icon = null;
+			try {
+				using ZipArchive z = ZipFile.OpenRead(zip);
+				foreach (ZipArchiveEntry e in z.Entries) {
+					string n = (e.FullName ?? "").Replace('\\', '/');
+					string leaf = n;
+					int slash = leaf.LastIndexOf('/');
+					if (slash >= 0)
+						leaf = leaf[(slash + 1)..];
+					if (leaf.Equals("pack.json", StringComparison.OrdinalIgnoreCase) && jsonText == null)
+						jsonText = ReadZipText(e);
+					if (leaf.Equals("icon.png", StringComparison.OrdinalIgnoreCase) && icon == null)
+						icon = ReadZipBytes(e);
+				}
+			}
+			catch {
+				return false;
+			}
+
+			return jsonText != null || icon != null;
+		}
+
+		private static string ReadZipText(ZipArchiveEntry e)
+		{
+			try {
+				using Stream s = e.Open();
+				using var sr = new StreamReader(s);
+				return sr.ReadToEnd();
+			}
+			catch {
+				return null;
+			}
+		}
+
+		private static byte[] ReadZipBytes(ZipArchiveEntry e)
+		{
+			try {
+				using Stream s = e.Open();
+				using var ms = new MemoryStream();
+				s.CopyTo(ms);
+				return ms.ToArray();
+			}
+			catch {
+				return null;
+			}
+		}
+
+		private static string NameFromPackJson(string jsonPath, string fallback)
+		{
+			try {
+				return NameFromPackJsonText(File.ReadAllText(jsonPath), fallback);
+			}
+			catch {
+				return fallback;
+			}
+		}
+
+		private static string NameFromPackJsonText(string json, string fallback)
+		{
+			if (string.IsNullOrEmpty(json))
+				return fallback;
+			try {
+				foreach (string quoted in Quoted(json)) {
+					if (!string.Equals(quoted, "Name", StringComparison.OrdinalIgnoreCase) &&
+					    !string.Equals(quoted, "Description", StringComparison.OrdinalIgnoreCase) &&
+					    quoted.Length > 1)
+						return quoted;
+				}
+			}
+			catch {
+			}
+
+			return fallback;
 		}
 
 		private static void FillPackIcon(WeResPack pack)
@@ -1967,6 +2251,18 @@ namespace DieWithASmile.Engine.Settings
 			if (PackIcons.TryGetValue(pack.Name, out Texture2D cached)) {
 				pack.Icon = cached;
 				return;
+			}
+
+			if (!string.IsNullOrEmpty(pack.Path) && pack.Path.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) && File.Exists(pack.Path)) {
+				if (ZipLooksPack(pack.Path, out _, out byte[] icon) && icon != null) {
+					Texture2D zipTex = TexFrom(icon);
+					if (zipTex != null) {
+						pack.Icon = zipTex;
+						PackIcons[pack.Name] = zipTex;
+						pack.Edge = Mean(zipTex);
+						return;
+					}
+				}
 			}
 
 			string[] files =
@@ -2007,7 +2303,8 @@ namespace DieWithASmile.Engine.Settings
 			var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 			void Add(string dir)
 			{
-				if (!string.IsNullOrEmpty(dir) && seen.Add(dir)) { }
+				if (!string.IsNullOrEmpty(dir))
+					seen.Add(dir);
 			}
 
 			Add(Path.Combine(Main.SavePath, "ResourcePacks"));
@@ -2023,8 +2320,13 @@ namespace DieWithASmile.Engine.Settings
 			string walk = Main.SavePath;
 			for (int i = 0; i < 8 && !string.IsNullOrEmpty(walk); i++) {
 				Add(Path.Combine(walk, "steamapps", "workshop", "content", "1281930"));
+				Add(Path.Combine(walk, "steamapps", "workshop", "content", "105600"));
 				walk = Path.GetDirectoryName(walk);
 			}
+
+			string steam = @"C:\Steam\steamapps\workshop\content";
+			Add(Path.Combine(steam, "1281930"));
+			Add(Path.Combine(steam, "105600"));
 
 			foreach (string dir in seen)
 				yield return dir;
@@ -2089,7 +2391,7 @@ namespace DieWithASmile.Engine.Settings
 					}
 				}
 
-				object ctrl = typeof(Main).GetProperty("AssetSourceController")?.GetValue(Main.instance);
+				object ctrl = PackController();
 				if (ctrl != null) {
 					Type ct = ctrl.GetType();
 					ct.GetMethod("Refresh")?.Invoke(ctrl, null);
