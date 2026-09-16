@@ -1,3 +1,8 @@
+Version 3.0.10
+
+Title
+- Settings overlay: one row per option (Autosave / Autopause / Map / passwords), larger type, live cursor and lighting previews, Apply only after a video change.
+
 Version 3.0.9
 
 Title

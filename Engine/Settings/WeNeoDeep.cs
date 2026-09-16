@@ -46,6 +46,22 @@ namespace DieWithASmile.Engine.Settings
 				Main.menuMode = 888;
 		}
 
+		internal static void OpenBrowser()
+		{
+			WeNeoMenu.BeginDeepLink(WeNeoCat.Mods);
+			if (!OpenInterface("modBrowser", "modBrowserID") &&
+			    !OpenInterface("modBrowserMenu", "modBrowserMenuID"))
+				Main.menuMode = 888;
+		}
+
+		internal static void OpenModPacks()
+		{
+			WeNeoMenu.BeginDeepLink(WeNeoCat.Mods);
+			if (!OpenInterface("modPacksMenu", "modPacksMenuID") &&
+			    !OpenInterface("modPacks", "modPacksID"))
+				Main.menuMode = 888;
+		}
+
 		internal static void OpenTmlSettings()
 		{
 			WeNeoMenu.BeginDeepLink(WeNeoCat.Mods);

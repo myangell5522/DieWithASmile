@@ -314,4 +314,77 @@ UI: {
 	NeoOpenTml: tModLoader settings
 	NeoOpenCursorColor: Cursor color
 	NeoOpenCursorBorder: Cursor border
+	NeoOpenBrowser: Mod Browser
+	NeoOpenModPacks: Mod packs
+	NeoAutosave: Autosave
+	NeoAutopause: Autopause
+	NeoMap: Map
+	NeoHidePasswords: Hide passwords
+	NeoPauseUnfocused: Pause when unfocused
+	NeoSetBonus: Set bonus
+	NeoAutofire: Autofire
+	NeoSmartDoors: Smart doors
+	NeoHover: Hover
+	NeoZoom: Zoom
+	NeoUIScale: UI scale
+	NeoLanguage: Language
+	NeoFullscreen: Fullscreen
+	NeoBorderless: Borderless
+	NeoResolution: Resolution
+	NeoFrameSkip: Frame skip
+	NeoLighting: Lighting
+	NeoQuality: Quality
+	NeoBackgrounds: Backgrounds
+	NeoGore: Blood and gore
+	NeoWobble: Miner's wobble
+	NeoHeat: Heat distortion
+	NeoStorm: Storm effects
+	NeoWaves: Waves
+	NeoWind: Windy environment
+	NeoIntense: Intense effects
+	NeoParallax: Parallax
+	NeoMusic: Music
+	NeoSound: Sound
+	NeoAmbient: Ambient
+	NeoPickup: Pickup text
+	NeoEventBar: Event progress
+	NeoPlacement: Placement preview
+	NeoHighlightNew: Highlight new items
+	NeoTileGrid: Tile grid
+	NeoGamepadHints: Gamepad hints
+	NeoTooltipBoxes: Hover text boxes
+	NeoMinimap: Minimap border
+	NeoMapScale: Map scale
+	NeoHealthStyle: Health and mana
+	NeoBossBar: Boss bar
+	NeoSmartCursor: Smart cursor
+	NeoSmartBlocks: Smart placement
+	NeoSmartAxe: Axe after pickaxe
+	NeoLockOn: Lock-on
+	NeoQuickTrash: Quick trash
+	NeoShiftTrash: Shift trash
+	NeoOn: On
+	NeoOff: Off
+	NeoHold: Hold
+	NeoClick: Click
+	NeoToggle: Toggle
+	NeoUp: Up
+	NeoDown: Down
+	NeoGamepad: Gamepad
+	NeoSubtle: Subtle
+	NeoLightColor: Color
+	NeoLightWhite: White
+	NeoLightRetro: Retro
+	NeoLightTrippy: Trippy
+	NeoLow: Low
+	NeoMedium: Medium
+	NeoHigh: High
+	NeoAuto: Auto
+	NeoTimed: Timed
+	NeoFill: Fill
+	NeoBorder: Border
+	NeoSectionHud: HUD
+	NeoSectionColor: Color
+	NeoSectionSmart: Aim
+	NeoHslHint: HSL
 }

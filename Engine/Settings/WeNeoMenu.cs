@@ -44,10 +44,12 @@ namespace DieWithASmile.Engine.Settings
 		private static bool _frameInput;
 		private static bool _wasFancy;
 		private static float _fade;
+		private static float _page = 1f;
 		private static float _scroll;
 		private static float _contentH;
 		private static int _lastWheel;
 		private static int _clientChip;
+		private static int _cursorChip;
 		private static bool _factoryArmed;
 		private static string _search = "";
 		private static string _drag;
@@ -59,10 +61,12 @@ namespace DieWithASmile.Engine.Settings
 		internal static bool AteInput => _ate;
 		internal static WeNeoCat Category => _cat;
 		internal static float Fade => _fade;
+		internal static float PageFade => _page;
 		internal static string Search => _search ?? "";
 		internal static bool SearchFocus => _searchFocus;
 		internal static string Drag => _drag;
 		internal static int ClientChip => _clientChip;
+		internal static int CursorChip => _cursorChip;
 		internal static bool FactoryArmed => _factoryArmed;
 		internal static float Scroll => _scroll;
 		internal static bool InGame => _inGame;
@@ -70,6 +74,8 @@ namespace DieWithASmile.Engine.Settings
 		internal static void SetContentHeight(float h) => _contentH = h;
 
 		internal static void SetClientChip(int chip) => _clientChip = Math.Clamp(chip, 0, 2);
+
+		internal static void SetCursorChip(int chip) => _cursorChip = Math.Clamp(chip, 0, 1);
 
 		internal static void SetFactoryArmed(bool armed) => _factoryArmed = armed;
 
@@ -158,7 +164,9 @@ namespace DieWithASmile.Engine.Settings
 			_inGame = game;
 			_cat = cat;
 			_scroll = 0f;
+			_page = 1f;
 			_drag = null;
+			WeNeoBind.ClearDirty();
 			_searchFocus = false;
 			_factoryArmed = false;
 			_pendingReturn = false;
@@ -254,6 +262,7 @@ namespace DieWithASmile.Engine.Settings
 			CatchTitleHub();
 			CatchReturn();
 			_fade = MathHelper.Lerp(_fade, _open ? 1f : 0f, 0.28f);
+			_page = MathHelper.Lerp(_page, 1f, 0.22f);
 			if (!_open && _fade < 0.02f)
 				_fade = 0f;
 			if (_open && _inGame)
@@ -274,7 +283,7 @@ namespace DieWithASmile.Engine.Settings
 		{
 			int wheel = Mouse.GetState().ScrollWheelValue;
 			if (view.Contains(Main.mouseX, Main.mouseY))
-				_scroll = MathHelper.Clamp(_scroll - (wheel - _lastWheel) / 120f * 36f, 0f, MaxScroll(view));
+				_scroll = MathHelper.Clamp(_scroll - (wheel - _lastWheel) / 120f * 48f, 0f, MaxScroll(view));
 			_lastWheel = wheel;
 		}
 
@@ -284,12 +293,13 @@ namespace DieWithASmile.Engine.Settings
 				return;
 			_cat = cat;
 			_scroll = 0f;
+			_page = 0f;
 			_factoryArmed = false;
 			SoundEngine.PlaySound(SoundID.MenuTick);
 		}
 
 		internal static Color RowFill(bool hover) =>
-			hover ? new Color(32, 36, 44) : new Color(22, 24, 30);
+			hover ? Color.Lerp(new Color(22, 24, 30), WeAccent.Deep, 0.52f) : new Color(22, 24, 30);
 
 		internal static void DrawLabel(SpriteBatch spriteBatch, string text, Vector2 pos, Color color, float scale)
 		{

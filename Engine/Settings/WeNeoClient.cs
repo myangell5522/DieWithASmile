@@ -114,7 +114,7 @@ namespace DieWithASmile.Engine.Settings
 			if (!click)
 				WeNeoShell.Header(spriteBatch, view, ref y, WeText.UI("Looks"), _fade);
 			else
-				y += 26;
+				WeNeoShell.SkipHeader(ref y);
 
 			if (click) {
 				if (TwinHit(view, y, out int which) && left) {
@@ -124,7 +124,7 @@ namespace DieWithASmile.Engine.Settings
 						WeFiles.OpenFolder(WeSave.PresetFolder);
 				}
 
-				y += 34;
+				y += 42;
 				foreach (WeLookFile look in WePresets.Copy()) {
 					Rectangle hit = WeNeoShell.Row(view, y);
 					y += WeNeoShell.RowStep;
@@ -149,23 +149,23 @@ namespace DieWithASmile.Engine.Settings
 			if (!click)
 				WeNeoShell.Header(spriteBatch, view, ref y, WeText.UI("HubStyle"), _fade);
 			else
-				y += 26;
+				WeNeoShell.SkipHeader(ref y);
 
 			int cellW = (view.Width - 16) / 2;
-			var leftR = new Rectangle(view.X + 4, y, cellW - 4, 72);
-			var rightR = new Rectangle(leftR.Right + 8, y, cellW - 4, 72);
+			var leftR = new Rectangle(view.X + 4, y, cellW - 4, 96);
+			var rightR = new Rectangle(leftR.Right + 8, y, cellW - 4, 96);
 			if (click) {
 				if (left && leftR.Contains(Main.mouseX, Main.mouseY))
 					WeSettings.SetWrenchStyle(0);
 				if (left && rightR.Contains(Main.mouseX, Main.mouseY))
 					WeSettings.SetWrenchStyle(1);
-				y += 80;
+				y += 110;
 				return;
 			}
 
 			DrawHubCell(spriteBatch, leftR, 0);
 			DrawHubCell(spriteBatch, rightR, 1);
-			y += 80;
+			y += 110;
 		}
 
 		private static void DrawHubCell(SpriteBatch spriteBatch, Rectangle hit, int style)
@@ -174,11 +174,11 @@ namespace DieWithASmile.Engine.Settings
 			bool hover = hit.Contains(Main.mouseX, Main.mouseY);
 			WeDraw.Fill(spriteBatch, hit, (on ? WeAccent.Deep : new Color(22, 24, 30)) * _fade);
 			WeDraw.Border(spriteBatch, hit, (on || hover ? WeAccent.Light : WeAccent.Mid) * _fade);
-			var preview = new Rectangle(hit.X + 6, hit.Y + 6, hit.Width - 12, hit.Height - 24);
+			var preview = new Rectangle(hit.X + 6, hit.Y + 6, hit.Width - 12, hit.Height - 30);
 			WrenchToolbar.DrawStylePreview(spriteBatch, preview, style, _fade, on);
 			ChatManager.DrawColorCodedStringWithShadow(
 				spriteBatch, FontAssets.MouseText.Value, WeText.UI(style == 1 ? "HubStyleDock" : "HubStyleRadial"),
-				new Vector2(hit.X + 8, hit.Bottom - 16), Color.White * _fade, 0f, Vector2.Zero, new Vector2(0.62f));
+				new Vector2(hit.X + 10, hit.Bottom - 20), Color.White * _fade, 0f, Vector2.Zero, new Vector2(0.78f));
 		}
 
 		private static void DrawWindow(SpriteBatch spriteBatch, Rectangle view, ref int y, bool click, bool left = false, bool right = false)
@@ -186,18 +186,18 @@ namespace DieWithASmile.Engine.Settings
 			if (!click)
 				WeNeoShell.Header(spriteBatch, view, ref y, WeText.UI("GroupWindow"), _fade);
 			else
-				y += 26;
+				WeNeoShell.SkipHeader(ref y);
 
-			var preview = new Rectangle(view.X + 4, y, view.Width - 8, 28);
+			var preview = new Rectangle(view.X + 4, y, view.Width - 8, 42);
 			if (!click)
 				DrawWindowPreview(spriteBatch, preview);
-			y += 34;
+			y += 50;
 
 			int chipW = (view.Width - 20) / 3;
 			Rectangle[] chips = {
-				new(view.X + 4, y, chipW, 22),
-				new(view.X + 8 + chipW, y, chipW, 22),
-				new(view.X + 12 + chipW * 2, y, chipW, 22)
+				new(view.X + 4, y, chipW, 32),
+				new(view.X + 8 + chipW, y, chipW, 32),
+				new(view.X + 12 + chipW * 2, y, chipW, 32)
 			};
 			if (click) {
 				if (left) {
@@ -207,7 +207,7 @@ namespace DieWithASmile.Engine.Settings
 					}
 				}
 
-				y += 26;
+				y += 40;
 				ClickRgb(view, ref y, WeNeoMenu.ClientChip == 1 ? "border" : WeNeoMenu.ClientChip == 2 ? "title" : "caption", left);
 				if (WeNeoShell.HitRow(view, ref y) && left) {
 					WeSave.Data.DarkTitleBar = !WeSave.Data.DarkTitleBar;
@@ -227,18 +227,18 @@ namespace DieWithASmile.Engine.Settings
 					}
 				}
 
-				y += 34;
+				y += 42;
 				if (WeNeoShell.HitRow(view, ref y) && left)
 					WeSplash.Show();
 				y += WeNeoShell.RowStep;
-				y += 22;
+				y += 28;
 				return;
 			}
 
 			DrawChip(spriteBatch, chips[0], 0, WeSettings.CaptionColor, WeText.UI("ChipCaption"));
 			DrawChip(spriteBatch, chips[1], 1, WeSettings.BorderColor, WeText.UI("ChipBorder"));
 			DrawChip(spriteBatch, chips[2], 2, WeSettings.TitleTextColor, WeText.UI("ChipTitle"));
-			y += 26;
+			y += 40;
 			string key = WeNeoMenu.ClientChip == 1 ? "border" : WeNeoMenu.ClientChip == 2 ? "title" : "caption";
 			Color color = WeNeoMenu.ClientChip == 1 ? WeSettings.BorderColor : WeNeoMenu.ClientChip == 2 ? WeSettings.TitleTextColor : WeSettings.CaptionColor;
 			DrawRgb(spriteBatch, view, ref y, key, color);
@@ -247,8 +247,8 @@ namespace DieWithASmile.Engine.Settings
 			WeNeoShell.Button(spriteBatch, view, ref y, WeText.UI("ShowHelp"), "", _fade);
 			ChatManager.DrawColorCodedStringWithShadow(
 				spriteBatch, FontAssets.MouseText.Value, WeText.UI(WeOs.IsWindows ? "BorderlessHint" : "ChromeOsHint"),
-				new Vector2(view.X + 8, y), Color.White * (0.55f * _fade), 0f, Vector2.Zero, new Vector2(0.6f));
-			y += 22;
+				new Vector2(view.X + 8, y), Color.White * (0.55f * _fade), 0f, Vector2.Zero, new Vector2(0.72f));
+			y += 28;
 		}
 
 		private static void DrawWindowPreview(SpriteBatch spriteBatch, Rectangle bar)
@@ -261,7 +261,7 @@ namespace DieWithASmile.Engine.Settings
 			Color text = WeSave.Data.ChromeCustom ? WeSettings.TitleTextColor : (WeSave.Data.DarkTitleBar ? Color.White : new Color(32, 32, 32));
 			ChatManager.DrawColorCodedStringWithShadow(
 				spriteBatch, FontAssets.MouseText.Value, "Terraria",
-				new Vector2(bar.X + 28, bar.Y + 6), text * _fade, 0f, Vector2.Zero, new Vector2(0.7f));
+				new Vector2(bar.X + 28, bar.Y + 10), text * _fade, 0f, Vector2.Zero, new Vector2(0.86f));
 		}
 
 		private static void DrawChip(SpriteBatch spriteBatch, Rectangle hit, int index, Color color, string label)
@@ -270,10 +270,10 @@ namespace DieWithASmile.Engine.Settings
 			bool hover = hit.Contains(Main.mouseX, Main.mouseY);
 			WeDraw.Fill(spriteBatch, hit, (on ? WeAccent.Deep : new Color(22, 24, 30)) * _fade);
 			WeDraw.Border(spriteBatch, hit, (on || hover ? WeAccent.Light : WeAccent.Mid) * _fade);
-			WeDraw.Fill(spriteBatch, new Rectangle(hit.X + 5, hit.Y + 5, 12, 12), color * _fade);
+			WeDraw.Fill(spriteBatch, new Rectangle(hit.X + 8, hit.Y + 8, 16, 16), color * _fade);
 			ChatManager.DrawColorCodedStringWithShadow(
 				spriteBatch, FontAssets.MouseText.Value, label,
-				new Vector2(hit.X + 22, hit.Y + 4), Color.White * _fade, 0f, Vector2.Zero, new Vector2(0.58f));
+				new Vector2(hit.X + 30, hit.Y + 7), Color.White * _fade, 0f, Vector2.Zero, new Vector2(0.72f));
 		}
 
 		private static void DrawMenu(SpriteBatch spriteBatch, Rectangle view, ref int y, bool click, bool left = false, bool right = false)
@@ -281,19 +281,19 @@ namespace DieWithASmile.Engine.Settings
 			if (!click)
 				WeNeoShell.Header(spriteBatch, view, ref y, WeText.UI("GroupMenu"), _fade);
 			else
-				y += 26;
+				WeNeoShell.SkipHeader(ref y);
 
 			int styleW = (view.Width - 28) / 4;
 			if (click) {
 				if (left) {
 					for (int i = 0; i < 4; i++) {
-						var cell = new Rectangle(view.X + 4 + i * (styleW + 6), y, styleW, 48);
+						var cell = new Rectangle(view.X + 4 + i * (styleW + 6), y, styleW, 64);
 						if (cell.Contains(Main.mouseX, Main.mouseY))
 							WeSettings.SetButtonStyle(i);
 					}
 				}
 
-				y += 54;
+				y += 74;
 				if (WeNeoShell.HitRow(view, ref y) && left)
 					WeSettings.ToggleMenuTextCustom();
 				y += WeNeoShell.RowStep;
@@ -309,11 +309,11 @@ namespace DieWithASmile.Engine.Settings
 						WeFiles.OpenFolder(WeSave.FontFolder);
 				}
 
-				y += 34;
-				y += 20;
+				y += 42;
+				y += 24;
 				foreach (WeFontOffer offer in WeType.All) {
 					Rectangle hit = WeNeoShell.Row(view, y);
-					y += 36;
+					y += WeNeoShell.RowStep;
 					if (!hit.Contains(Main.mouseX, Main.mouseY))
 						continue;
 					if (right)
@@ -329,21 +329,21 @@ namespace DieWithASmile.Engine.Settings
 
 			string sample = WeText.UI("MenuPreview");
 			for (int i = 0; i < 4; i++) {
-				var cell = new Rectangle(view.X + 4 + i * (styleW + 6), y, styleW, 48);
+				var cell = new Rectangle(view.X + 4 + i * (styleW + 6), y, styleW, 64);
 				bool on = WeSave.Data.ButtonStyle == i;
 				bool hover = cell.Contains(Main.mouseX, Main.mouseY);
 				WeDraw.Fill(spriteBatch, cell, (on ? WeAccent.Deep : new Color(22, 24, 30)) * _fade);
 				WeDraw.Border(spriteBatch, cell, (on || hover ? WeAccent.Light : WeAccent.Mid) * _fade);
 				WeDraw.WithClip(spriteBatch, cell, () => WeLook.DrawPreview(
-					spriteBatch, sample, new Vector2(cell.Center.X, cell.Y + 16),
-					WeLook.MenuIdle, _fade, 0.22f, i));
+					spriteBatch, sample, new Vector2(cell.Center.X, cell.Y + 22),
+					WeLook.MenuIdle, _fade, 0.28f, i));
 				string key = i switch { 1 => "BtnOutline", 2 => "BtnAccent", 3 => "BtnPlate", _ => "BtnVanilla" };
 				ChatManager.DrawColorCodedStringWithShadow(
 					spriteBatch, FontAssets.MouseText.Value, WeText.UI(key),
-					new Vector2(cell.X + 4, cell.Bottom - 14), Color.White * _fade, 0f, Vector2.Zero, new Vector2(0.52f));
+					new Vector2(cell.X + 6, cell.Bottom - 18), Color.White * _fade, 0f, Vector2.Zero, new Vector2(0.64f));
 			}
 
-			y += 54;
+			y += 74;
 			WeNeoShell.Toggle(spriteBatch, view, ref y, WeText.UI("MenuTextCustom"), WeSave.Data.MenuTextCustom, _fade);
 			if (WeSave.Data.MenuTextCustom)
 				DrawRgb(spriteBatch, view, ref y, "menu", WeSettings.MenuTextColor);
@@ -351,8 +351,8 @@ namespace DieWithASmile.Engine.Settings
 			DrawTwin(spriteBatch, view, ref y, WeText.UI("ImportFont"), WeText.UI("OpenFolder"));
 			ChatManager.DrawColorCodedStringWithShadow(
 				spriteBatch, FontAssets.MouseText.Value, WeText.UI(WeOs.IsWindows ? "FontHint" : "FontOsHint"),
-				new Vector2(view.X + 8, y), Color.White * (0.55f * _fade), 0f, Vector2.Zero, new Vector2(0.6f));
-			y += 20;
+				new Vector2(view.X + 8, y), Color.White * (0.55f * _fade), 0f, Vector2.Zero, new Vector2(0.72f));
+			y += 24;
 			foreach (WeFontOffer offer in WeType.All) {
 				Rectangle hit = WeNeoShell.Row(view, y);
 				bool on = string.Equals(WeSave.Data.FontFile, offer.FileName, StringComparison.OrdinalIgnoreCase);
@@ -361,8 +361,8 @@ namespace DieWithASmile.Engine.Settings
 				WeDraw.Border(spriteBatch, hit, (on || hover ? WeAccent.Light : WeAccent.Mid) * _fade);
 				ChatManager.DrawColorCodedStringWithShadow(
 					spriteBatch, FontAssets.MouseText.Value, offer.Family,
-					new Vector2(hit.X + 10, hit.Y + 6), Color.White * _fade, 0f, Vector2.Zero, new Vector2(0.7f));
-				y += 36;
+					new Vector2(hit.X + 12, hit.Y + 10), Color.White * _fade, 0f, Vector2.Zero, new Vector2(WeNeoShell.Type));
+				y += WeNeoShell.RowStep;
 			}
 
 			WeNeoShell.Slider(spriteBatch, view, ref y, WeText.UI("FontWidth"), (WeLook.FontScaleX - 0.5f) / 1.3f, "", _fade);
@@ -374,35 +374,53 @@ namespace DieWithASmile.Engine.Settings
 			if (!click)
 				WeNeoShell.Header(spriteBatch, view, ref y, WeText.UI("Accent"), _fade);
 			else
-				y += 26;
+				WeNeoShell.SkipHeader(ref y);
 
 			const int cols = 4;
 			int cellW = (view.Width - 28) / cols;
+			const int cellH = 48;
+			const int stride = 56;
+			int gridH = stride * 2 + 28;
 			if (click) {
 				if (left) {
 					for (int i = 0; i < WeAccent.Palettes.Length; i++) {
 						int col = i % cols;
 						int row = i / cols;
-						var hit = new Rectangle(view.X + 4 + col * (cellW + 6), y + row * 28, cellW, 24);
+						var hit = new Rectangle(view.X + 4 + col * (cellW + 6), y + row * stride, cellW, cellH);
 						if (hit.Contains(Main.mouseX, Main.mouseY))
 							WeAccent.Set(i);
 					}
 				}
 
-				y += 60;
+				y += gridH;
 				return;
 			}
 
 			for (int i = 0; i < WeAccent.Palettes.Length; i++) {
 				int col = i % cols;
 				int row = i / cols;
-				var hit = new Rectangle(view.X + 4 + col * (cellW + 6), y + row * 28, cellW, 24);
+				var hit = new Rectangle(view.X + 4 + col * (cellW + 6), y + row * stride, cellW, cellH);
+				bool on = i == WeAccent.Index;
+				bool hover = hit.Contains(Main.mouseX, Main.mouseY);
 				WeDraw.Fill(spriteBatch, hit, WeAccent.Palettes[i].Mid * _fade);
-				if (i == WeAccent.Index)
+				if (on || hover)
 					WeDraw.Border(spriteBatch, hit, Color.White * _fade);
 			}
 
-			y += 60;
+			ChatManager.DrawColorCodedStringWithShadow(
+				spriteBatch, FontAssets.MouseText.Value, AccentName(WeAccent.Index),
+				new Vector2(view.X + 8, y + stride * 2 + 4), Color.White * _fade, 0f, Vector2.Zero, new Vector2(WeNeoShell.Type));
+			y += gridH;
+		}
+
+		private static string AccentName(int i)
+		{
+			if (i < 0 || i >= WeAccent.Palettes.Length)
+				i = 0;
+			string key = WeAccent.Palettes[i].Key;
+			if (string.IsNullOrEmpty(key))
+				return "";
+			return WeText.UI("Accent" + char.ToUpperInvariant(key[0]) + key.Substring(1));
 		}
 
 		private static void DrawFactory(SpriteBatch spriteBatch, Rectangle view, ref int y, bool click, bool left = false, bool right = false)
@@ -410,7 +428,7 @@ namespace DieWithASmile.Engine.Settings
 			if (!click)
 				WeNeoShell.Header(spriteBatch, view, ref y, WeText.UI("ResetFactory"), _fade);
 			else
-				y += 26;
+				WeNeoShell.SkipHeader(ref y);
 
 			if (click) {
 				if (WeNeoShell.HitRow(view, ref y) && left) {
@@ -425,15 +443,15 @@ namespace DieWithASmile.Engine.Settings
 					WeNeoMenu.SetFactoryArmed(false);
 
 				y += WeNeoShell.RowStep;
-				y += 36;
+				y += 44;
 				return;
 			}
 
 			WeNeoShell.Toggle(spriteBatch, view, ref y, WeText.UI(WeNeoMenu.FactoryArmed ? "ResetFactorySure" : "ResetFactory"), WeNeoMenu.FactoryArmed, _fade);
 			ChatManager.DrawColorCodedStringWithShadow(
 				spriteBatch, FontAssets.MouseText.Value, WeText.UI("ResetFactoryHint"),
-				new Vector2(view.X + 8, y), Color.White * (0.55f * _fade), 0f, Vector2.Zero, new Vector2(0.58f));
-			y += 36;
+				new Vector2(view.X + 8, y), Color.White * (0.55f * _fade), 0f, Vector2.Zero, new Vector2(0.7f));
+			y += 44;
 		}
 
 		private static void DrawRgb(SpriteBatch spriteBatch, Rectangle view, ref int y, string key, Color color)
@@ -463,18 +481,18 @@ namespace DieWithASmile.Engine.Settings
 		private static void DrawTwin(SpriteBatch spriteBatch, Rectangle view, ref int y, string a, string b)
 		{
 			int w = (view.Width - 16) / 2;
-			var left = new Rectangle(view.X + 4, y, w - 4, 24);
-			var right = new Rectangle(left.Right + 8, y, w - 4, 24);
+			var left = new Rectangle(view.X + 4, y, w - 4, 32);
+			var right = new Rectangle(left.Right + 8, y, w - 4, 32);
 			DrawMini(spriteBatch, left, a);
 			DrawMini(spriteBatch, right, b);
-			y += 34;
+			y += 42;
 		}
 
 		private static bool TwinHit(Rectangle view, int y, out int which)
 		{
 			int w = (view.Width - 16) / 2;
-			var left = new Rectangle(view.X + 4, y, w - 4, 24);
-			var right = new Rectangle(left.Right + 8, y, w - 4, 24);
+			var left = new Rectangle(view.X + 4, y, w - 4, 32);
+			var right = new Rectangle(left.Right + 8, y, w - 4, 32);
 			which = left.Contains(Main.mouseX, Main.mouseY) ? 0 : right.Contains(Main.mouseX, Main.mouseY) ? 1 : -1;
 			return which >= 0;
 		}
@@ -482,13 +500,13 @@ namespace DieWithASmile.Engine.Settings
 		private static void DrawMini(SpriteBatch spriteBatch, Rectangle hit, string text)
 		{
 			bool hover = hit.Contains(Main.mouseX, Main.mouseY);
-			WeDraw.Fill(spriteBatch, hit, new Color(32, 36, 44) * ((hover ? 0.95f : 0.8f) * _fade));
-			WeDraw.Border(spriteBatch, hit, WeAccent.Mid * _fade);
-			Vector2 size = FontAssets.MouseText.Value.MeasureString(text) * 0.62f;
+			WeDraw.Fill(spriteBatch, hit, (hover ? WeAccent.Deep : new Color(32, 36, 44)) * ((hover ? 0.95f : 0.8f) * _fade));
+			WeDraw.Border(spriteBatch, hit, (hover ? WeAccent.Light : WeAccent.Mid) * _fade);
+			Vector2 size = FontAssets.MouseText.Value.MeasureString(text) * 0.72f;
 			ChatManager.DrawColorCodedStringWithShadow(
 				spriteBatch, FontAssets.MouseText.Value, text,
 				new Vector2(hit.X + (hit.Width - size.X) * 0.5f, hit.Y + (hit.Height - size.Y) * 0.5f),
-				Color.White * _fade, 0f, Vector2.Zero, new Vector2(0.62f));
+				Color.White * _fade, 0f, Vector2.Zero, new Vector2(0.72f));
 		}
 	}
 }

@@ -314,4 +314,77 @@ UI: {
 	NeoOpenTml: tModLoader 설정
 	NeoOpenCursorColor: 커서 색
 	NeoOpenCursorBorder: 커서 테두리
+	NeoOpenBrowser: 모드 브라우저
+	NeoOpenModPacks: 모드 팩
+	NeoAutosave: 자동 저장
+	NeoAutopause: 자동 일시정지
+	NeoMap: 지도
+	NeoHidePasswords: 비밀번호 숨김
+	NeoPauseUnfocused: 포커스 잃으면 일시정지
+	NeoSetBonus: 세트 보너스
+	NeoAutofire: 자동 발사
+	NeoSmartDoors: 스마트 문
+	NeoHover: 호버
+	NeoZoom: 확대
+	NeoUIScale: UI 배율
+	NeoLanguage: 언어
+	NeoFullscreen: 전체 화면
+	NeoBorderless: 테두리 없음
+	NeoResolution: 해상도
+	NeoFrameSkip: 프레임 생략
+	NeoLighting: 조명
+	NeoQuality: 품질
+	NeoBackgrounds: 배경
+	NeoGore: 피와 잔해
+	NeoWobble: 광부 흔들림
+	NeoHeat: 열기 왜곡
+	NeoStorm: 폭풍 효과
+	NeoWaves: 파도
+	NeoWind: 바람 환경
+	NeoIntense: 강한 효과
+	NeoParallax: 시차
+	NeoMusic: 음악
+	NeoSound: 효과음
+	NeoAmbient: 환경음
+	NeoPickup: 획득 텍스트
+	NeoEventBar: 이벤트 진행
+	NeoPlacement: 배치 미리보기
+	NeoHighlightNew: 새 아이템 강조
+	NeoTileGrid: 타일 격자
+	NeoGamepadHints: 패드 힌트
+	NeoTooltipBoxes: 툴팁 상자
+	NeoMinimap: 미니맵 테두리
+	NeoMapScale: 지도 배율
+	NeoHealthStyle: 생명과 마나
+	NeoBossBar: 보스 체력바
+	NeoSmartCursor: 스마트 커서
+	NeoSmartBlocks: 스마트 배치
+	NeoSmartAxe: 곡괭이 다음 도끼
+	NeoLockOn: 락온
+	NeoQuickTrash: 빠른 버리기
+	NeoShiftTrash: Shift 버리기
+	NeoOn: 켜짐
+	NeoOff: 꺼짐
+	NeoHold: 유지
+	NeoClick: 클릭
+	NeoToggle: 전환
+	NeoUp: 위
+	NeoDown: 아래
+	NeoGamepad: 패드
+	NeoSubtle: 약하게
+	NeoLightColor: 컬러
+	NeoLightWhite: 흰색
+	NeoLightRetro: 레트로
+	NeoLightTrippy: 환각
+	NeoLow: 낮음
+	NeoMedium: 중간
+	NeoHigh: 높음
+	NeoAuto: 자동
+	NeoTimed: 시간제
+	NeoFill: 채우기
+	NeoBorder: 테두리
+	NeoSectionHud: HUD
+	NeoSectionColor: 색
+	NeoSectionSmart: 조준
+	NeoHslHint: HSL
 }

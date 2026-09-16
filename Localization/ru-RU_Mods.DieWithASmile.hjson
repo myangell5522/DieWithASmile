@@ -314,4 +314,77 @@ UI: {
 	NeoOpenTml: Настройки tModLoader
 	NeoOpenCursorColor: Цвет курсора
 	NeoOpenCursorBorder: Обводка курсора
+	NeoOpenBrowser: Браузер модов
+	NeoOpenModPacks: Наборы модов
+	NeoAutosave: Автосохранение
+	NeoAutopause: Автопауза
+	NeoMap: Карта
+	NeoHidePasswords: Скрыть пароли
+	NeoPauseUnfocused: Пауза без фокуса
+	NeoSetBonus: Бонус сета
+	NeoAutofire: Автоогонь
+	NeoSmartDoors: Умные двери
+	NeoHover: Парение
+	NeoZoom: Масштаб
+	NeoUIScale: Масштаб UI
+	NeoLanguage: Язык
+	NeoFullscreen: Полный экран
+	NeoBorderless: Без рамки
+	NeoResolution: Разрешение
+	NeoFrameSkip: Пропуск кадров
+	NeoLighting: Освещение
+	NeoQuality: Качество
+	NeoBackgrounds: Фоны
+	NeoGore: Кровь и гибель
+	NeoWobble: Дрожание шахтёра
+	NeoHeat: Искажение жары
+	NeoStorm: Эффекты бури
+	NeoWaves: Волны
+	NeoWind: Ветер
+	NeoIntense: Яркие эффекты
+	NeoParallax: Параллакс
+	NeoMusic: Музыка
+	NeoSound: Звуки
+	NeoAmbient: Окружение
+	NeoPickup: Текст подбора
+	NeoEventBar: Прогресс события
+	NeoPlacement: Превью размещения
+	NeoHighlightNew: Подсветка новых
+	NeoTileGrid: Сетка блоков
+	NeoGamepadHints: Подсказки геймпада
+	NeoTooltipBoxes: Рамки подсказок
+	NeoMinimap: Рамка миникарты
+	NeoMapScale: Масштаб карты
+	NeoHealthStyle: Здоровье и мана
+	NeoBossBar: Полоса босса
+	NeoSmartCursor: Умный курсор
+	NeoSmartBlocks: Умная установка
+	NeoSmartAxe: Топор после кирки
+	NeoLockOn: Захват цели
+	NeoQuickTrash: Быстрый мусор
+	NeoShiftTrash: Shift-мусор
+	NeoOn: Вкл
+	NeoOff: Выкл
+	NeoHold: Удерж.
+	NeoClick: Клик
+	NeoToggle: Перекл.
+	NeoUp: Вверх
+	NeoDown: Вниз
+	NeoGamepad: Геймпад
+	NeoSubtle: Мягко
+	NeoLightColor: Цвет
+	NeoLightWhite: Белый
+	NeoLightRetro: Ретро
+	NeoLightTrippy: Триппи
+	NeoLow: Низк.
+	NeoMedium: Средн.
+	NeoHigh: Высок.
+	NeoAuto: Авто
+	NeoTimed: По времени
+	NeoFill: Заливка
+	NeoBorder: Рамка
+	NeoSectionHud: HUD
+	NeoSectionColor: Цвет
+	NeoSectionSmart: Прицел
+	NeoHslHint: HSL
 }
