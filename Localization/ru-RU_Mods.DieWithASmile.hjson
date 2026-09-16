@@ -406,7 +406,7 @@ UI: {
 	NeoImportWorlds: Импорт миров
 	NeoLogs: Логи
 	NeoBack: Назад
-	NeoModsHint: Имя — описание. Вкл/Выкл — включить. Reload применяет список.
+	NeoModsHint: Имя или ? — описание. Вкл/Выкл — включить. Reload применяет список.
 	NeoModsInGame: Включать моды и Reload можно только в меню.
 	NeoEnableAll: Включить все
 	NeoDisableAll: Выключить все
@@ -414,6 +414,30 @@ UI: {
 	NeoModsFolder: Папка модов
 	NeoSavePack: Сохранить пак
 	NeoConfigFolder: Папка конфигов
+	NeoReloadNeed: Список изменился — нажми Reload, чтобы применить.
+	NeoFilterAll: Все
+	NeoFilterOn: Вкл
+	NeoFilterOff: Выкл
+	NeoFilterClient: Клиент
+	NeoEnabledCount: "{0} вкл / {1}"
+	NeoEmptyMods: В папке Mods модов нет.
+	NeoEmptyBrowser: Workshop-модов пока нет. Открой Steam Workshop.
+	NeoEmptyPacks: Сохранённых паков нет. Сохрани набор в списке модов или открой папку.
+	NeoEmptyRes: Пакетов ресурсов нет. Положи паки в папку, затем Применить.
+	NeoEmptyDev: В ModSources пока нет проектов.
+	NeoResFolder: Папка паков
+	NeoActive: Активен
+	NeoInstalled: Установлен
+	NeoOpenPage: Страница Steam
+	NeoHasCsproj: .csproj
+	NeoDeletePack: Удалить
+	NeoPackMods: "{0} модов"
+	NeoSideClient: Клиент
+	NeoSideServer: Сервер
+	NeoSideBoth: Оба
+	NeoConfigMark: Конфиг
+	NeoMoveUp: Вверх
+	NeoMoveDown: Вниз
 	NeoBrowserHint: Здесь установленные workshop-моды. Остальное — в Steam.
 	NeoOpenSteam: Открыть Steam Workshop
 	NeoPacksHint: Наборы включённых модов. Клик загружает пак в меню.

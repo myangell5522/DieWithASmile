@@ -406,7 +406,7 @@ UI: {
 	NeoImportWorlds: Import worlds
 	NeoLogs: Logs
 	NeoBack: Back
-	NeoModsHint: Click a name for info. Click On/Off to enable. Reload applies the list.
+	NeoModsHint: Click a name or ? for info. On/Off enables. Force reload applies the list.
 	NeoModsInGame: Enable and reload only work on the title screen.
 	NeoEnableAll: Enable all
 	NeoDisableAll: Disable all
@@ -414,6 +414,30 @@ UI: {
 	NeoModsFolder: Mods folder
 	NeoSavePack: Save mod pack
 	NeoConfigFolder: Config folder
+	NeoReloadNeed: Enable list changed — Force reload to apply.
+	NeoFilterAll: All
+	NeoFilterOn: Enabled
+	NeoFilterOff: Disabled
+	NeoFilterClient: Client
+	NeoEnabledCount: "{0} enabled / {1}"
+	NeoEmptyMods: No mods found in the Mods folder.
+	NeoEmptyBrowser: No workshop mods installed yet. Open Steam Workshop to browse.
+	NeoEmptyPacks: No saved mod packs. Save one from Manage mods, or open the packs folder.
+	NeoEmptyRes: No resource packs found. Put packs in this folder, then Apply.
+	NeoEmptyDev: No projects in ModSources yet.
+	NeoResFolder: Packs folder
+	NeoActive: Active
+	NeoInstalled: Installed
+	NeoOpenPage: Steam page
+	NeoHasCsproj: .csproj
+	NeoDeletePack: Delete
+	NeoPackMods: "{0} mods"
+	NeoSideClient: Client
+	NeoSideServer: Server
+	NeoSideBoth: Both
+	NeoConfigMark: Config
+	NeoMoveUp: Up
+	NeoMoveDown: Down
 	NeoBrowserHint: Installed workshop mods are listed here. Open Steam for more.
 	NeoOpenSteam: Open Steam Workshop
 	NeoPacksHint: Saved packs of enabled mods. Click a pack to load it on the title.

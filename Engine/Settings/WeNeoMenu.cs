@@ -84,6 +84,7 @@ namespace DieWithASmile.Engine.Settings
 			_leaf = page;
 			_scroll = 0f;
 			_pageFade = 0f;
+			WeTml.Touch();
 		}
 
 		internal static void SetFactoryArmed(bool armed) => _factoryArmed = armed;

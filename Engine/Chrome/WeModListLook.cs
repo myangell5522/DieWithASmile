@@ -110,6 +110,37 @@ namespace DieWithASmile.Engine.Chrome
 			orig(self, spriteBatch);
 		}
 
+		internal static bool DrawIcon(SpriteBatch spriteBatch, Rectangle dest, float alpha)
+		{
+			if (dest.Width < 8 || dest.Height < 8)
+				return false;
+
+			Texture2D frame = CurrentFrame();
+			if (frame != null) {
+				float scale = Math.Max(
+					dest.Width / (float)Math.Max(1, frame.Width),
+					dest.Height / (float)Math.Max(1, frame.Height));
+				int srcW = Math.Min(frame.Width, Math.Max(1, (int)(dest.Width / scale)));
+				int srcH = Math.Min(frame.Height, Math.Max(1, (int)(dest.Height / scale)));
+				int srcX = Math.Max(0, (frame.Width - srcW) / 2);
+				int srcY = Math.Max(0, (frame.Height - srcH) / 2);
+				spriteBatch.Draw(frame, dest, new Rectangle(srcX, srcY, srcW, srcH), Color.White * (0.92f * alpha));
+			}
+			else {
+				Texture2D pixel = TextureAssets.MagicPixel.Value;
+				spriteBatch.Draw(pixel, dest, new Color(18, 48, 92) * (0.92f * alpha));
+			}
+
+			bool logo = DrawLogo(spriteBatch, dest, alpha);
+			Texture2D px = TextureAssets.MagicPixel.Value;
+			Color edge = new Color(80, 220, 255) * alpha;
+			spriteBatch.Draw(px, new Rectangle(dest.X, dest.Y, dest.Width, 2), edge);
+			spriteBatch.Draw(px, new Rectangle(dest.X, dest.Bottom - 2, dest.Width, 2), edge);
+			spriteBatch.Draw(px, new Rectangle(dest.X, dest.Y, 2, dest.Height), edge);
+			spriteBatch.Draw(px, new Rectangle(dest.Right - 2, dest.Y, 2, dest.Height), edge);
+			return logo;
+		}
+
 		private static void DrawBackdrop(SpriteBatch spriteBatch, UIPanel panel)
 		{
 			CalculatedStyle dim = panel.GetDimensions();

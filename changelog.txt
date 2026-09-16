@@ -1,3 +1,8 @@
+Version 3.0.12
+
+Title
+- Workshop overlay: real On/Off from enabled.json, tmod icons/GIFs, this theme's colored card, resource packs from disk, mod-pack folder, filters, and Force reload when the list changes.
+
 Version 3.0.11
 
 Title

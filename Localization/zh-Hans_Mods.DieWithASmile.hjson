@@ -406,7 +406,7 @@ UI: {
 	NeoImportWorlds: 导入世界
 	NeoLogs: 日志
 	NeoBack: 返回
-	NeoModsHint: 点名称看简介。点开关启用。Reload 应用列表。
+	NeoModsHint: 点名称或 ? 看简介。点开关启用。Reload 应用列表。
 	NeoModsInGame: 只能在标题画面启用模组并 Reload。
 	NeoEnableAll: 全部启用
 	NeoDisableAll: 全部禁用
@@ -414,6 +414,30 @@ UI: {
 	NeoModsFolder: 模组文件夹
 	NeoSavePack: 保存模组包
 	NeoConfigFolder: 配置文件夹
+	NeoReloadNeed: 启用列表已更改 — 点强制重载以应用。
+	NeoFilterAll: 全部
+	NeoFilterOn: 已启用
+	NeoFilterOff: 已禁用
+	NeoFilterClient: 客户端
+	NeoEnabledCount: "{0} 已启用 / {1}"
+	NeoEmptyMods: Mods 文件夹里没有模组。
+	NeoEmptyBrowser: 还没有安装工坊模组。打开 Steam 工坊浏览。
+	NeoEmptyPacks: 没有已保存的模组包。在管理模组里保存，或打开文件夹。
+	NeoEmptyRes: 没有资源包。把资源包放到该文件夹后点应用。
+	NeoEmptyDev: ModSources 里还没有工程。
+	NeoResFolder: 资源包文件夹
+	NeoActive: 启用中
+	NeoInstalled: 已安装
+	NeoOpenPage: Steam 页面
+	NeoHasCsproj: .csproj
+	NeoDeletePack: 删除
+	NeoPackMods: "{0} 个模组"
+	NeoSideClient: 客户端
+	NeoSideServer: 服务端
+	NeoSideBoth: 双方
+	NeoConfigMark: 配置
+	NeoMoveUp: 上移
+	NeoMoveDown: 下移
 	NeoBrowserHint: 这里列出已安装的工坊模组。更多请打开 Steam。
 	NeoOpenSteam: 打开 Steam 工坊
 	NeoPacksHint: 已启用模组的打包。点击可在标题画面加载。

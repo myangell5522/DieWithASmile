@@ -406,7 +406,7 @@ UI: {
 	NeoImportWorlds: 월드 가져오기
 	NeoLogs: 로그
 	NeoBack: 뒤로
-	NeoModsHint: 이름을 누르면 설명, On/Off로 켜고 Reload로 적용합니다.
+	NeoModsHint: 이름 또는 ?로 설명, On/Off로 켜고 Reload로 적용합니다.
 	NeoModsInGame: 모드 켜기와 Reload는 타이틀에서만 됩니다.
 	NeoEnableAll: 모두 켜기
 	NeoDisableAll: 모두 끄기
@@ -414,6 +414,30 @@ UI: {
 	NeoModsFolder: 모드 폴더
 	NeoSavePack: 모드 팩 저장
 	NeoConfigFolder: 설정 폴더
+	NeoReloadNeed: 목록이 바뀌었습니다. 적용하려면 강제 리로드.
+	NeoFilterAll: 전체
+	NeoFilterOn: 켜짐
+	NeoFilterOff: 꺼짐
+	NeoFilterClient: 클라이언트
+	NeoEnabledCount: "{0} 켜짐 / {1}"
+	NeoEmptyMods: Mods 폴더에 모드가 없습니다.
+	NeoEmptyBrowser: 설치된 창작마당 모드가 없습니다. Steam에서 찾아보세요.
+	NeoEmptyPacks: 저장된 모드 팩이 없습니다. 모드 관리에서 저장하거나 폴더를 여세요.
+	NeoEmptyRes: 리소스 팩이 없습니다. 이 폴더에 넣은 뒤 적용하세요.
+	NeoEmptyDev: ModSources에 프로젝트가 없습니다.
+	NeoResFolder: 팩 폴더
+	NeoActive: 활성
+	NeoInstalled: 설치됨
+	NeoOpenPage: Steam 페이지
+	NeoHasCsproj: .csproj
+	NeoDeletePack: 삭제
+	NeoPackMods: "모드 {0}개"
+	NeoSideClient: 클라이언트
+	NeoSideServer: 서버
+	NeoSideBoth: 양쪽
+	NeoConfigMark: 설정
+	NeoMoveUp: 위로
+	NeoMoveDown: 아래로
 	NeoBrowserHint: 설치된 창작마당 모드입니다. 더 보려면 Steam을 여세요.
 	NeoOpenSteam: Steam 창작마당 열기
 	NeoPacksHint: 켜 둔 모드 묶음입니다. 타이틀에서 클릭하면 불러옵니다.
