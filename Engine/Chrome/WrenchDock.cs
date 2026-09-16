@@ -97,7 +97,7 @@ namespace DieWithASmile.Engine.Chrome
 
 		internal static void DrawPreview(SpriteBatch spriteBatch, Rectangle dest, float fade, bool on)
 		{
-			var inner = new Rectangle(dest.X + 16, dest.Y + 16, dest.Width - 32, dest.Height - 32);
+			var inner = new Rectangle(dest.X + 6, dest.Y + dest.Height / 3, dest.Width - 12, dest.Height / 2);
 			float focus = on ? 4f : 2f;
 			float lift = on ? 0.55f + MathF.Sin(Main.GlobalTimeWrappedHourly * 2.2f) * 0.12f : 0f;
 			DrawBar(spriteBatch, inner, focus, lift, fade, interactive: false);

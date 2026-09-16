@@ -116,6 +116,13 @@ namespace DieWithASmile.Engine.Settings
 				}
 			}
 
+			if (!searching && WeNeoMenu.Category == WeNeoCat.Controls)
+				WeNeoKeys.Draw(spriteBatch, view, ref y, fade);
+			if (!searching && WeNeoMenu.Category == WeNeoCat.Mods)
+				WeNeoShop.Draw(spriteBatch, view, ref y, fade);
+			else if (searching)
+				WeNeoShop.DrawSearch(spriteBatch, view, ref y, q, fade);
+
 			if (!searching && WeNeoMenu.Category == WeNeoCat.Client)
 				WeNeoClient.Draw(spriteBatch, view, ref y, fade);
 			else if (searching)
@@ -198,6 +205,13 @@ namespace DieWithASmile.Engine.Settings
 				}
 			}
 
+			if (!searching && WeNeoMenu.Category == WeNeoCat.Controls)
+				WeNeoKeys.Click(view, ref y, left, right);
+			if (!searching && WeNeoMenu.Category == WeNeoCat.Mods)
+				WeNeoShop.Click(view, ref y, left, right);
+			else if (searching)
+				WeNeoShop.ClickSearch(view, ref y, q, left, right);
+
 			if (!searching && WeNeoMenu.Category == WeNeoCat.Client)
 				WeNeoClient.Click(view, ref y, left, right);
 			else if (searching)
@@ -261,7 +275,6 @@ namespace DieWithASmile.Engine.Settings
 			Func<string> color = () => T("NeoSectionColor");
 			Func<string> aim = () => T("NeoSectionSmart");
 			Func<string> keys = () => T("NeoCatControls");
-			Func<string> mods = () => T("NeoCatMods");
 
 			Toggle(list, WeNeoCat.Game, g, "autosave", () => T("NeoAutosave"), () => Main.autoSave, v => { Main.autoSave = v; PersistSoft(); });
 			Toggle(list, WeNeoCat.Game, g, "autopause", () => T("NeoAutopause"), () => Main.autoPause, v => { Main.autoPause = v; PersistSoft(); });
@@ -422,7 +435,7 @@ namespace DieWithASmile.Engine.Settings
 					}
 				});
 
-			Preview(list, WeNeoCat.Cursor, color, "cprev", 48, WeNeoShell.CursorPreview, WeNeoShell.CursorPreviewClick);
+			Preview(list, WeNeoCat.Cursor, color, "cprev", WeNeoCursor.Height, WeNeoCursor.Draw, WeNeoCursor.Click);
 			Slider(list, WeNeoCat.Cursor, color, "cr", () => WeText.UI("Red"),
 				() => CursorRgb().R / 255f, () => CursorRgb().R.ToString(),
 				t => SetCursorRgb(r: (int)(t * 255)));
@@ -438,10 +451,6 @@ namespace DieWithASmile.Engine.Settings
 			MaybeSmart(list, aim, "blocks", "NeoSmartBlocks", "SmartBlocksEnabled", "UseSmartCursorForCommonBlocks");
 			MaybeSmart(list, aim, "axe", "NeoSmartAxe", "SmartAxeAfterPickaxe", "UseSmartAxeAfterPickaxe");
 			MaybeLockOn(list, aim);
-			Button(list, WeNeoCat.Cursor, color, "ccolor", () => T("NeoOpenCursorColor"),
-				() => T("NeoHslHint"), () => WeNeoDeep.OpenCursorColor());
-			Button(list, WeNeoCat.Cursor, color, "cborder", () => T("NeoOpenCursorBorder"),
-				() => T("NeoHslHint"), () => WeNeoDeep.OpenCursorBorder());
 
 			Toggle(list, WeNeoCat.Controls, keys, "trash", () => T("NeoQuickTrash"),
 				() => !WeNeoFld.GetBool(typeof(Main), "DisableQuickTrash"),
@@ -449,19 +458,6 @@ namespace DieWithASmile.Engine.Settings
 			Toggle(list, WeNeoCat.Controls, keys, "shifttrash", () => T("NeoShiftTrash"),
 				() => !WeNeoFld.GetBool(typeof(Main), "DisableLeftShiftTrashCan"),
 				v => WeNeoFld.SetBool(typeof(Main), "DisableLeftShiftTrashCan", !v));
-			Button(list, WeNeoCat.Controls, keys, "keys", () => T("NeoOpenKeybinds"),
-				() => ">", () => WeNeoDeep.OpenKeybinds());
-
-			Button(list, WeNeoCat.Mods, mods, "mods", () => T("NeoOpenMods"),
-				() => ">", () => WeNeoDeep.OpenMods());
-			Button(list, WeNeoCat.Mods, mods, "browser", () => T("NeoOpenBrowser"),
-				() => ">", () => WeNeoDeep.OpenBrowser());
-			Button(list, WeNeoCat.Mods, mods, "packs", () => T("NeoOpenPacks"),
-				() => ">", () => WeNeoDeep.OpenPacks());
-			Button(list, WeNeoCat.Mods, mods, "modpacks", () => T("NeoOpenModPacks"),
-				() => ">", () => WeNeoDeep.OpenModPacks());
-			Button(list, WeNeoCat.Mods, mods, "tml", () => T("NeoOpenTml"),
-				() => ">", () => WeNeoDeep.OpenTmlSettings());
 			return list;
 		}
 

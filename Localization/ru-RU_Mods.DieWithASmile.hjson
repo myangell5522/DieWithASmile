@@ -387,4 +387,44 @@ UI: {
 	NeoSectionColor: Цвет
 	NeoSectionSmart: Прицел
 	NeoHslHint: HSL
+	NeoCursorNormal: Обычный
+	NeoCursorThick: Толстый
+	NeoCursorSmart: Умный
+	NeoCursorHint: Заливка — стрелка. Рамка — контур. Меняется сразу.
+	NeoKeysHint: Кликни действие, потом клавишу. Можно нажать на схему.
+	NeoKeysWaiting: Нажми клавишу или клетку. ПКМ — отмена.
+	NeoKeysAll: Все
+	NeoKeysMove: Ход
+	NeoKeysInv: Инв
+	NeoKeysMisc: Проч
+	NeoKeysMods: Моды
+	NeoKeysReset: Сбросить
+	NeoKeysResetAll: Сбросить всё
+	NeoHubTitle: Мастерская
+	NeoHubHint: Моды, загрузки, паки, миры и логи здесь. Без лишних экранов Terraria.
+	NeoDevelop: Разработка
+	NeoImportWorlds: Импорт миров
+	NeoLogs: Логи
+	NeoBack: Назад
+	NeoModsHint: Имя — описание. Вкл/Выкл — включить. Reload применяет список.
+	NeoModsInGame: Включать моды и Reload можно только в меню.
+	NeoEnableAll: Включить все
+	NeoDisableAll: Выключить все
+	NeoReload: Перезагрузка
+	NeoModsFolder: Папка модов
+	NeoSavePack: Сохранить пак
+	NeoConfigFolder: Папка конфигов
+	NeoBrowserHint: Здесь установленные workshop-моды. Остальное — в Steam.
+	NeoOpenSteam: Открыть Steam Workshop
+	NeoPacksHint: Наборы включённых модов. Клик загружает пак в меню.
+	NeoPacksFolder: Папка паков
+	NeoLoadPack: Загрузить
+	NeoResHint: Пакеты ресурсов. Переключи и нажми Применить.
+	NeoApplyPacks: Применить паки
+	NeoDevelopHint: Проекты ModSources. Клик открывает папку.
+	NeoOpenSources: Открыть ModSources
+	NeoWorldsHint: Скопировать .wld в папку миров.
+	NeoImportWorld: Импорт мира
+	NeoWorldsFolder: Папка миров
+	NeoOpenLogs: Папка логов
 }

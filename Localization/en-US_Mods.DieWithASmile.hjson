@@ -387,4 +387,44 @@ UI: {
 	NeoSectionColor: Color
 	NeoSectionSmart: Aim
 	NeoHslHint: HSL
+	NeoCursorNormal: Normal
+	NeoCursorThick: Thick
+	NeoCursorSmart: Smart
+	NeoCursorHint: Fill is the arrow. Border is the outline. Changes apply immediately.
+	NeoKeysHint: Click an action, then press a key. Click the keyboard to pick a bind.
+	NeoKeysWaiting: Press a key, or click a key on the keyboard. Right-click cancels.
+	NeoKeysAll: All
+	NeoKeysMove: Move
+	NeoKeysInv: Inv
+	NeoKeysMisc: Misc
+	NeoKeysMods: Mods
+	NeoKeysReset: Reset bind
+	NeoKeysResetAll: Reset all
+	NeoHubTitle: Workshop
+	NeoHubHint: Manage mods, downloads, packs, worlds, and logs here. No extra Terraria screens.
+	NeoDevelop: Develop mods
+	NeoImportWorlds: Import worlds
+	NeoLogs: Logs
+	NeoBack: Back
+	NeoModsHint: Click a name for info. Click On/Off to enable. Reload applies the list.
+	NeoModsInGame: Enable and reload only work on the title screen.
+	NeoEnableAll: Enable all
+	NeoDisableAll: Disable all
+	NeoReload: Force reload
+	NeoModsFolder: Mods folder
+	NeoSavePack: Save mod pack
+	NeoConfigFolder: Config folder
+	NeoBrowserHint: Installed workshop mods are listed here. Open Steam for more.
+	NeoOpenSteam: Open Steam Workshop
+	NeoPacksHint: Saved packs of enabled mods. Click a pack to load it on the title.
+	NeoPacksFolder: Packs folder
+	NeoLoadPack: Load
+	NeoResHint: Resource packs. Toggle, then Apply.
+	NeoApplyPacks: Apply packs
+	NeoDevelopHint: Your ModSources projects. Click a folder to open it.
+	NeoOpenSources: Open ModSources
+	NeoWorldsHint: Copy a .wld into your worlds folder.
+	NeoImportWorld: Import world file
+	NeoWorldsFolder: Worlds folder
+	NeoOpenLogs: Open logs folder
 }

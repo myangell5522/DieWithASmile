@@ -343,22 +343,28 @@ namespace DieWithASmile.Engine.Chrome
 			}
 
 			Vector2 origin = dest.Center.ToVector2();
-			float radius = Math.Min(dest.Width, dest.Height) * 0.16f;
+			float radius = Math.Min(dest.Width, dest.Height) * 0.14f;
 			Texture2D circle = WeDraw.Circle();
-			spriteBatch.Draw(circle, origin, null, WeAccent.Mid * (0.22f * fade), 0f, circle.Size() * 0.5f, (radius * 2.8f) / circle.Width, SpriteEffects.None, 0f);
+			spriteBatch.Draw(circle, origin, null, WeAccent.Mid * (0.18f * fade), 0f, circle.Size() * 0.5f, (radius * 2.4f) / circle.Width, SpriteEffects.None, 0f);
 			RoundButton.Draw(spriteBatch, origin, radius, fade, selected);
 			Texture2D hub = WeIcons.Get(WeIcons.Setting);
 			if (hub != null) {
-				float iconScale = radius * 1.1f / Math.Max(1, Math.Max(hub.Width, hub.Height));
+				float iconScale = radius * 1.15f / Math.Max(1, Math.Max(hub.Width, hub.Height));
 				spriteBatch.Draw(hub, origin, null, WeAccent.Icon(false, selected) * fade, 0f, hub.Size() * 0.5f, iconScale, SpriteEffects.None, 0f);
 			}
 
 			int n = WrenchHub.Actions.Length;
-			float orbit = Math.Min(dest.Width, dest.Height) * 0.36f;
+			float orbit = Math.Min(dest.Width, dest.Height) * 0.38f;
 			for (int i = 0; i < n; i++) {
 				float angle = -MathHelper.PiOver2 + i * MathHelper.TwoPi / n;
 				Vector2 pos = origin + angle.ToRotationVector2() * orbit;
-				RoundButton.Draw(spriteBatch, pos, radius * 0.42f, fade * 0.9f, selected && i == 2);
+				float child = radius * 0.48f;
+				RoundButton.Draw(spriteBatch, pos, child, fade * 0.95f, selected && i == 2);
+				Texture2D icon = WeIcons.Get(WrenchHub.IconName(WrenchHub.Actions[i]));
+				if (icon != null) {
+					float s = child * 1.15f / Math.Max(1, Math.Max(icon.Width, icon.Height));
+					spriteBatch.Draw(icon, pos, null, WeAccent.Icon(false, selected) * fade, 0f, icon.Size() * 0.5f, s, SpriteEffects.None, 0f);
+				}
 			}
 		}
 	}

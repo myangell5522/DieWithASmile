@@ -152,20 +152,20 @@ namespace DieWithASmile.Engine.Settings
 				WeNeoShell.SkipHeader(ref y);
 
 			int cellW = (view.Width - 16) / 2;
-			var leftR = new Rectangle(view.X + 4, y, cellW - 4, 96);
-			var rightR = new Rectangle(leftR.Right + 8, y, cellW - 4, 96);
+			var leftR = new Rectangle(view.X + 4, y, cellW - 4, 148);
+			var rightR = new Rectangle(leftR.Right + 8, y, cellW - 4, 148);
 			if (click) {
 				if (left && leftR.Contains(Main.mouseX, Main.mouseY))
 					WeSettings.SetWrenchStyle(0);
 				if (left && rightR.Contains(Main.mouseX, Main.mouseY))
 					WeSettings.SetWrenchStyle(1);
-				y += 110;
+				y += 164;
 				return;
 			}
 
 			DrawHubCell(spriteBatch, leftR, 0);
 			DrawHubCell(spriteBatch, rightR, 1);
-			y += 110;
+			y += 164;
 		}
 
 		private static void DrawHubCell(SpriteBatch spriteBatch, Rectangle hit, int style)
@@ -174,11 +174,14 @@ namespace DieWithASmile.Engine.Settings
 			bool hover = hit.Contains(Main.mouseX, Main.mouseY);
 			WeDraw.Fill(spriteBatch, hit, (on ? WeAccent.Deep : new Color(22, 24, 30)) * _fade);
 			WeDraw.Border(spriteBatch, hit, (on || hover ? WeAccent.Light : WeAccent.Mid) * _fade);
-			var preview = new Rectangle(hit.X + 6, hit.Y + 6, hit.Width - 12, hit.Height - 30);
-			WrenchToolbar.DrawStylePreview(spriteBatch, preview, style, _fade, on);
+			if (hover || on)
+				WeDraw.Fill(spriteBatch, new Rectangle(hit.X, hit.Y, 4, hit.Height), WeAccent.Hover * _fade);
+			var canvas = new Rectangle(hit.X + 8, hit.Y + 8, hit.Width - 16, hit.Height - 36);
+			WeDraw.Fill(spriteBatch, canvas, new Color(12, 14, 18) * _fade);
+			WrenchToolbar.DrawStylePreview(spriteBatch, canvas, style, _fade, on);
 			ChatManager.DrawColorCodedStringWithShadow(
 				spriteBatch, FontAssets.MouseText.Value, WeText.UI(style == 1 ? "HubStyleDock" : "HubStyleRadial"),
-				new Vector2(hit.X + 10, hit.Bottom - 20), Color.White * _fade, 0f, Vector2.Zero, new Vector2(0.78f));
+				new Vector2(hit.X + 12, hit.Bottom - 24), Color.White * _fade, 0f, Vector2.Zero, new Vector2(0.86f));
 		}
 
 		private static void DrawWindow(SpriteBatch spriteBatch, Rectangle view, ref int y, bool click, bool left = false, bool right = false)

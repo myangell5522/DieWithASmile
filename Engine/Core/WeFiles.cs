@@ -19,6 +19,9 @@ namespace DieWithASmile.Engine.Core
 		internal static bool TryPickFont(out string path) =>
 			TryPick(out path, ShowFont, "Choose a font", ".ttf", ".otf");
 
+		internal static bool TryPickWorld(out string path) =>
+			TryPick(out path, ShowWorld, "Import a world", ".wld", ".twld");
+
 		internal static void OpenFile(string path)
 		{
 			try {
@@ -113,6 +116,10 @@ namespace DieWithASmile.Engine.Core
 		private static string ShowFont() => ShowDialog(
 			"Fonts (*.ttf;*.otf)\0*.ttf;*.otf\0TrueType\0*.ttf\0OpenType\0*.otf\0",
 			"Choose a font");
+
+		private static string ShowWorld() => ShowDialog(
+			"Worlds (*.wld)\0*.wld\0Terraria World\0*.wld\0",
+			"Import a world");
 
 		private static string ShowDialog(string filter, string title)
 		{

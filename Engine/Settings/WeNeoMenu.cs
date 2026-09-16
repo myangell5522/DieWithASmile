@@ -44,7 +44,7 @@ namespace DieWithASmile.Engine.Settings
 		private static bool _frameInput;
 		private static bool _wasFancy;
 		private static float _fade;
-		private static float _page = 1f;
+		private static float _pageFade = 1f;
 		private static float _scroll;
 		private static float _contentH;
 		private static int _lastWheel;
@@ -55,13 +55,15 @@ namespace DieWithASmile.Engine.Settings
 		private static string _drag;
 		private static WeNeoCat _cat = WeNeoCat.Game;
 		private static WeNeoCat _returnCat = WeNeoCat.Game;
+		private static WeNeoPage _leaf = WeNeoPage.Hub;
 
 		internal static bool IsOpen => _open;
 		internal static bool Covering => _open || _fade > 0.02f;
 		internal static bool AteInput => _ate;
 		internal static WeNeoCat Category => _cat;
+		internal static WeNeoPage Page => _leaf;
 		internal static float Fade => _fade;
-		internal static float PageFade => _page;
+		internal static float PageFade => _pageFade;
 		internal static string Search => _search ?? "";
 		internal static bool SearchFocus => _searchFocus;
 		internal static string Drag => _drag;
@@ -76,6 +78,13 @@ namespace DieWithASmile.Engine.Settings
 		internal static void SetClientChip(int chip) => _clientChip = Math.Clamp(chip, 0, 2);
 
 		internal static void SetCursorChip(int chip) => _cursorChip = Math.Clamp(chip, 0, 1);
+
+		internal static void SetPage(WeNeoPage page)
+		{
+			_leaf = page;
+			_scroll = 0f;
+			_pageFade = 0f;
+		}
 
 		internal static void SetFactoryArmed(bool armed) => _factoryArmed = armed;
 
@@ -115,12 +124,101 @@ namespace DieWithASmile.Engine.Settings
 		{
 			if (!Main.gameMenu || CoolerMenuCompat.WorldGenUiActive)
 				return;
-			if (Main.menuMode != 11)
+			if (Main.menuMode == 11) {
+				Main.menuMode = 0;
+				if (!_pendingReturn)
+					Open(WeNeoCat.Game, inGame: false);
 				return;
+			}
+
+			if (IsWorkshopScreen()) {
+				DismissFancy();
+				if (!_open && !_pendingReturn)
+					Open(WeNeoCat.Mods, inGame: false);
+			}
+		}
+
+		internal static bool OnEsc()
+		{
+			if (!_open)
+				return false;
+			if (WeNeoKeys.Capturing) {
+				WeNeoKeys.Cancel();
+				return true;
+			}
+
+			if (_leaf != WeNeoPage.Hub && _cat == WeNeoCat.Mods) {
+				SetPage(WeNeoPage.Hub);
+				return true;
+			}
+
+			if (_searchFocus) {
+				_searchFocus = false;
+				return true;
+			}
+
+			Close();
+			return true;
+		}
+
+		private static bool IsWorkshopScreen()
+		{
+			if (Main.menuMode == 1007)
+				return false;
+			try {
+				object state = Main.MenuUI?.CurrentState;
+				string name = state?.GetType().Name ?? "";
+				if (name.Contains("WorkshopHub") || name == "UIMods" || name.Contains("ModBrowser") ||
+				    name.Contains("UIModPacks") || name.Contains("UIModSources"))
+					return true;
+			}
+			catch {
+			}
+
+			foreach (int id in WorkshopIds()) {
+				if (Main.menuMode == id)
+					return true;
+			}
+
+			return false;
+		}
+
+		private static int[] WorkshopIds()
+		{
+			var ids = new System.Collections.Generic.List<int>();
+			try {
+				Type iface = typeof(ModLoader).Assembly.GetType("Terraria.ModLoader.UI.Interface");
+				if (iface == null)
+					return ids.ToArray();
+				foreach (System.Reflection.FieldInfo f in iface.GetFields(
+					         System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic |
+					         System.Reflection.BindingFlags.Static)) {
+					if (f.FieldType != typeof(int))
+						continue;
+					string n = f.Name ?? "";
+					if (n.Contains("workshop", StringComparison.OrdinalIgnoreCase) ||
+					    n.Contains("modsMenu", StringComparison.OrdinalIgnoreCase) ||
+					    n.Contains("modBrowser", StringComparison.OrdinalIgnoreCase) ||
+					    n.Contains("modPacks", StringComparison.OrdinalIgnoreCase) ||
+					    n.Contains("modSources", StringComparison.OrdinalIgnoreCase))
+						ids.Add((int)f.GetValue(null));
+				}
+			}
+			catch {
+			}
+
+			return ids.ToArray();
+		}
+
+		private static void DismissFancy()
+		{
+			try {
+				Main.MenuUI?.SetState(null);
+			}
+			catch {
+			}
+
 			Main.menuMode = 0;
-			if (_pendingReturn)
-				return;
-			Open(WeNeoCat.Game, inGame: false);
 		}
 
 		internal static void CatchReturn()
@@ -164,7 +262,8 @@ namespace DieWithASmile.Engine.Settings
 			_inGame = game;
 			_cat = cat;
 			_scroll = 0f;
-			_page = 1f;
+			_pageFade = 1f;
+			_leaf = WeNeoPage.Hub;
 			_drag = null;
 			WeNeoBind.ClearDirty();
 			_searchFocus = false;
@@ -189,6 +288,8 @@ namespace DieWithASmile.Engine.Settings
 			_searchFocus = false;
 			_drag = null;
 			_factoryArmed = false;
+			_leaf = WeNeoPage.Hub;
+			WeNeoKeys.Cancel();
 			_pendingReturn = false;
 			SoundEngine.PlaySound(SoundID.MenuClose);
 			if (save)
@@ -230,10 +331,8 @@ namespace DieWithASmile.Engine.Settings
 
 			bool esc = Main.keyState.IsKeyDown(Keys.Escape);
 			if (esc && !_esc) {
-				if (_searchFocus)
-					_searchFocus = false;
-				else if (_open && !WeSplash.Visible)
-					Close();
+				if (_open && !WeSplash.Visible && !Main.gameMenu)
+					OnEsc();
 			}
 
 			_esc = esc;
@@ -242,6 +341,8 @@ namespace DieWithASmile.Engine.Settings
 
 			_ate = true;
 			Main.blockMouse = true;
+			if (WeNeoKeys.Capturing)
+				WeNeoKeys.TickCapture();
 			bool pressed = WeInput.Edge(ref _mouseHeld, ref _holdLock);
 			bool right = WeInput.Edge(WeInput.RightDown, ref _rightHeld, ref _rightLock);
 			WeNeoShell.Handle(pressed, right);
@@ -262,7 +363,7 @@ namespace DieWithASmile.Engine.Settings
 			CatchTitleHub();
 			CatchReturn();
 			_fade = MathHelper.Lerp(_fade, _open ? 1f : 0f, 0.28f);
-			_page = MathHelper.Lerp(_page, 1f, 0.22f);
+			_pageFade = MathHelper.Lerp(_pageFade, 1f, 0.22f);
 			if (!_open && _fade < 0.02f)
 				_fade = 0f;
 			if (_open && _inGame)
@@ -293,7 +394,8 @@ namespace DieWithASmile.Engine.Settings
 				return;
 			_cat = cat;
 			_scroll = 0f;
-			_page = 0f;
+			_pageFade = 0f;
+			_leaf = WeNeoPage.Hub;
 			_factoryArmed = false;
 			SoundEngine.PlaySound(SoundID.MenuTick);
 		}

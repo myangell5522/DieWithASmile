@@ -387,4 +387,44 @@ UI: {
 	NeoSectionColor: 색
 	NeoSectionSmart: 조준
 	NeoHslHint: HSL
+	NeoCursorNormal: 기본
+	NeoCursorThick: 두껍게
+	NeoCursorSmart: 스마트
+	NeoCursorHint: 채우기는 화살표, 테두리는 외곽선입니다. 바로 적용됩니다.
+	NeoKeysHint: 동작을 누른 뒤 키를 누르세요. 키보드 그림도 클릭할 수 있습니다.
+	NeoKeysWaiting: 키를 누르거나 칸을 클릭하세요. 우클릭은 취소입니다.
+	NeoKeysAll: 전체
+	NeoKeysMove: 이동
+	NeoKeysInv: 인벤
+	NeoKeysMisc: 기타
+	NeoKeysMods: 모드
+	NeoKeysReset: 이 키 초기화
+	NeoKeysResetAll: 모두 초기화
+	NeoHubTitle: 창작마당
+	NeoHubHint: 모드, 다운로드, 팩, 월드, 로그를 여기서 다룹니다. 바닐라 화면으로 나가지 않습니다.
+	NeoDevelop: 모드 개발
+	NeoImportWorlds: 월드 가져오기
+	NeoLogs: 로그
+	NeoBack: 뒤로
+	NeoModsHint: 이름을 누르면 설명, On/Off로 켜고 Reload로 적용합니다.
+	NeoModsInGame: 모드 켜기와 Reload는 타이틀에서만 됩니다.
+	NeoEnableAll: 모두 켜기
+	NeoDisableAll: 모두 끄기
+	NeoReload: 강제 리로드
+	NeoModsFolder: 모드 폴더
+	NeoSavePack: 모드 팩 저장
+	NeoConfigFolder: 설정 폴더
+	NeoBrowserHint: 설치된 창작마당 모드입니다. 더 보려면 Steam을 여세요.
+	NeoOpenSteam: Steam 창작마당 열기
+	NeoPacksHint: 켜 둔 모드 묶음입니다. 타이틀에서 클릭하면 불러옵니다.
+	NeoPacksFolder: 팩 폴더
+	NeoLoadPack: 불러오기
+	NeoResHint: 리소스 팩입니다. 켠 뒤 적용을 누르세요.
+	NeoApplyPacks: 팩 적용
+	NeoDevelopHint: ModSources 프로젝트입니다. 클릭하면 폴더가 열립니다.
+	NeoOpenSources: ModSources 열기
+	NeoWorldsHint: .wld 파일을 월드 폴더로 복사합니다.
+	NeoImportWorld: 월드 파일 가져오기
+	NeoWorldsFolder: 월드 폴더
+	NeoOpenLogs: 로그 폴더 열기
 }

@@ -239,7 +239,7 @@ namespace DieWithASmile.Engine.Content
 				if (WeSplash.Visible)
 					WeSplash.Dismiss(savePreference: false);
 				else if (WeNeoMenu.IsOpen)
-					WeNeoMenu.Close();
+					WeNeoMenu.OnEsc();
 				else if (WePanels.IsOpen)
 					WePanels.Close();
 				else if (LayoutEditor.Editing)
