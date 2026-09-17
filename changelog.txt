@@ -1,3 +1,8 @@
+Version 3.0.17
+
+Title
+- Settings: Lighting uses wiki tunnel previews. Boss bar shows a full strip and a live HP strip. Minimap border draws the real frame around a fake map.
+
 Version 3.0.16
 
 Title

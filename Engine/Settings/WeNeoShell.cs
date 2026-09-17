@@ -339,14 +339,21 @@ namespace DieWithASmile.Engine.Settings
 			string[] keys = { "NeoLightColor", "NeoLightWhite", "NeoLightRetro", "NeoLightTrippy" };
 			for (int i = 0; i < 4; i++) {
 				Rectangle cell = LightCell(view, y, i);
-				Color fill = i switch {
-					0 => new Color(70, 150, 255),
-					1 => Color.White,
-					2 => new Color(186, 140, 88),
-					_ => new Color(214, 72, 214)
-				};
-				WeDraw.Fill(spriteBatch, cell, fill * (0.35f * fade));
-				WeDraw.Fill(spriteBatch, new Rectangle(cell.X, cell.Y, 6, cell.Height), fill * fade);
+				Texture2D tex = LightTex(i);
+				if (tex != null)
+					WeDraw.DrawCover(spriteBatch, tex, cell, Color.White * fade);
+				else {
+					Color fill = i switch {
+						0 => new Color(70, 150, 255),
+						1 => Color.White,
+						2 => new Color(186, 140, 88),
+						_ => new Color(214, 72, 214)
+					};
+					WeDraw.Fill(spriteBatch, cell, fill * (0.35f * fade));
+					WeDraw.Fill(spriteBatch, new Rectangle(cell.X, cell.Y, 6, cell.Height), fill * fade);
+				}
+
+				WeDraw.Fill(spriteBatch, new Rectangle(cell.X, cell.Bottom - 18, cell.Width, 18), Color.Black * (0.55f * fade));
 				if (i == mode)
 					WeDraw.Border(spriteBatch, cell, WeAccent.Light * fade);
 				else
@@ -355,13 +362,17 @@ namespace DieWithASmile.Engine.Settings
 				Vector2 size = FontAssets.MouseText.Value.MeasureString(label) * TypeSmall;
 				ChatManager.DrawColorCodedStringWithShadow(
 					spriteBatch, FontAssets.MouseText.Value, label,
-					new Vector2(cell.X + 10, cell.Y + (cell.Height - size.Y) * 0.5f), Color.White * fade, 0f, Vector2.Zero, new Vector2(TypeSmall));
+					new Vector2(cell.X + 8, cell.Bottom - 16 + (18 - size.Y) * 0.5f), Color.White * fade, 0f, Vector2.Zero, new Vector2(TypeSmall));
 			}
 
 			ChatManager.DrawColorCodedStringWithShadow(
 				spriteBatch, FontAssets.MouseText.Value, WeText.UI("NeoLightHint"),
-				new Vector2(view.X + 10, y + 34), Color.White * (0.5f * fade), 0f, Vector2.Zero, new Vector2(0.58f));
+				new Vector2(view.X + 10, y + LightGridH + 6), Color.White * (0.5f * fade), 0f, Vector2.Zero, new Vector2(0.58f));
 		}
+
+		internal const int LightExtraH = 176;
+		private const int LightCellH = 72;
+		private const int LightGridH = 2 + LightCellH + 6 + LightCellH;
 
 		internal static bool LightPreviewClick(Rectangle view, int y, bool left)
 		{
@@ -386,8 +397,33 @@ namespace DieWithASmile.Engine.Settings
 		private static Rectangle LightCell(Rectangle view, int y, int i)
 		{
 			int gap = 6;
-			int w = Math.Max(64, (view.Width - 20 - gap * 3) / 4);
-			return new Rectangle(view.X + 10 + i * (w + gap), y + 2, w, 28);
+			int w = Math.Max(80, (view.Width - 20 - gap) / 2);
+			int col = i % 2;
+			int row = i / 2;
+			return new Rectangle(view.X + 10 + col * (w + gap), y + 2 + row * (LightCellH + gap), w, LightCellH);
+		}
+
+		private static readonly string[] LightNames = { "Color", "White", "Retro", "Trippy" };
+		private static Texture2D[] _lightTex;
+
+		private static Texture2D LightTex(int i)
+		{
+			if (i < 0 || i > 3)
+				return null;
+			_lightTex ??= new Texture2D[4];
+			if (_lightTex[i] != null && !_lightTex[i].IsDisposed)
+				return _lightTex[i];
+			try {
+				var asset = Terraria.ModLoader.ModContent.Request<Texture2D>(
+					"DieWithASmile/Settingimg/Lighting_mode_" + LightNames[i],
+					ReLogic.Content.AssetRequestMode.ImmediateLoad);
+				if (asset.IsLoaded && asset.Value != null && !asset.Value.IsDisposed)
+					_lightTex[i] = asset.Value;
+			}
+			catch {
+			}
+
+			return _lightTex[i];
 		}
 
 		internal static void CursorPreview(SpriteBatch spriteBatch, Rectangle view, int y, float fade)

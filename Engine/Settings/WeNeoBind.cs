@@ -353,7 +353,7 @@ namespace DieWithASmile.Engine.Settings
 					Lighting.Mode = (LightMode)(((int)Lighting.Mode + 1) % 4);
 					PersistSoft();
 				});
-			light.ExtraH = 52;
+			light.ExtraH = WeNeoShell.LightExtraH;
 			light.ExtraDraw = WeNeoShell.LightPreview;
 			light.ExtraClick = (view, y, left, right) => WeNeoShell.LightPreviewClick(view, y, left);
 			Cycle(list, WeNeoCat.Video, qlt, "qual", () => T("NeoQuality"),
@@ -431,6 +431,9 @@ namespace DieWithASmile.Engine.Settings
 
 					PersistSoft();
 				});
+			list[^1].ExtraH = WeNeoHud.MapExtraH;
+			list[^1].ExtraDraw = WeNeoHud.MapPreview;
+			list[^1].ExtraClick = (view, y, left, right) => WeNeoHud.MapClick(view, y, left);
 			Slider(list, WeNeoCat.Interface, hud, "mapscale", () => T("NeoMapScale"),
 				() => MathHelper.Clamp((Main.MapScale - 0.5f) / 0.5f, 0f, 1f),
 				() => (int)Math.Round(Main.MapScale * 100f) + "%",
@@ -452,6 +455,9 @@ namespace DieWithASmile.Engine.Settings
 					catch {
 					}
 				});
+			list[^1].ExtraH = WeNeoHud.BossExtraH;
+			list[^1].ExtraDraw = WeNeoHud.BossPreview;
+			list[^1].ExtraClick = (view, y, left, right) => WeNeoHud.BossClick(view, y, left);
 			MaybeFlag(list, WeNeoCat.Interface, hud, "bosshp", "NeoBossHpText", typeof(Main), "ShowBossBarHealthText");
 			if (!WeNeoFld.TryGetBool(typeof(Main), "ShowBossBarHealthText", out bool _)) {
 				Type iface = typeof(ModLoader).Assembly.GetType("Terraria.ModLoader.UI.Interface");

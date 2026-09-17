@@ -357,6 +357,8 @@ UI: {
 	NeoMapScale: Масштаб карты
 	NeoHealthStyle: Здоровье и мана
 	NeoBossBar: Полоса босса
+	NeoBossFull: Полная
+	NeoBossLive: Живая
 	NeoSmartCursor: Умный курсор
 	NeoSmartBlocks: Умная установка
 	NeoSmartAxe: Топор после кирки

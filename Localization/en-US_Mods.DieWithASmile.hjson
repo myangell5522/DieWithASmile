@@ -357,6 +357,8 @@ UI: {
 	NeoMapScale: Map scale
 	NeoHealthStyle: Health and mana
 	NeoBossBar: Boss bar
+	NeoBossFull: Full
+	NeoBossLive: Live
 	NeoSmartCursor: Smart cursor
 	NeoSmartBlocks: Smart placement
 	NeoSmartAxe: Axe after pickaxe

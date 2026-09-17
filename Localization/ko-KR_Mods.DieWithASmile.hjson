@@ -357,6 +357,8 @@ UI: {
 	NeoMapScale: 지도 배율
 	NeoHealthStyle: 생명과 마나
 	NeoBossBar: 보스 체력바
+	NeoBossFull: 가득
+	NeoBossLive: 실시간
 	NeoSmartCursor: 스마트 커서
 	NeoSmartBlocks: 스마트 배치
 	NeoSmartAxe: 곡괭이 다음 도끼

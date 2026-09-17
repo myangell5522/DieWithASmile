@@ -357,6 +357,8 @@ UI: {
 	NeoMapScale: 地图缩放
 	NeoHealthStyle: 生命与魔力
 	NeoBossBar: 首领血条
+	NeoBossFull: 满血
+	NeoBossLive: 动态
 	NeoSmartCursor: 智能光标
 	NeoSmartBlocks: 智能放置
 	NeoSmartAxe: 镐后用斧
