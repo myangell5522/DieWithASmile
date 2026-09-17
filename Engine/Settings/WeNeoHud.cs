@@ -198,11 +198,11 @@ namespace DieWithASmile.Engine.Settings
 
 		private static void DrawHealthHud(SpriteBatch spriteBatch, Rectangle inner, float fade)
 		{
-			if (!DrawActiveSet(spriteBatch, inner))
+			if (!DrawActiveSet(spriteBatch, inner, fade))
 				DrawHudFallback(spriteBatch, inner, fade);
 		}
 
-		private static bool DrawActiveSet(SpriteBatch spriteBatch, Rectangle inner)
+		private static bool DrawActiveSet(SpriteBatch spriteBatch, Rectangle inner, float fade)
 		{
 			object set = null;
 			try {
@@ -219,7 +219,7 @@ namespace DieWithASmile.Engine.Settings
 			if (draw == null)
 				return false;
 			try {
-				if (DrawActiveSetRt(spriteBatch, inner, set, draw))
+				if (DrawActiveSetRt(spriteBatch, inner, set, draw, fade))
 					return true;
 				WithPreviewStats(() => {
 					WeDraw.WithTransform(spriteBatch, HealthFitMatrix(inner), () => draw.Invoke(set, null));
@@ -231,7 +231,7 @@ namespace DieWithASmile.Engine.Settings
 			}
 		}
 
-		private static bool DrawActiveSetRt(SpriteBatch spriteBatch, Rectangle inner, object set, MethodInfo draw)
+		private static bool DrawActiveSetRt(SpriteBatch spriteBatch, Rectangle inner, object set, MethodInfo draw, float fade)
 		{
 			int w = Math.Max(64, Main.screenWidth);
 			const int h = 160;
@@ -253,7 +253,7 @@ namespace DieWithASmile.Engine.Settings
 			int dw = Math.Max(8, (int)(crop.Width * scale));
 			int dh = Math.Max(8, (int)(crop.Height * scale));
 			var dest = new Rectangle(inner.X + (inner.Width - dw) / 2, inner.Y + (inner.Height - dh) / 2, dw, dh);
-			WeDraw.WithPoint(spriteBatch, () => spriteBatch.Draw(rt, dest, crop, Color.White));
+			WeDraw.WithPoint(spriteBatch, () => spriteBatch.Draw(rt, dest, crop, Color.White * fade));
 			return true;
 		}
 
@@ -300,8 +300,18 @@ namespace DieWithASmile.Engine.Settings
 			if (bars) {
 				bool text = key.Contains("Text", StringComparison.OrdinalIgnoreCase) ||
 				            key.Contains("Full", StringComparison.OrdinalIgnoreCase);
-				int bw = text ? 400 : 240;
-				int bh = text ? 88 : 80;
+				if (!text) {
+					try {
+						string shown = Main.ResourceSetsManager?.ActiveSet?.DisplayedName ?? "";
+						text = shown.Contains('2') || shown.Contains('3') ||
+						       shown.Contains("Text", StringComparison.OrdinalIgnoreCase);
+					}
+					catch {
+					}
+				}
+
+				int bw = text ? 420 : 280;
+				int bh = text ? 90 : 80;
 				return new Rectangle(Math.Max(0, sw - bw - 8), 4, bw, bh);
 			}
 

@@ -404,6 +404,7 @@ UI: {
 	NeoKeysMods: 모드
 	NeoKeysReset: 이 키 초기화
 	NeoKeysResetAll: 모두 초기화
+	NeoKeysNoMods: 추가 모드 단축키가 없습니다.
 	NeoHubTitle: 창작마당
 	NeoHubHint: 모드, 다운로드, 팩, 월드, 로그를 여기서 다룹니다. 바닐라 화면으로 나가지 않습니다.
 	NeoDevelop: 빌드 및 게시

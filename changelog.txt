@@ -1,3 +1,8 @@
+Version 3.0.23
+
+Title
+- Settings: Health and mana sits on a framed landscape with live 10–100 HP. Bars styles capture the real HUD. Controls lists extra mod keybinds.
+
 Version 3.0.22
 
 Title

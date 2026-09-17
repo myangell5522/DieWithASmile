@@ -129,7 +129,9 @@ namespace DieWithASmile.Engine.Settings
 
 		internal static bool ApplyWheel(int delta)
 		{
-			if (delta == 0 || _listHit.Width < 8 || !_listHit.Contains(Main.mouseX, Main.mouseY) || _listMax < 1)
+			if (delta == 0 || WeNeoMenu.Category != WeNeoCat.Controls)
+				return false;
+			if (_listHit.Width < 8 || !_listHit.Contains(Main.mouseX, Main.mouseY) || _listMax < 1)
 				return false;
 			_listScroll = Math.Clamp(_listScroll - delta / 6, 0, _listMax);
 			return true;
@@ -411,11 +413,24 @@ namespace DieWithASmile.Engine.Settings
 		private static string ActionUsing(string key)
 		{
 			foreach (KeyValuePair<string, List<string>> pair in KeyMap()) {
-				if (pair.Value != null && pair.Value.Exists(v => string.Equals(v, key, StringComparison.OrdinalIgnoreCase)))
-					return pair.Key;
+				if (pair.Value == null || !pair.Value.Exists(v => string.Equals(v, key, StringComparison.OrdinalIgnoreCase)))
+					continue;
+				return IsModStatusKey(pair.Key) ? "mod:" + pair.Key : pair.Key;
 			}
 
 			return null;
+		}
+
+		private static string PickKey()
+		{
+			string id = _listen ?? _pick;
+			if (string.IsNullOrEmpty(id))
+				return "";
+			if (id.StartsWith("mod:"))
+				id = id[4..];
+			if (KeyMap().TryGetValue(id, out List<string> list) && list != null && list.Count > 0)
+				return list[0];
+			return "";
 		}
 
 		private static void Assign(string key)
@@ -449,7 +464,14 @@ namespace DieWithASmile.Engine.Settings
 			if (string.IsNullOrEmpty(id))
 				return;
 			try {
-				CopyDefault(id);
+				if (id.StartsWith("mod:")) {
+					string full = id[4..];
+					if (!CopyDefault(full))
+						SetModBind(full, DefaultModBind(full));
+				}
+				else {
+					CopyDefault(id);
+				}
 			}
 			catch {
 			}
@@ -477,21 +499,28 @@ namespace DieWithASmile.Engine.Settings
 			SoundEngine.PlaySound(SoundID.MenuTick);
 		}
 
-		private static void CopyDefault(string id)
+		private static bool CopyDefault(string id)
 		{
 			object orig = typeof(PlayerInput).GetField("OriginalProfiles", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)?.GetValue(null);
 			if (orig is not IDictionary dict)
-				return;
+				return false;
 			foreach (DictionaryEntry e in dict) {
 				object kb = ModeOf(e.Value);
 				object status = kb?.GetType().GetField("KeyStatus")?.GetValue(kb) ?? kb?.GetType().GetProperty("KeyStatus")?.GetValue(kb);
-				if (status is Dictionary<string, List<string>> typed && typed.TryGetValue(id, out List<string> src) &&
-				    KeyMap().TryGetValue(id, out List<string> dst)) {
+				if (status is Dictionary<string, List<string>> typed && typed.TryGetValue(id, out List<string> src)) {
+					Dictionary<string, List<string>> map = KeyMap();
+					if (!map.TryGetValue(id, out List<string> dst)) {
+						dst = new List<string>();
+						map[id] = dst;
+					}
+
 					dst.Clear();
 					dst.AddRange(src);
-					return;
+					return true;
 				}
 			}
+
+			return false;
 		}
 
 		private static object ModeOf(object profile)
@@ -510,42 +539,95 @@ namespace DieWithASmile.Engine.Settings
 
 		private static IEnumerable<(string id, string label)> ModBinds()
 		{
+			var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+			foreach (object bind in RawModBinds()) {
+				string id = BindFullName(bind);
+				if (string.IsNullOrEmpty(id) || !seen.Add(id))
+					continue;
+				yield return (id, BindLabel(bind, id));
+			}
+
+			foreach (string key in KeyMap().Keys) {
+				if (!IsModStatusKey(key) || !seen.Add(key))
+					continue;
+				yield return (key, Nice(key.Replace('/', ' ')));
+			}
+		}
+
+		private static IEnumerable<object> RawModBinds()
+		{
 			Type type = typeof(ModLoader).Assembly.GetType("Terraria.ModLoader.KeybindLoader");
-			object raw = type == null ? null : WeNeoFld.Get(type, "Keybinds") ?? WeNeoFld.Get(type, "ModKeybinds");
+			object raw = type == null
+				? null
+				: WeNeoFld.Get(type, "modKeybinds") ?? WeNeoFld.Get(type, "Keybinds") ?? WeNeoFld.Get(type, "ModKeybinds");
+			if (raw == null)
+				yield break;
+			if (raw is IDictionary dict) {
+				foreach (DictionaryEntry e in dict) {
+					if (e.Value != null)
+						yield return e.Value;
+				}
+
+				yield break;
+			}
+
 			if (raw is not IEnumerable en)
 				yield break;
-			foreach (object bind in en) {
-				string name = bind.GetType().GetProperty("FullName")?.GetValue(bind)?.ToString()
-				              ?? bind.GetType().GetProperty("Name")?.GetValue(bind)?.ToString();
-				if (string.IsNullOrEmpty(name))
+			foreach (object item in en) {
+				if (item == null)
 					continue;
-				object display = bind.GetType().GetProperty("DisplayName")?.GetValue(bind);
-				string label = display?.GetType().GetProperty("Value")?.GetValue(display)?.ToString() ?? Nice(name);
-				yield return (name, label);
+				object bind = item;
+				if (item.GetType().Name.Contains("KeyValuePair"))
+					bind = Inst(item, "Value") ?? item;
+				if (bind != null)
+					yield return bind;
 			}
+		}
+
+		private static string BindFullName(object bind)
+		{
+			string name = Inst(bind, "FullName")?.ToString();
+			if (!string.IsNullOrEmpty(name))
+				return name;
+			object mod = Inst(bind, "Mod");
+			string modName = Inst(mod, "Name")?.ToString();
+			string key = Inst(bind, "Name")?.ToString();
+			if (!string.IsNullOrEmpty(modName) && !string.IsNullOrEmpty(key))
+				return modName + "/" + key;
+			return key;
+		}
+
+		private static string BindLabel(object bind, string id)
+		{
+			string display = TextOf(Inst(bind, "DisplayName"));
+			string modTitle = TextOf(Inst(Inst(bind, "Mod"), "DisplayName")) ?? Inst(Inst(bind, "Mod"), "Name")?.ToString();
+			string stem = id;
+			int slash = id.IndexOf('/');
+			if (slash >= 0 && slash + 1 < id.Length)
+				stem = id[(slash + 1)..];
+			string bindName = string.IsNullOrEmpty(display) ? Nice(stem) : display;
+			if (string.IsNullOrEmpty(modTitle))
+				return bindName;
+			return modTitle + " · " + bindName;
 		}
 
 		private static string ModBindValue(string id)
 		{
-			foreach ((string name, string label) in ModBinds()) {
-				if (name != id)
-					continue;
-			}
-
+			if (KeyMap().TryGetValue(id, out List<string> mapped) && mapped != null && mapped.Count > 0)
+				return Short(mapped[0]);
 			try {
-				Type type = typeof(ModLoader).Assembly.GetType("Terraria.ModLoader.KeybindLoader");
-				object raw = type == null ? null : WeNeoFld.Get(type, "Keybinds") ?? WeNeoFld.Get(type, "ModKeybinds");
-				if (raw is IEnumerable en) {
-					foreach (object bind in en) {
-						string name = bind.GetType().GetProperty("FullName")?.GetValue(bind)?.ToString();
-						if (name != id)
-							continue;
-						MethodInfo get = bind.GetType().GetMethod("GetAssignedKeys", Type.EmptyTypes)
-						                 ?? bind.GetType().GetMethod("GetAssignedKeys", new[] { typeof(InputMode) });
-						object keys = get?.GetParameters().Length == 0 ? get.Invoke(bind, null) : get?.Invoke(bind, new object[] { InputMode.Keyboard });
-						if (keys is IList list && list.Count > 0)
-							return Short(list[0]?.ToString() ?? "-");
-					}
+				foreach (object bind in RawModBinds()) {
+					if (BindFullName(bind) != id)
+						continue;
+					MethodInfo get = bind.GetType().GetMethod("GetAssignedKeys", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, Type.EmptyTypes, null)
+					                 ?? bind.GetType().GetMethod("GetAssignedKeys", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(InputMode) }, null);
+					object keys = get == null
+						? null
+						: get.GetParameters().Length == 0
+							? get.Invoke(bind, null)
+							: get.Invoke(bind, new object[] { InputMode.Keyboard });
+					if (keys is IList list && list.Count > 0)
+						return Short(list[0]?.ToString() ?? "-");
 				}
 			}
 			catch {
@@ -556,23 +638,47 @@ namespace DieWithASmile.Engine.Settings
 
 		private static void SetModBind(string id, string key)
 		{
-			try {
-				Type type = typeof(ModLoader).Assembly.GetType("Terraria.ModLoader.KeybindLoader");
-				object raw = type == null ? null : WeNeoFld.Get(type, "Keybinds") ?? WeNeoFld.Get(type, "ModKeybinds");
-				if (raw is not IEnumerable en)
-					return;
-				foreach (object bind in en) {
-					string name = bind.GetType().GetProperty("FullName")?.GetValue(bind)?.ToString();
-					if (name != id)
-						continue;
-					MethodInfo set = bind.GetType().GetMethod("SetAssignedKeys") ?? bind.GetType().GetMethod("SetKey");
-					set?.Invoke(bind, set.GetParameters().Length == 1 ? new object[] { key } : new object[] { InputMode.Keyboard, key });
-					var current = bind.GetType().GetField("current") ?? bind.GetType().GetField("_binding");
-					return;
-				}
+			if (string.IsNullOrEmpty(id))
+				return;
+			Dictionary<string, List<string>> map = KeyMap();
+			if (!map.TryGetValue(id, out List<string> list) || list == null) {
+				list = new List<string>();
+				map[id] = list;
 			}
-			catch {
+
+			list.Clear();
+			if (!string.IsNullOrEmpty(key))
+				list.Add(key);
+		}
+
+		private static string DefaultModBind(string id)
+		{
+			foreach (object bind in RawModBinds()) {
+				if (BindFullName(bind) != id)
+					continue;
+				return Inst(bind, "DefaultBinding")?.ToString() ?? "";
 			}
+
+			return "";
+		}
+
+		private static object Inst(object target, string name)
+		{
+			if (target == null || string.IsNullOrEmpty(name))
+				return null;
+			const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+			Type type = target.GetType();
+			return type.GetProperty(name, flags)?.GetValue(target) ?? type.GetField(name, flags)?.GetValue(target);
+		}
+
+		private static string TextOf(object value)
+		{
+			if (value == null)
+				return null;
+			if (value is string s)
+				return string.IsNullOrWhiteSpace(s) ? null : s;
+			object inner = Inst(value, "Value");
+			return inner is string sv && !string.IsNullOrWhiteSpace(sv) ? sv : null;
 		}
 
 		private static void DrawBtn(SpriteBatch spriteBatch, Rectangle hit, string text, float fade)
@@ -580,6 +686,7 @@ namespace DieWithASmile.Engine.Settings
 			bool hover = hit.Contains(Main.mouseX, Main.mouseY);
 			WeDraw.Fill(spriteBatch, hit, (hover ? WeAccent.Deep : new Color(28, 30, 38)) * fade);
 			WeDraw.Border(spriteBatch, hit, (hover ? WeAccent.Light : WeAccent.Mid) * fade);
+			WeDraw.Hairline(spriteBatch, hit, fade);
 			Vector2 size = FontAssets.MouseText.Value.MeasureString(text) * WeNeoShell.TypeSmall;
 			ChatManager.DrawColorCodedStringWithShadow(
 				spriteBatch, FontAssets.MouseText.Value, text,

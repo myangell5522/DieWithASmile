@@ -404,6 +404,7 @@ UI: {
 	NeoKeysMods: Моды
 	NeoKeysReset: Сбросить
 	NeoKeysResetAll: Сбросить всё
+	NeoKeysNoMods: Нет доп. клавиш от включённых модов.
 	NeoHubTitle: Мастерская
 	NeoHubHint: Моды, загрузки, паки, миры и логи здесь. Без лишних экранов Terraria.
 	NeoDevelop: Сборка и публикация

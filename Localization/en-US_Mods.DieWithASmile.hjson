@@ -404,6 +404,7 @@ UI: {
 	NeoKeysMods: Mods
 	NeoKeysReset: Reset bind
 	NeoKeysResetAll: Reset all
+	NeoKeysNoMods: No extra mod keybinds are loaded.
 	NeoHubTitle: Workshop
 	NeoHubHint: Manage mods, downloads, packs, worlds, and logs here. No extra Terraria screens.
 	NeoDevelop: Build & Publish

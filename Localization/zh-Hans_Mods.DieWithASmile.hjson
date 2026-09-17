@@ -404,6 +404,7 @@ UI: {
 	NeoKeysMods: 模组
 	NeoKeysReset: 重置此项
 	NeoKeysResetAll: 全部重置
+	NeoKeysNoMods: 当前没有模组额外按键。
 	NeoHubTitle: 工坊
 	NeoHubHint: 模组、下载、资源包、世界和日志都在这里，不再跳出 Terraria 界面。
 	NeoDevelop: 构建与发布

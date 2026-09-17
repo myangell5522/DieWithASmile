@@ -63,7 +63,8 @@ namespace DieWithASmile.Engine.Settings
 			WeDraw.Fill(spriteBatch, WeDraw.CoverRect, Color.Black * (0.55f * fade));
 			Rectangle panel = Panel();
 			WeDraw.Fill(spriteBatch, panel, new Color(12, 14, 18) * (0.94f * fade));
-			WeDraw.Border(spriteBatch, panel, WeAccent.Mid * (0.55f * fade));
+			WeDraw.Frame(spriteBatch, panel, fade);
+			WeDraw.Corners(spriteBatch, panel, fade, 16);
 			DrawSearch(spriteBatch, panel, fade);
 			DrawClose(spriteBatch, panel, fade);
 			DrawSide(spriteBatch, panel, fade);
@@ -81,7 +82,9 @@ namespace DieWithASmile.Engine.Settings
 			Rectangle panel = Panel();
 			Rectangle view = View(panel);
 			WeNeoMenu.SetViewHeight(view.Height);
-			WeNeoMenu.Wheel(view);
+			int wheel = WeNeoMenu.TakeWheel(view);
+			if (wheel != 0 && !WeNeoKeys.ApplyWheel(wheel))
+				WeNeoMenu.ApplyWheel(wheel);
 
 			if (WeNeoMenu.Drag != null) {
 				if (WeNeoMenu.Drag.StartsWith("neo", StringComparison.Ordinal)) {
@@ -220,8 +223,10 @@ namespace DieWithASmile.Engine.Settings
 				bool on = WeNeoMenu.Category == cat;
 				bool hover = hit.Contains(Main.mouseX, Main.mouseY);
 				WeDraw.Fill(spriteBatch, hit, (on ? WeAccent.Deep : new Color(18, 20, 26)) * ((hover || on ? 0.98f : 0.82f) * fade));
-				if (on)
+				if (on) {
 					WeDraw.Fill(spriteBatch, new Rectangle(hit.X, hit.Y, 4, hit.Height), WeAccent.Hover * fade);
+					WeDraw.Fill(spriteBatch, new Rectangle(hit.X + 4, hit.Y, hit.Width - 4, 1), WeAccent.Light * (0.35f * fade));
+				}
 				else if (hover)
 					WeDraw.Fill(spriteBatch, new Rectangle(hit.X, hit.Y, 3, hit.Height), WeAccent.Light * (0.7f * fade));
 				WeDraw.Border(spriteBatch, hit, (on || hover ? WeAccent.Light : WeAccent.Mid) * (0.45f * fade));
@@ -252,6 +257,7 @@ namespace DieWithASmile.Engine.Settings
 			bool hover = hit.Contains(Main.mouseX, Main.mouseY);
 			WeDraw.Fill(spriteBatch, hit, (hover ? WeAccent.Deep : new Color(28, 30, 38)) * fade);
 			WeDraw.Border(spriteBatch, hit, (hover ? WeAccent.Light : WeAccent.Mid) * fade);
+			WeDraw.Hairline(spriteBatch, hit, fade);
 			Vector2 size = FontAssets.MouseText.Value.MeasureString(text) * Type;
 			ChatManager.DrawColorCodedStringWithShadow(
 				spriteBatch, FontAssets.MouseText.Value, text,
@@ -264,6 +270,8 @@ namespace DieWithASmile.Engine.Settings
 			ChatManager.DrawColorCodedStringWithShadow(
 				spriteBatch, FontAssets.MouseText.Value, "+  " + title,
 				new Vector2(view.X + 8, y + 6), WeAccent.Light * fade, 0f, Vector2.Zero, new Vector2(0.92f));
+			int lineW = Math.Min(220, view.Width - 24);
+			WeDraw.Fill(spriteBatch, new Rectangle(view.X + 8, y + 26, lineW, 1), WeAccent.Mid * (0.7f * fade));
 			y += HeaderStep;
 		}
 
@@ -280,6 +288,7 @@ namespace DieWithASmile.Engine.Settings
 			WeDraw.Fill(spriteBatch, hit, fill * fade);
 			if (hover) {
 				WeDraw.Fill(spriteBatch, new Rectangle(hit.X, hit.Y, 3, hit.Height), WeAccent.Hover * fade);
+				WeDraw.Fill(spriteBatch, new Rectangle(hit.X + 3, hit.Y, hit.Width - 3, 1), Color.White * (0.1f * fade));
 				WeDraw.Border(spriteBatch, hit, WeAccent.Light * (0.4f * fade));
 			}
 

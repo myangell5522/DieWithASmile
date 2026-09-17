@@ -478,17 +478,31 @@ namespace DieWithASmile.Engine.Settings
 			_scroll = MathHelper.Clamp(_scroll, 0f, max);
 		}
 
-		internal static void Wheel(Rectangle view)
+		internal static int TakeWheel(Rectangle view)
 		{
-			_viewH = Math.Max(1, view.Height);
 			int wheel = Mouse.GetState().ScrollWheelValue;
 			int delta = wheel - _lastWheel;
 			_lastWheel = wheel;
 			if (delta == 0 || !view.Contains(Main.mouseX, Main.mouseY))
+				return 0;
+			return delta;
+		}
+
+		internal static void ApplyWheel(int delta)
+		{
+			if (delta == 0)
 				return;
 			float notches = delta / 120f;
 			_scrollVel -= notches * 22f;
 			_scrollWant = MathHelper.Clamp(_scrollWant - notches * 64f, 0f, MaxScroll());
+		}
+
+		internal static void Wheel(Rectangle view)
+		{
+			int delta = TakeWheel(view);
+			if (delta == 0)
+				return;
+			ApplyWheel(delta);
 		}
 
 		internal static Rectangle ListBox(Rectangle view) =>
