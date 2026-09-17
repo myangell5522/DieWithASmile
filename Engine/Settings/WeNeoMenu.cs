@@ -607,6 +607,13 @@ namespace DieWithASmile.Engine.Settings
 			HandleInput();
 			Tick();
 			Draw(sb);
+			WeMenuHost.DrawCursorOnTop();
+			try {
+				WeDraw.BeginUi(sb);
+			}
+			catch {
+			}
+
 			EndFrame();
 		}
 	}

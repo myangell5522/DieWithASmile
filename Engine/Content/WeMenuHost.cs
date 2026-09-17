@@ -19,6 +19,7 @@ namespace DieWithASmile.Engine.Content
 	{
 		private static bool _esc;
 		private static bool _skipCursor;
+		private static bool _overlayCursor;
 
 		public override void Load()
 		{
@@ -81,7 +82,7 @@ namespace DieWithASmile.Engine.Content
 
 			if (WeModMenu.OnTitle) {
 				DrawTitleChrome();
-				DrawCursorOverChrome();
+				DrawCursorOnTop();
 			}
 
 			WeBackgroundStyle.EndFrame();
@@ -123,12 +124,14 @@ namespace DieWithASmile.Engine.Content
 			}
 		}
 
-		private static void DrawCursorOverChrome()
+		internal static void DrawCursorOnTop()
 		{
 			SpriteBatch spriteBatch = Main.spriteBatch;
 			if (spriteBatch == null)
 				return;
 
+			bool previous = _overlayCursor;
+			_overlayCursor = true;
 			TryEnd(spriteBatch);
 			try {
 				BeginCursor(spriteBatch);
@@ -144,6 +147,7 @@ namespace DieWithASmile.Engine.Content
 			}
 			finally {
 				TryEnd(spriteBatch);
+				_overlayCursor = previous;
 			}
 		}
 
@@ -162,16 +166,26 @@ namespace DieWithASmile.Engine.Content
 		private static bool OwnsTitleCursor =>
 			WeModMenu.IsActive && WeModMenu.OnTitle && CoolerMenuCompat.MenuBackdropActive;
 
+		private static bool OwnsInGameCursor =>
+			WeNeoMenu.Covering && WeNeoMenu.InGame;
+
 		private static void DrawCursorHook(On_Main.orig_DrawCursor orig, Vector2 bonus, bool smart)
 		{
-			if (_skipCursor)
+			if (_overlayCursor) {
+				orig(bonus, smart);
+				return;
+			}
+
+			if (_skipCursor || OwnsInGameCursor)
 				return;
 			orig(bonus, smart);
 		}
 
 		private static Vector2 DrawThickCursorHook(On_Main.orig_DrawThickCursor orig, bool smart)
 		{
-			if (_skipCursor)
+			if (_overlayCursor)
+				return orig(smart);
+			if (_skipCursor || OwnsInGameCursor)
 				return Vector2.Zero;
 			return orig(smart);
 		}

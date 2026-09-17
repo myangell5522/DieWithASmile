@@ -62,7 +62,7 @@ namespace DieWithASmile.Engine.Settings
 			};
 			Http = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(10) };
 			Http.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent",
-				"Mozilla/5.0 (Windows NT 10.0; Win64; x64) DieWithASmile-tModLoader/3.0.18");
+				"Mozilla/5.0 (Windows NT 10.0; Win64; x64) DieWithASmile-tModLoader/3.0.19");
 			Http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/html"));
 		}
 

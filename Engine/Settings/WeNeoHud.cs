@@ -16,11 +16,11 @@ namespace DieWithASmile.Engine.Settings
 {
 	internal static class WeNeoHud
 	{
-		internal const int BossExtraH = 140;
+		internal const int BossExtraH = 200;
 		internal const int MapExtraH = 264;
-		internal const int HealthExtraH = 100;
-		private const float BossScale = 0.55f;
-		private const float HealthScale = 0.42f;
+		internal const int HealthExtraH = 120;
+		private const float BossScale = 0.8f;
+		private const float HealthScale = 0.8f;
 		private static readonly WePreviewBar Dummy = new();
 
 		internal static void BossPreview(SpriteBatch spriteBatch, Rectangle view, int y, float fade)
@@ -142,18 +142,9 @@ namespace DieWithASmile.Engine.Settings
 			var box = HealthBox(view, y);
 			WeDraw.Fill(spriteBatch, box, new Color(12, 14, 18) * (0.55f * fade));
 			WeDraw.Border(spriteBatch, box, WeAccent.Mid * (0.7f * fade));
-			float life = LiveHp();
-			float mana = LiveHp(1.2f);
-			string kind = ResourceKind();
 			WeDraw.WithClip(spriteBatch, box, () => {
-				if (kind == "classic")
-					DrawClassicResources(spriteBatch, box, life, mana, fade);
-				else if (kind == "fancy")
-					DrawFancyResources(spriteBatch, box, life, mana, fade);
-				else if (kind == "bars")
-					DrawBarResources(spriteBatch, box, life, mana, fade);
-				else if (!DrawActiveSet(spriteBatch, box, fade))
-					DrawBarResources(spriteBatch, box, life, mana, fade);
+				if (!DrawActiveSet(spriteBatch, box, fade))
+					DrawBarResources(spriteBatch, box, LiveHp(), LiveHp(1.2f), fade);
 			});
 		}
 
@@ -206,13 +197,18 @@ namespace DieWithASmile.Engine.Settings
 			object saved = DrawingInfo();
 			try {
 				SetDrawingInfo(info);
-				if (style == null || !prevent)
-					Dummy.Draw(ref info, spriteBatch);
 				style?.Draw(spriteBatch, Dummy, info);
+				if (prevent)
+					DrawModBossSample(spriteBatch, style, Dummy.Life);
+				else
+					Dummy.Draw(ref info, spriteBatch);
 			}
 			catch {
 				try {
-					Dummy.Draw(ref info, spriteBatch);
+					if (prevent)
+						DrawModBossSample(spriteBatch, style, Dummy.Life);
+					else
+						Dummy.Draw(ref info, spriteBatch);
 				}
 				catch {
 				}
@@ -224,6 +220,15 @@ namespace DieWithASmile.Engine.Settings
 
 		private static Matrix BossMatrix(Rectangle dest)
 		{
+			Vector2 origin = BossOrigin();
+			Vector2 target = dest.Center.ToVector2();
+			return Matrix.CreateTranslation(-origin.X, -origin.Y, 0f)
+			       * Matrix.CreateScale(BossScale, BossScale, 1f)
+			       * Matrix.CreateTranslation(target.X, target.Y, 0f);
+		}
+
+		private static Vector2 BossOrigin()
+		{
 			ModBossBarStyle style = null;
 			bool prevent = false;
 			try {
@@ -233,13 +238,11 @@ namespace DieWithASmile.Engine.Settings
 			catch {
 			}
 
-			Vector2 origin = prevent
-				? new Vector2(Main.screenWidth * 0.5f, 36f)
-				: new Vector2(Main.screenWidth * 0.5f, Main.screenHeight - 50f);
-			Vector2 target = dest.Center.ToVector2();
-			return Matrix.CreateTranslation(-origin.X, -origin.Y, 0f)
-			       * Matrix.CreateScale(BossScale, BossScale, 1f)
-			       * Matrix.CreateTranslation(target.X, target.Y, 0f);
+			if (!prevent)
+				return new Vector2(Main.screenWidth * 0.5f, Main.screenHeight - 50f);
+			if (IsCalamityStyle(style))
+				return new Vector2(Main.screenWidth - 220f, Main.screenHeight - 70f);
+			return new Vector2(Main.screenWidth * 0.5f, 50f);
 		}
 
 		private static Rectangle BossBox(Rectangle view, int y) =>
@@ -410,123 +413,12 @@ namespace DieWithASmile.Engine.Settings
 			SetVec(frame, "Position", v);
 		}
 
-		private static string ResourceKind()
-		{
-			string key = "";
-			try {
-				key = Main.ResourceSetsManager?.ActiveSetKeyName ?? "";
-				object set = Main.ResourceSetsManager?.ActiveSet;
-				string cfg = Prop(set, "ConfigKey") as string;
-				if (!string.IsNullOrWhiteSpace(cfg))
-					key = cfg;
-			}
-			catch {
-			}
-
-			if (string.IsNullOrWhiteSpace(key))
-				return "bars";
-			if (key.StartsWith("HorizontalBars", StringComparison.OrdinalIgnoreCase) ||
-			    key.Contains("Bar", StringComparison.OrdinalIgnoreCase) && !key.Contains("New", StringComparison.OrdinalIgnoreCase))
-				return "bars";
-			if (key.Equals("Default", StringComparison.OrdinalIgnoreCase) ||
-			    key.Contains("Classic", StringComparison.OrdinalIgnoreCase) && !key.Contains("Fancy", StringComparison.OrdinalIgnoreCase))
-				return "classic";
-			if (key.StartsWith("New", StringComparison.OrdinalIgnoreCase) ||
-			    key.Contains("Fancy", StringComparison.OrdinalIgnoreCase))
-				return "fancy";
-			return "mod";
-		}
-
-		private static void DrawClassicResources(SpriteBatch spriteBatch, Rectangle box, float life, float mana, float fade)
-		{
-			Texture2D heart = TextureAssets.Heart?.Value;
-			Texture2D fruit = TextureAssets.Heart2?.Value;
-			Texture2D star = TextureAssets.Mana?.Value;
-			int filled = (int)MathF.Round(life * 10f);
-			int manaOn = (int)MathF.Round(mana * 10f);
-			int originX = box.X + 10;
-			int originY = box.Y + 12;
-			for (int i = 0; i < 10; i++) {
-				int col = i % 5;
-				int row = i / 5;
-				var dest = new Rectangle(originX + col * 26, originY + row * 24, 22, 22);
-				Texture2D tex = i < filled && i >= 8 && fruit != null ? fruit : heart;
-				Color c = (i < filled ? Color.White : new Color(40, 40, 48)) * fade;
-				if (tex != null && !tex.IsDisposed)
-					spriteBatch.Draw(tex, dest, c);
-				else
-					WeDraw.Fill(spriteBatch, dest, new Color(200, 40, 50) * (i < filled ? fade : 0.25f * fade));
-			}
-
-			int starX = box.Right - 28;
-			int starY = box.Y + 10;
-			for (int i = 0; i < 10; i++) {
-				var dest = new Rectangle(starX, starY + i * 8, 14, 14);
-				Color c = (i < manaOn ? new Color(80, 140, 255) : new Color(36, 40, 52)) * fade;
-				if (star != null && !star.IsDisposed)
-					spriteBatch.Draw(star, dest, (i < manaOn ? Color.White : new Color(40, 40, 52)) * fade);
-				else
-					WeDraw.Fill(spriteBatch, dest, c);
-			}
-		}
-
-		private static void DrawFancyResources(SpriteBatch spriteBatch, Rectangle box, float life, float mana, float fade)
-		{
-			object set = null;
-			try {
-				set = Main.ResourceSetsManager?.ActiveSet;
-			}
-			catch {
-			}
-
-			Texture2D panelL = AssetTex(Prop(set, "_heartLeft"));
-			Texture2D panelM = AssetTex(Prop(set, "_heartMiddle"));
-			Texture2D panelR = AssetTex(Prop(set, "_heartRightFancy")) ?? AssetTex(Prop(set, "_heartRight"));
-			Texture2D fill = AssetTex(Prop(set, "_heartFill"));
-			Texture2D honey = AssetTex(Prop(set, "_heartFillHoney"));
-			Texture2D starFill = AssetTex(Prop(set, "_starFill"));
-			if (fill == null && panelL == null) {
-				DrawClassicResources(spriteBatch, box, life, mana, fade);
-				return;
-			}
-
-			int x = box.X + 8;
-			int y = box.Y + 18;
-			int n = 10;
-			int filled = (int)MathF.Round(life * n);
-			for (int i = 0; i < n; i++) {
-				Texture2D panel = i == 0 ? panelL : i == n - 1 ? panelR : panelM;
-				var dest = new Rectangle(x + i * 22, y, 24, 24);
-				if (panel != null)
-					spriteBatch.Draw(panel, dest, Color.White * fade);
-				else
-					WeDraw.Fill(spriteBatch, dest, new Color(28, 18, 22) * fade);
-				if (i < filled) {
-					Texture2D heart = i >= 8 && honey != null ? honey : fill;
-					if (heart != null)
-						spriteBatch.Draw(heart, dest, Color.White * fade);
-					else
-						WeDraw.Fill(spriteBatch, Inset(dest, 4), new Color(210, 50, 60) * fade);
-				}
-			}
-
-			int manaOn = (int)MathF.Round(mana * 10f);
-			int starX = box.Right - 30;
-			for (int i = 0; i < 10; i++) {
-				var dest = new Rectangle(starX, box.Y + 8 + i * 8, 16, 16);
-				if (i < manaOn && starFill != null)
-					spriteBatch.Draw(starFill, dest, Color.White * fade);
-				else
-					WeDraw.Fill(spriteBatch, dest, new Color(50, 70, 140) * ((i < manaOn ? 1f : 0.25f) * fade));
-			}
-		}
-
 		private static void DrawBarResources(SpriteBatch spriteBatch, Rectangle box, float life, float mana, float fade)
 		{
 			int x = box.X + 12;
-			int w = box.Width - 24;
-			int lifeY = box.Y + 22;
-			int manaY = box.Y + 54;
+			int w = Math.Min(220, box.Width - 24);
+			int lifeY = box.Y + 28;
+			int manaY = box.Y + 62;
 			DrawResourceBar(spriteBatch, new Rectangle(x, lifeY, w, 18), life, new Color(200, 46, 52), fade);
 			DrawResourceBar(spriteBatch, new Rectangle(x, manaY, w, 18), mana, new Color(50, 110, 230), fade);
 		}
@@ -552,23 +444,13 @@ namespace DieWithASmile.Engine.Settings
 
 			if (set == null)
 				return false;
-			Player player = null;
+			MethodInfo draw = set.GetType().GetMethod("Draw", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+				null, Type.EmptyTypes, null);
+			if (draw == null)
+				return false;
 			try {
-				player = Main.LocalPlayer;
-			}
-			catch {
-			}
-
-			if (player == null || player.statLifeMax2 <= 0 || player.ghost) {
-				DrawBarResources(spriteBatch, box, LiveHp(), LiveHp(1.2f), fade);
-				return true;
-			}
-
-			try {
-				WeDraw.WithTransform(spriteBatch, HealthMatrix(box), () => {
-					MethodInfo draw = set.GetType().GetMethod("Draw", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-						null, Type.EmptyTypes, null);
-					draw?.Invoke(set, null);
+				WithPreviewStats(LiveHp(), LiveHp(1.2f), () => {
+					WeDraw.WithTransform(spriteBatch, HealthMatrix(box), () => draw.Invoke(set, null));
 				});
 				return true;
 			}
@@ -577,13 +459,167 @@ namespace DieWithASmile.Engine.Settings
 			}
 		}
 
+		private static void WithPreviewStats(float life, float mana, Action draw)
+		{
+			Player player = null;
+			try {
+				player = Main.LocalPlayer;
+			}
+			catch {
+			}
+
+			if (player == null) {
+				draw();
+				return;
+			}
+
+			int life0 = player.statLife;
+			int lifeMax = player.statLifeMax;
+			int lifeMax2 = player.statLifeMax2;
+			int mana0 = player.statMana;
+			int manaMax = player.statManaMax;
+			int manaMax2 = player.statManaMax2;
+			bool ghost = player.ghost;
+			try {
+				player.ghost = false;
+				int maxL = Math.Max(100, Math.Max(lifeMax, lifeMax2));
+				int maxM = Math.Max(20, Math.Max(manaMax, manaMax2));
+				player.statLifeMax = maxL;
+				player.statLifeMax2 = maxL;
+				player.statManaMax = maxM;
+				player.statManaMax2 = maxM;
+				player.statLife = Math.Max(1, (int)MathF.Round(maxL * MathHelper.Clamp(life, 0.05f, 1f)));
+				player.statMana = Math.Max(0, (int)MathF.Round(maxM * MathHelper.Clamp(mana, 0.05f, 1f)));
+				draw();
+			}
+			finally {
+				player.statLife = life0;
+				player.statLifeMax = lifeMax;
+				player.statLifeMax2 = lifeMax2;
+				player.statMana = mana0;
+				player.statManaMax = manaMax;
+				player.statManaMax2 = manaMax2;
+				player.ghost = ghost;
+			}
+		}
+
 		private static Matrix HealthMatrix(Rectangle dest)
 		{
 			var origin = new Vector2(Main.screenWidth, 0f);
-			var target = new Vector2(dest.Right - 6, dest.Y + 6);
+			var target = new Vector2(dest.Right - 8, dest.Y + 8);
 			return Matrix.CreateTranslation(-origin.X, -origin.Y, 0f)
 			       * Matrix.CreateScale(HealthScale, HealthScale, 1f)
 			       * Matrix.CreateTranslation(target.X, target.Y, 0f);
+		}
+
+		private static bool IsCalamityStyle(ModBossBarStyle style)
+		{
+			if (style == null)
+				return false;
+			string name = style.GetType().FullName ?? style.GetType().Name;
+			return name.Contains("Calamity", StringComparison.OrdinalIgnoreCase)
+			       || name.Contains("BossHealthBar", StringComparison.OrdinalIgnoreCase);
+		}
+
+		private static bool IsInfernumStyle(ModBossBarStyle style)
+		{
+			if (style == null)
+				return false;
+			string name = style.GetType().FullName ?? style.GetType().Name;
+			return name.Contains("Infernum", StringComparison.OrdinalIgnoreCase);
+		}
+
+		private static void DrawModBossSample(SpriteBatch spriteBatch, ModBossBarStyle style, float life)
+		{
+			life = MathHelper.Clamp(life, 0.05f, 1f);
+			if (IsCalamityStyle(style) && DrawCalamitySample(spriteBatch, style, life))
+				return;
+			if (DrawStyleBarTextures(spriteBatch, style, life))
+				return;
+			var info = new BigProgressBarInfo
+			{
+				npcIndexToAimAt = 0,
+				validatedAtLeastOnce = true,
+				showText = false
+			};
+			Dummy.Draw(ref info, spriteBatch);
+		}
+
+		private static bool DrawCalamitySample(SpriteBatch spriteBatch, ModBossBarStyle style, float life)
+		{
+			Type type = style?.GetType();
+			Texture2D main = StaticTex(type, "BossMainHPBar");
+			Texture2D sep = StaticTex(type, "BossSeperatorBar");
+			if (main == null && sep == null)
+				return false;
+			int x = Main.screenWidth - 420;
+			int y = Main.screenHeight - 100;
+			const int barW = 400;
+			int fill = Math.Max(8, (int)(barW * life));
+			if (main != null && !main.IsDisposed)
+				spriteBatch.Draw(main, new Rectangle(x, y + 28, fill, Math.Max(4, main.Height)), Color.White);
+			if (sep != null && !sep.IsDisposed)
+				spriteBatch.Draw(sep, new Rectangle(x, y + 18, barW, 6), new Color(240, 240, 255));
+			string pct = (life * 100f).ToString("N1") + "%";
+			ChatManager.DrawColorCodedStringWithShadow(
+				spriteBatch, FontAssets.MouseText.Value, pct,
+				new Vector2(x, y + 4), Color.White, 0f, Vector2.Zero, Vector2.One);
+			return true;
+		}
+
+		private static bool DrawStyleBarTextures(SpriteBatch spriteBatch, ModBossBarStyle style, float life)
+		{
+			var textures = new List<Texture2D>();
+			CollectBarTextures(style?.GetType(), textures);
+			if (textures.Count == 0)
+				return false;
+			int x = (int)(Main.screenWidth * 0.5f) - 220;
+			int y = IsInfernumStyle(style) ? 28 : 40;
+			int drawn = 0;
+			foreach (Texture2D tex in textures) {
+				if (tex == null || tex.IsDisposed)
+					continue;
+				int w = Math.Clamp(tex.Width, 80, 520);
+				int h = Math.Clamp(tex.Height, 8, 80);
+				int fill = drawn == 0 ? Math.Max(8, (int)(w * life)) : w;
+				spriteBatch.Draw(tex, new Rectangle(x, y, fill, h), Color.White);
+				y += h + 4;
+				drawn++;
+				if (drawn >= 4)
+					break;
+			}
+
+			return drawn > 0;
+		}
+
+		private static void CollectBarTextures(Type type, List<Texture2D> into)
+		{
+			if (type == null || into.Count >= 6)
+				return;
+			const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
+			foreach (FieldInfo field in type.GetFields(flags)) {
+				if (into.Count >= 6)
+					break;
+				if (field.Name.IndexOf("Bar", StringComparison.OrdinalIgnoreCase) < 0
+				    && field.Name.IndexOf("HP", StringComparison.OrdinalIgnoreCase) < 0)
+					continue;
+				Texture2D tex = AssetTex(field.GetValue(null));
+				if (tex != null && !tex.IsDisposed && tex.Width >= 16 && tex.Height >= 4 && !into.Contains(tex))
+					into.Add(tex);
+			}
+
+			foreach (Type nested in type.GetNestedTypes(BindingFlags.Public | BindingFlags.NonPublic))
+				CollectBarTextures(nested, into);
+		}
+
+		private static Texture2D StaticTex(Type type, string name)
+		{
+			if (type == null)
+				return null;
+			const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
+			object raw = type.GetField(name, flags)?.GetValue(null)
+			             ?? type.GetProperty(name, flags)?.GetValue(null);
+			return AssetTex(raw);
 		}
 
 		private static List<string> ResourceKeys(object mgr)
