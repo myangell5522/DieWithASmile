@@ -1,3 +1,13 @@
+Version 3.0.22
+
+Title
+- Settings: Health and mana preview draws the real in-game HUD at full HP/MP with resource packs. Infernum boss bar uses native chrome, phase notches, and the Empress icon in the circle.
+
+Version 3.0.21
+
+Title
+- Settings: Infernum boss bar matches vanilla width with the Empress head in the circular icon. Health and mana previews stay at full 200/200. Minimap shows a village scene with town NPCs walking and jumping on the grass.
+
 Version 3.0.20
 
 Title

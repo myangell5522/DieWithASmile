@@ -17,23 +17,15 @@ namespace DieWithASmile.Engine.Settings
 {
 	internal static class WeNeoHud
 	{
-		internal const int BossExtraH = 228;
+		internal const int BossExtraH = 320;
 		internal const int MapExtraH = 264;
 		internal const int HealthExtraH = 168;
 		private const float VanillaBarW = 516f;
-		private const int PreviewLifeMax = 200;
-		private const int PreviewManaMax = 200;
 		private static readonly WePreviewBar Dummy = new();
-
-		private enum HudKind
-		{
-			Classic,
-			Fancy,
-			FancyText,
-			Bars,
-			BarsText,
-			BarsFull
-		}
+		private static readonly List<MapWalker> Walkers = new();
+		private static float _mapClock;
+		private static int _mapW;
+		private static int _mapH;
 
 		private static BigProgressBarInfo _fancyInfo;
 		private static SpriteBatch _fancyBatch;
@@ -182,179 +174,121 @@ namespace DieWithASmile.Engine.Settings
 
 		private static void DrawHealthHud(SpriteBatch spriteBatch, Rectangle inner, float fade)
 		{
+			if (!DrawActiveSet(spriteBatch, inner))
+				DrawHudFallback(spriteBatch, inner, fade);
+		}
+
+		private static bool DrawActiveSet(SpriteBatch spriteBatch, Rectangle inner)
+		{
 			object set = null;
 			try {
 				set = Main.ResourceSetsManager?.ActiveSet;
 			}
 			catch {
+				return false;
 			}
 
-			float life = LiveHp();
-			float mana = LiveHp(1.2f);
-			switch (Kind()) {
-				case HudKind.Fancy:
-					DrawFancyHud(spriteBatch, inner, set, life, mana, fade, false);
-					break;
-				case HudKind.FancyText:
-					DrawFancyHud(spriteBatch, inner, set, life, mana, fade, true);
-					break;
-				case HudKind.Bars:
-					DrawBarsHud(spriteBatch, inner, set, life, mana, fade, false, false);
-					break;
-				case HudKind.BarsText:
-					DrawBarsHud(spriteBatch, inner, set, life, mana, fade, true, false);
-					break;
-				case HudKind.BarsFull:
-					DrawBarsHud(spriteBatch, inner, set, life, mana, fade, true, true);
-					break;
-				default:
-					DrawClassicHud(spriteBatch, inner, set, life, mana, fade);
-					break;
+			if (set == null)
+				return false;
+			MethodInfo draw = set.GetType().GetMethod("Draw", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+				null, Type.EmptyTypes, null);
+			if (draw == null)
+				return false;
+			try {
+				WithPreviewStats(() => {
+					WeDraw.WithTransform(spriteBatch, HealthFitMatrix(inner), () => draw.Invoke(set, null));
+				});
+				return true;
+			}
+			catch {
+				return false;
 			}
 		}
 
-		private static void DrawClassicHud(SpriteBatch spriteBatch, Rectangle inner, object set, float life, float mana, float fade)
+		private static void WithPreviewStats(Action draw)
 		{
-			int textH = inner.Height >= 96 ? 18 : 0;
-			if (textH > 0)
-				DrawLifeLabel(spriteBatch, inner.X + 2, inner.Y, life, fade);
-			var field = new Rectangle(inner.X, inner.Y + textH, inner.Width, inner.Height - textH);
-			int manaW = Math.Clamp(field.Height / 10 + 6, 22, 36);
-			var hearts = new Rectangle(field.X, field.Y, Math.Max(40, field.Width - manaW - 6), field.Height);
-			var stars = new Rectangle(field.Right - manaW, field.Y, manaW, field.Height);
-			DrawHeartGrid(spriteBatch, hearts, set, life, fade, 5, 2, false);
-			DrawManaColumn(spriteBatch, stars, set, mana, fade, 10);
-		}
-
-		private static void DrawFancyHud(SpriteBatch spriteBatch, Rectangle inner, object set, float life, float mana, float fade, bool text)
-		{
-			int textH = text ? 18 : 0;
-			if (text)
-				DrawLifeLabel(spriteBatch, inner.X + 2, inner.Y, life, fade);
-			var field = new Rectangle(inner.X, inner.Y + textH, inner.Width, inner.Height - textH);
-			int starW = Math.Clamp(field.Height - 8, 26, 40);
-			var hearts = new Rectangle(field.X, field.Y, Math.Max(40, field.Width - starW - 8), field.Height);
-			var star = new Rectangle(field.Right - starW, field.Y + (field.Height - starW) / 2, starW, starW);
-			DrawHeartGrid(spriteBatch, hearts, set, life, fade, 10, 1, true);
-			DrawManaColumn(spriteBatch, star, set, mana, fade, 1);
-		}
-
-		private static void DrawBarsHud(SpriteBatch spriteBatch, Rectangle inner, object set, float life, float mana, float fade, bool lifeText, bool manaText)
-		{
-			Texture2D hpFill = SetTex(set, "_hpFill", "hpFill", "HPFill", "_lifeFill") ?? ScanTex(set, "hp", "fill");
-			Texture2D mpFill = SetTex(set, "_mpFill", "mpFill", "MPFill", "_manaFill") ?? ScanTex(set, "mp", "fill");
-			Texture2D hpLeft = SetTex(set, "_hpPanelLeft", "_panelLeft", "_panelLeftHP", "HP_Panel_Left");
-			Texture2D hpMid = SetTex(set, "_hpPanelMiddle", "_panelMiddleHP", "HP_Panel_Middle") ?? ScanTex(set, "panel", "middle", "hp");
-			Texture2D hpRight = SetTex(set, "_hpPanelRight", "_panelRightHP", "HP_Panel_Right") ?? ScanTex(set, "panel", "right", "hp");
-			Texture2D mpLeft = SetTex(set, "_mpPanelLeft", "_panelLeftMP", "MP_Panel_Left") ?? hpLeft;
-			Texture2D mpMid = SetTex(set, "_mpPanelMiddle", "_panelMiddleMP", "MP_Panel_Middle") ?? ScanTex(set, "panel", "middle", "mp");
-			Texture2D mpRight = SetTex(set, "_mpPanelRight", "_panelRightMP", "MP_Panel_Right") ?? ScanTex(set, "panel", "right", "mp");
-			Texture2D heart = Heart() ?? hpFill;
-			Texture2D star = Mana() ?? SetTex(set, "_starFill", "starFill") ?? mpFill;
-			int icon = 26;
-			int barH = 18;
-			if (hpFill != null)
-				barH = Math.Clamp(hpFill.Height, 12, 28);
-			int rowGap = 12;
-			int clusterH = barH * 2 + rowGap;
-			int y0 = inner.Y + Math.Max(0, (inner.Height - clusterH) / 2);
-			int y1 = y0 + barH + rowGap;
-			string lifeTag = LifeText(life);
-			string manaTag = ManaText(mana);
-			int textW = 0;
-			if (lifeText || manaText) {
-				float tw = 0f;
-				if (lifeText)
-					tw = Math.Max(tw, Measure(lifeTag, 0.7f));
-				if (manaText)
-					tw = Math.Max(tw, Measure(manaTag, 0.7f));
-				textW = (int)tw + 10;
+			Player player = null;
+			try {
+				player = Main.LocalPlayer;
+			}
+			catch {
 			}
 
-			int barW = Math.Clamp(inner.Width - textW - icon - 28, 96, 240);
-			int barX = inner.Right - 4 - icon - 6 - barW;
-			if (lifeText)
-				DrawString(spriteBatch, lifeTag, new Vector2(inner.X + 4, y0 + (barH - 16) * 0.5f), 0.7f, Color.White * fade);
-			if (manaText)
-				DrawString(spriteBatch, manaTag, new Vector2(inner.X + 4, y1 + (barH - 16) * 0.5f), 0.7f, Color.White * fade);
-			var hpBar = new Rectangle(barX, y0, barW, barH);
-			var mpBar = new Rectangle(barX, y1, barW, barH);
-			DrawHudBar(spriteBatch, hpBar, hpFill, hpLeft, hpMid, hpRight, life, fade, new Color(200, 46, 52));
-			DrawHudBar(spriteBatch, mpBar, mpFill, mpLeft, mpMid, mpRight, mana, fade, new Color(50, 110, 230));
-			var hpIcon = new Rectangle(hpBar.Right + 4, hpBar.Y + (barH - icon) / 2, icon, icon);
-			var mpIcon = new Rectangle(mpBar.Right + 4, mpBar.Y + (barH - icon) / 2, icon, icon);
-			DrawFitted(spriteBatch, heart, hpIcon, Color.White * fade, life);
-			DrawFitted(spriteBatch, star, mpIcon, Color.White * fade, mana);
-		}
-
-		private static void DrawHeartGrid(SpriteBatch spriteBatch, Rectangle area, object set, float life, float fade, int cols, int rows, bool fancy)
-		{
-			Texture2D fill = fancy
-				? SetTex(set, "_heartFill", "heartFill", "HeartFill") ?? Heart()
-				: Heart();
-			Texture2D left = fancy ? SetTex(set, "_heartLeft", "heartLeft", "HeartLeft") : null;
-			Texture2D mid = fancy ? SetTex(set, "_heartMiddle", "heartMiddle", "HeartMiddle") : null;
-			Texture2D right = fancy ? SetTex(set, "_heartRight", "heartRight", "HeartRight") : null;
-			if (fill == null)
-				fill = Heart();
-			int n = Math.Max(1, cols * rows);
-			float cellW = area.Width / (float)cols;
-			float cellH = area.Height / (float)rows;
-			float filled = life * n;
-			for (int i = 0; i < n; i++) {
-				int c = i % cols;
-				int r = i / cols;
-				var cell = new Rectangle(
-					area.X + (int)MathF.Round(c * cellW),
-					area.Y + (int)MathF.Round(r * cellH),
-					Math.Max(8, (int)MathF.Round(cellW)),
-					Math.Max(8, (int)MathF.Round(cellH)));
-				Texture2D panel = c == 0 ? left : c == cols - 1 ? right : mid;
-				if (panel != null)
-					DrawFitted(spriteBatch, panel, Inset(cell, 1), Color.White * fade, 1f);
-				DrawFitted(spriteBatch, fill, Inset(cell, fancy ? 3 : 2), Color.White * fade, MathHelper.Clamp(filled - i, 0f, 1f));
-			}
-		}
-
-		private static void DrawManaColumn(SpriteBatch spriteBatch, Rectangle area, object set, float mana, float fade, int count)
-		{
-			Texture2D star = SetTex(set, "_starFill", "_starTop", "starFill", "StarFill") ?? Mana();
-			if (star == null)
+			if (player == null) {
+				draw();
 				return;
-			count = Math.Max(1, count);
-			float cellH = area.Height / (float)count;
-			float filled = mana * count;
-			for (int i = 0; i < count; i++) {
-				var cell = new Rectangle(area.X, area.Y + (int)MathF.Round(i * cellH), area.Width, Math.Max(8, (int)MathF.Round(cellH)));
-				DrawFitted(spriteBatch, star, Inset(cell, 1), Color.White * fade, MathHelper.Clamp(filled - i, 0f, 1f));
+			}
+
+			int life0 = player.statLife;
+			int lifeMax = player.statLifeMax;
+			int lifeMax2 = player.statLifeMax2;
+			int mana0 = player.statMana;
+			int manaMax = player.statManaMax;
+			int manaMax2 = player.statManaMax2;
+			bool ghost = player.ghost;
+			try {
+				player.ghost = false;
+				int maxL = Math.Max(100, Math.Max(lifeMax, lifeMax2));
+				int maxM = Math.Max(20, Math.Max(manaMax, manaMax2));
+				player.statLifeMax = maxL;
+				player.statLifeMax2 = maxL;
+				player.statManaMax = maxM;
+				player.statManaMax2 = maxM;
+				player.statLife = maxL;
+				player.statMana = maxM;
+				draw();
+			}
+			finally {
+				player.statLife = life0;
+				player.statLifeMax = lifeMax;
+				player.statLifeMax2 = lifeMax2;
+				player.statMana = mana0;
+				player.statManaMax = manaMax;
+				player.statManaMax2 = manaMax2;
+				player.ghost = ghost;
 			}
 		}
 
-		private static void DrawHudBar(SpriteBatch spriteBatch, Rectangle bar, Texture2D fill, Texture2D left, Texture2D mid, Texture2D right, float t, float fade, Color fallback)
+		private static Matrix HealthFitMatrix(Rectangle inner)
 		{
-			t = MathHelper.Clamp(t, 0f, 1f);
-			WeDraw.Fill(spriteBatch, bar, new Color(16, 14, 18) * (0.55f * fade));
-			int x = bar.X;
-			int rightW = right != null ? Math.Min(right.Width, bar.Width / 4) : 0;
-			int leftW = left != null ? Math.Min(left.Width, bar.Width / 4) : 0;
-			if (left != null)
-				spriteBatch.Draw(left, new Rectangle(x, bar.Y, leftW, bar.Height), Color.White * fade);
-			if (right != null)
-				spriteBatch.Draw(right, new Rectangle(bar.Right - rightW, bar.Y, rightW, bar.Height), Color.White * fade);
-			int midX = x + leftW;
-			int midW = Math.Max(4, bar.Width - leftW - rightW);
-			if (mid != null)
-				spriteBatch.Draw(mid, new Rectangle(midX, bar.Y, midW, bar.Height), Color.White * fade);
-			var inner = new Rectangle(bar.X + Math.Max(2, leftW / 2), bar.Y + 2, Math.Max(4, bar.Width - Math.Max(4, leftW / 2 + rightW / 2)), Math.Max(4, bar.Height - 4));
-			int fillW = Math.Max(1, (int)(inner.Width * t));
-			if (fill != null && !fill.IsDisposed) {
-				int srcW = Math.Max(1, (int)(fill.Width * t));
-				spriteBatch.Draw(fill, new Rectangle(inner.X, inner.Y, fillW, inner.Height), new Rectangle(0, 0, srcW, fill.Height), Color.White * fade);
+			int manaMax = 20;
+			try {
+				Player player = Main.LocalPlayer;
+				if (player != null)
+					manaMax = Math.Max(20, Math.Max(player.statManaMax, player.statManaMax2));
 			}
-			else {
-				WeDraw.Fill(spriteBatch, new Rectangle(inner.X, inner.Y, fillW, inner.Height), fallback * fade);
+			catch {
 			}
+
+			int stars = Math.Max(1, manaMax / 20);
+			int h = Math.Max(90, 28 + stars * 26);
+			var bbox = new Rectangle(Main.screenWidth - 310, 0, 300, h);
+			float scale = Math.Min(inner.Width / (float)Math.Max(1, bbox.Width), inner.Height / (float)Math.Max(1, bbox.Height));
+			scale = Math.Clamp(scale, 0.4f, 3f);
+			var origin = bbox.Center.ToVector2();
+			var target = inner.Center.ToVector2();
+			return Matrix.CreateTranslation(-origin.X, -origin.Y, 0f)
+			       * Matrix.CreateScale(scale, scale, 1f)
+			       * Matrix.CreateTranslation(target.X, target.Y, 0f);
 		}
+
+		private static void DrawHudFallback(SpriteBatch spriteBatch, Rectangle inner, float fade)
+		{
+			Texture2D heart = Heart();
+			Texture2D star = Mana();
+			const int step = 26;
+			int clusterW = step * 5 + 10 + step;
+			int x = inner.X + Math.Max(0, (inner.Width - clusterW) / 2);
+			int y = inner.Y + Math.Max(0, (inner.Height - step) / 2);
+			if (heart != null) {
+				for (int i = 0; i < 5; i++)
+					DrawFitted(spriteBatch, heart, new Rectangle(x + i * step, y, step, step), Color.White * fade, 1f);
+			}
+
+			if (star != null)
+				DrawFitted(spriteBatch, star, new Rectangle(x + step * 5 + 10, y, step, step), Color.White * fade, 1f);
+		}
+
 
 		private static void DrawBossRow(SpriteBatch spriteBatch, Rectangle row, float life, float fade, string tag, bool nums)
 		{
@@ -454,100 +388,104 @@ namespace DieWithASmile.Engine.Settings
 
 		private static bool DrawInfernumNative(SpriteBatch spriteBatch, ModBossBarStyle style, Rectangle dest, float life, float fade)
 		{
-			InfernumTextures(style?.GetType(), out Texture2D frame, out Texture2D fill);
-			Texture2D main = frame ?? fill;
-			if (main == null)
+			Type type = style?.GetType();
+			Texture2D barFrame = InfernumTex(type, "BarFrame");
+			if (barFrame == null)
 				return false;
-			if (!FitAspect(main, dest, 8, out Rectangle fitted))
-				return false;
-			if (fill != null && !fill.IsDisposed)
-				DrawAspectSlice(spriteBatch, fill, fitted, life, fade);
-			if (frame != null && !frame.IsDisposed)
-				spriteBatch.Draw(frame, fitted, Color.White * fade);
-			else if (fill == null)
-				DrawAspectSlice(spriteBatch, main, fitted, life, fade);
+			Texture2D iconFrame = InfernumTex(type, "IconFrame", "IconBase");
+			Texture2D tip = InfernumTex(type, "MainBarTip");
+			Texture2D percent = InfernumTex(type, "PercentageFrame");
+			life = MathHelper.Clamp(life, 0.02f, 1f);
+			Texture2D phaseEnd = InfernumTex(type, "PhaseIndicatorEnd");
+			Texture2D phaseMid = InfernumTex(type, "PhaseIndicatorMiddle");
+			Texture2D phaseStart = InfernumTex(type, "PhaseIndicatorStart");
+			Texture2D phaseNotch = InfernumTex(type, "PhaseIndicatorNotch");
+			float needW = barFrame.Width;
+			float needH = barFrame.Height + 48f;
+			float scale = Math.Min(1f, Math.Min((dest.Width - 16) / needW, (dest.Height - 8) / needH));
+			scale = Math.Clamp(scale, 0.35f, 1f);
+			var center = dest.Center.ToVector2() + new Vector2(0f, 16f * scale);
+			Color color = Color.White * fade;
+			DrawTex(spriteBatch, barFrame, center, scale, color);
+			var leftTip = center + new Vector2(-147f, 0f) * scale;
+			var rightTip = center + new Vector2(84f, 0f) * scale;
+			var hpLeft = leftTip + new Vector2(10f, 0f) * scale;
+			var hpRight = rightTip + new Vector2(14f, 0f) * scale;
+			float hpW = Math.Max(4f, Vector2.Distance(hpLeft, hpRight) * life);
+			int hpH = Math.Max(4, (int)(33f * scale));
+			WeDraw.Fill(spriteBatch, new Rectangle((int)(hpRight.X - hpW), (int)(center.Y - hpH * 0.5f), (int)hpW, hpH), new Color(208, 47, 63) * fade);
+			DrawTex(spriteBatch, iconFrame, center, scale, color);
+			DrawInfernumHead(spriteBatch, EmpressHead(), center + new Vector2(135f, 0f) * scale, 40f * scale, fade);
+			DrawTex(spriteBatch, tip, Vector2.Lerp(rightTip, leftTip, life), scale, color);
+			DrawInfernumPhases(spriteBatch, center, scale, life, fade, color, percent, phaseStart, phaseMid, phaseEnd, phaseNotch);
 			return true;
 		}
 
-		private static void InfernumTextures(Type type, out Texture2D frame, out Texture2D fill)
+		private static Texture2D InfernumTex(Type type, params string[] names)
 		{
-			frame = null;
-			fill = null;
-			var bars = new List<(string Name, Texture2D Tex)>();
-			CollectBarLike(type, bars, 0);
-			foreach ((string Name, Texture2D Tex) item in bars) {
-				if (frame == null && item.Name.IndexOf("Frame", StringComparison.OrdinalIgnoreCase) >= 0)
-					frame = item.Tex;
-				if (fill == null && item.Name.IndexOf("Fill", StringComparison.OrdinalIgnoreCase) >= 0
-				    && item.Name.IndexOf("Frame", StringComparison.OrdinalIgnoreCase) < 0)
-					fill = item.Tex;
+			foreach (string name in names) {
+				Texture2D tex = StaticTex(type, name);
+				if (tex != null)
+					return tex;
 			}
 
-			if (frame == null && bars.Count > 0)
-				frame = bars[0].Tex;
-			if (fill == null && bars.Count > 1)
-				fill = bars[1].Tex;
+			return null;
 		}
 
-		private static void CollectBarLike(Type type, List<(string Name, Texture2D Tex)> into, int depth)
+		private static void DrawInfernumPhases(SpriteBatch spriteBatch, Vector2 center, float scale, float life, float fade, Color color,
+			Texture2D percent, Texture2D phaseStart, Texture2D phaseMid, Texture2D phaseEnd, Texture2D phaseNotch)
 		{
-			if (type == null || depth > 3 || into.Count >= 8)
+			const int count = 4;
+			int currentPhase = life >= 0.99f ? 1 : Math.Clamp(1 + (int)((1f - life) * count), 1, count + 1);
+			var rightShell = center + new Vector2(114f, -38f) * scale;
+			float endW = phaseEnd != null ? phaseEnd.Width * scale : 20f * scale;
+			float midW = phaseMid != null ? phaseMid.Width * scale : 12f * scale;
+			float shellX = rightShell.X - endW * 0.5f - midW * 0.5f + 4f * scale;
+			float notchX = shellX + 6f * scale;
+			for (int i = 0; i < count; i++) {
+				bool popped = count - i < currentPhase;
+				DrawTex(spriteBatch, phaseNotch, new Vector2(notchX, rightShell.Y + 3f * scale), scale, popped ? color * 0.22f : color);
+				notchX -= 15f * scale;
+				if (i < count - 1) {
+					DrawTex(spriteBatch, phaseMid, new Vector2(shellX, rightShell.Y - 9f * scale), scale, color);
+					shellX -= 15f * scale;
+				}
+			}
+
+			DrawTex(spriteBatch, phaseEnd, rightShell, scale, color);
+			var leftShell = new Vector2(shellX - 6f * scale, rightShell.Y);
+			DrawTex(spriteBatch, phaseStart, leftShell, scale, color);
+			var pctPos = leftShell + new Vector2(-30f, -3f) * scale;
+			DrawTex(spriteBatch, percent, pctPos, scale, color);
+			float shown = MathF.Truncate(life * 10000f) / 100f;
+			string pct = shown.ToString("0.00") + "%";
+			var font = FontAssets.MouseText.Value;
+			Vector2 size = font.MeasureString(pct);
+			ChatManager.DrawColorCodedString(spriteBatch, font, pct, pctPos + new Vector2(16f, 6.5f) * scale,
+				new Color(210, 158, 68) * fade, 0f, new Vector2(size.X, size.Y * 0.5f), Vector2.One * (0.62f * scale));
+		}
+
+		private static void DrawInfernumHead(SpriteBatch spriteBatch, Texture2D head, Vector2 pos, float size, float fade)
+		{
+			if (head == null || size < 4f)
 				return;
-			const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
-			foreach (FieldInfo field in type.GetFields(flags)) {
-				Texture2D tex = SafeTex(AssetTex(field.GetValue(null)));
-				if (!LooksLikeBar(tex, field.Name) || into.Exists(p => p.Tex == tex))
-					continue;
-				into.Add((field.Name, tex));
+			float s = size / Math.Max(1, Math.Max(head.Width, head.Height));
+			var origin = new Vector2(head.Width, head.Height) * 0.5f;
+			Color glow = new Color(255, 255, 255, 0) * (0.5f * fade * fade);
+			for (int i = 0; i < 12; i++) {
+				float a = MathHelper.TwoPi * i / 12f;
+				var off = new Vector2(MathF.Cos(a), MathF.Sin(a)) * 3f;
+				spriteBatch.Draw(head, pos + off, null, glow, 0f, origin, s, SpriteEffects.None, 0f);
 			}
 
-			foreach (Type nested in type.GetNestedTypes(BindingFlags.Public | BindingFlags.NonPublic))
-				CollectBarLike(nested, into, depth + 1);
-			if (type.BaseType != null && type.BaseType != typeof(object))
-				CollectBarLike(type.BaseType, into, depth + 1);
+			spriteBatch.Draw(head, pos, null, Color.White * fade, 0f, origin, s, SpriteEffects.None, 0f);
 		}
 
-		private static bool LooksLikeBar(Texture2D tex, string name)
+		private static void DrawTex(SpriteBatch spriteBatch, Texture2D tex, Vector2 pos, float scale, Color color)
 		{
 			if (tex == null || tex.IsDisposed)
-				return false;
-			if (tex.Width < 64 || tex.Height < 6 || tex.Height > 96)
-				return false;
-			if (tex.Width < tex.Height * 2)
-				return false;
-			if (name.IndexOf("Frame", StringComparison.OrdinalIgnoreCase) >= 0
-			    || name.IndexOf("Fill", StringComparison.OrdinalIgnoreCase) >= 0
-			    || name.IndexOf("Bar", StringComparison.OrdinalIgnoreCase) >= 0
-			    || name.IndexOf("HP", StringComparison.OrdinalIgnoreCase) >= 0)
-				return true;
-			return tex.Width >= 120;
-		}
-
-		private static bool FitAspect(Texture2D tex, Rectangle dest, int pad, out Rectangle fitted)
-		{
-			fitted = Rectangle.Empty;
-			if (tex == null || dest.Width < 8 || dest.Height < 8)
-				return false;
-			int maxW = Math.Max(8, dest.Width - pad * 2);
-			int maxH = Math.Max(8, dest.Height - pad * 2);
-			float aspect = tex.Width / (float)Math.Max(1, tex.Height);
-			int h = maxH;
-			int w = Math.Max(8, (int)MathF.Round(h * aspect));
-			if (w > maxW) {
-				w = maxW;
-				h = Math.Max(8, (int)MathF.Round(w / aspect));
-			}
-
-			fitted = new Rectangle(dest.X + (dest.Width - w) / 2, dest.Y + (dest.Height - h) / 2, w, h);
-			return fitted.Width >= 8 && fitted.Height >= 4;
-		}
-
-		private static void DrawAspectSlice(SpriteBatch spriteBatch, Texture2D tex, Rectangle dest, float t, float fade)
-		{
-			t = MathHelper.Clamp(t, 0.02f, 1f);
-			int srcW = Math.Max(1, (int)(tex.Width * t));
-			int dstW = Math.Max(1, (int)(dest.Width * t));
-			spriteBatch.Draw(tex, new Rectangle(dest.X, dest.Y, dstW, dest.Height), new Rectangle(0, 0, srcW, tex.Height), Color.White * fade);
+				return;
+			spriteBatch.Draw(tex, pos, null, color, 0f, new Vector2(tex.Width, tex.Height) * 0.5f, scale, SpriteEffects.None, 0f);
 		}
 
 		private static void DrawEmpressHeader(SpriteBatch spriteBatch, Rectangle row, float fade)
@@ -596,9 +534,6 @@ namespace DieWithASmile.Engine.Settings
 			spriteBatch.Draw(tex, pos, new Rectangle(0, 0, srcW, tex.Height), color, 0f, Vector2.Zero, s, SpriteEffects.None, 0f);
 		}
 
-		private static void DrawLifeLabel(SpriteBatch spriteBatch, int x, int y, float life, float fade) =>
-			DrawString(spriteBatch, LifeText(life), new Vector2(x, y), 0.7f, Color.White * fade);
-
 		private static void DrawString(SpriteBatch spriteBatch, string text, Vector2 pos, float scale, Color color)
 		{
 			if (string.IsNullOrEmpty(text))
@@ -617,47 +552,6 @@ namespace DieWithASmile.Engine.Settings
 			catch {
 				return text.Length * 8f * scale;
 			}
-		}
-
-		private static string LifeText(float life) =>
-			"Life: " + PreviewCur(PreviewLifeMax, life) + "/" + PreviewLifeMax;
-
-		private static string ManaText(float mana) =>
-			"Mana: " + PreviewCur(PreviewManaMax, mana) + "/" + PreviewManaMax;
-
-		private static int PreviewCur(int max, float t) =>
-			Math.Max(1, (int)MathF.Round(max * MathHelper.Clamp(t, 0.02f, 1f)));
-
-		private static HudKind Kind()
-		{
-			string key = ResourceKey();
-			if (key.Equals("HorizontalBarsWithFullText", StringComparison.OrdinalIgnoreCase))
-				return HudKind.BarsFull;
-			if (key.Equals("HorizontalBarsWithText", StringComparison.OrdinalIgnoreCase))
-				return HudKind.BarsText;
-			if (key.Equals("HorizontalBars", StringComparison.OrdinalIgnoreCase))
-				return HudKind.Bars;
-			if (key.Equals("NewWithText", StringComparison.OrdinalIgnoreCase))
-				return HudKind.FancyText;
-			if (key.Equals("New", StringComparison.OrdinalIgnoreCase))
-				return HudKind.Fancy;
-			return HudKind.Classic;
-		}
-
-		private static string ResourceKey()
-		{
-			try {
-				object set = Main.ResourceSetsManager?.ActiveSet;
-				if (Prop(set, "ConfigKey") is string cfg && !string.IsNullOrWhiteSpace(cfg))
-					return cfg;
-				string key = Main.ResourceSetsManager?.ActiveSetKeyName;
-				if (!string.IsNullOrWhiteSpace(key))
-					return key;
-			}
-			catch {
-			}
-
-			return "Default";
 		}
 
 		private static Rectangle BossBox(Rectangle view, int y) =>
@@ -796,56 +690,6 @@ namespace DieWithASmile.Engine.Settings
 		private static Texture2D SafeTex(Texture2D tex) =>
 			tex != null && !tex.IsDisposed ? tex : null;
 
-		private static Texture2D SetTex(object set, params string[] names)
-		{
-			if (set == null)
-				return null;
-			Type type = set.GetType();
-			const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-			foreach (string name in names) {
-				Texture2D tex = SafeTex(AssetTex(type.GetField(name, flags)?.GetValue(set)
-				                                 ?? type.GetProperty(name, flags)?.GetValue(set)));
-				if (tex != null)
-					return tex;
-			}
-
-			foreach (FieldInfo field in type.GetFields(flags)) {
-				foreach (string name in names) {
-					if (field.Name.IndexOf(name.Trim('_'), StringComparison.OrdinalIgnoreCase) < 0)
-						continue;
-					Texture2D tex = SafeTex(AssetTex(field.GetValue(set)));
-					if (tex != null)
-						return tex;
-				}
-			}
-
-			return null;
-		}
-
-		private static Texture2D ScanTex(object set, params string[] needles)
-		{
-			if (set == null || needles == null || needles.Length == 0)
-				return null;
-			const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-			foreach (FieldInfo field in set.GetType().GetFields(flags)) {
-				bool match = true;
-				foreach (string needle in needles) {
-					if (field.Name.IndexOf(needle, StringComparison.OrdinalIgnoreCase) < 0) {
-						match = false;
-						break;
-					}
-				}
-
-				if (!match)
-					continue;
-				Texture2D tex = SafeTex(AssetTex(field.GetValue(set)));
-				if (tex != null)
-					return tex;
-			}
-
-			return null;
-		}
-
 		private static Texture2D StaticTex(Type type, string name)
 		{
 			if (type == null)
@@ -869,21 +713,167 @@ namespace DieWithASmile.Engine.Settings
 		{
 			if (box.Width < 4 || box.Height < 4)
 				return;
-			WeDraw.Fill(spriteBatch, box, new Color(18, 22, 28) * fade);
-			int step = 8;
-			for (int x = box.X; x < box.Right; x += step) {
-				for (int y = box.Y; y < box.Bottom; y += step) {
-					int h = (x * 13 + y * 7) & 7;
-					Color c = h < 2 ? new Color(28, 48, 32) : h < 4 ? new Color(36, 34, 30) : new Color(22, 26, 32);
-					if (((x + y) & 24) == 0)
-						c = new Color(48, 36, 22);
-					WeDraw.Fill(spriteBatch, new Rectangle(x, y, step - 1, step - 1), c * fade);
+			TickWalkers(box);
+			WeDraw.WithPoint(spriteBatch, () => DrawVillage(spriteBatch, box, fade));
+			DrawWalkers(spriteBatch, box, fade);
+		}
+
+		private static void DrawVillage(SpriteBatch spriteBatch, Rectangle box, float fade)
+		{
+			int step = Math.Clamp(box.Width / 48, 4, 6);
+			int grassRow = GrassRow(box, step);
+			for (int px = box.X; px < box.Right; px += step) {
+				int col = (px - box.X) / step;
+				int pit = PitCol(box, step);
+				for (int py = box.Y; py < box.Bottom; py += step) {
+					int row = (py - box.Y) / step;
+					Color c = TileColor(col, row, grassRow, pit, box.Width / step);
+					WeDraw.Fill(spriteBatch, new Rectangle(px, py, step, step), c * fade);
+				}
+			}
+		}
+
+		private static int GrassRow(Rectangle box, int step) =>
+			(int)(box.Height * 0.52f / step);
+
+		private static int PitCol(Rectangle box, int step) =>
+			Math.Max(3, (int)(box.Width * 0.16f / step));
+
+		private static Color TileColor(int col, int row, int grass, int pit, int cols)
+		{
+			bool shaft = col >= pit && col <= pit + 2 && row >= grass;
+			if (row < grass) {
+				if (HouseAt(col, row, grass, cols))
+					return HouseColor(col, row, grass);
+				return new Color(90, 122, 223);
+			}
+
+			if (row == grass && !shaft)
+				return new Color(48, 168, 52);
+			if (shaft && row < grass + 8)
+				return row == grass ? new Color(36, 150, 70) : new Color(28, 48, 32);
+			if (row < grass + 5 && !shaft)
+				return new Color(148, 92, 48);
+			if (row < grass + 10)
+				return new Color(92, 58, 36);
+			int speck = (col * 13 + row * 7) & 7;
+			if (speck == 0)
+				return new Color(48, 36, 22);
+			return new Color(14, 12, 14);
+		}
+
+		private static bool HouseAt(int col, int row, int grass, int cols)
+		{
+			return HouseRect(cols, grass, 0).Contains(col, row)
+			       || HouseRect(cols, grass, 1).Contains(col, row)
+			       || HouseRect(cols, grass, 2).Contains(col, row);
+		}
+
+		private static Rectangle HouseRect(int cols, int grass, int index)
+		{
+			int x = index == 0 ? cols / 3 : index == 1 ? cols / 2 : (cols * 3) / 4;
+			int w = index == 1 ? 7 : 6;
+			int h = index == 1 ? 6 : 5;
+			return new Rectangle(x, grass - h, w, h);
+		}
+
+		private static Color HouseColor(int col, int row, int grass)
+		{
+			if (row <= grass - 5)
+				return new Color(92, 54, 40);
+			if ((col + row) % 3 == 0)
+				return new Color(168, 112, 64);
+			return new Color(118, 78, 48);
+		}
+
+		private static void TickWalkers(Rectangle box)
+		{
+			int step = Math.Clamp(box.Width / 48, 4, 6);
+			int grassY = box.Y + GrassRow(box, step) * step;
+			int pitX = box.X + PitCol(box, step) * step;
+			int left = pitX + step * 4;
+			int right = box.Right - 18;
+			if (Walkers.Count == 0 || _mapW != box.Width || _mapH != box.Height) {
+				Walkers.Clear();
+				_mapW = box.Width;
+				_mapH = box.Height;
+				int[] heads = { NPCHeadID.Guide, NPCHeadID.Merchant, NPCHeadID.Nurse, NPCHeadID.Demolitionist, NPCHeadID.Mechanic, NPCHeadID.GoblinTinkerer, NPCHeadID.Dryad };
+				for (int i = 0; i < heads.Length; i++) {
+					if (TownHead(heads[i]) == null)
+						continue;
+					float span = Math.Max(20, right - left);
+					Walkers.Add(new MapWalker
+					{
+						X = left + span * ((i + 0.4f) / heads.Length),
+						Y = grassY - 8,
+						Vx = (i % 2 == 0 ? 0.55f : -0.45f) * (0.8f + i * 0.07f),
+						Vy = 0f,
+						NextJump = 0.6f + i * 0.55f,
+						Head = heads[i]
+					});
 				}
 			}
 
-			WeDraw.Fill(spriteBatch, new Rectangle(box.Center.X - 4, box.Center.Y - 4, 8, 8), new Color(90, 200, 90) * fade);
-			WeDraw.Fill(spriteBatch, new Rectangle(box.Center.X + 28, box.Center.Y + 10, 6, 10), new Color(255, 140, 40) * fade);
-			WeDraw.Fill(spriteBatch, new Rectangle(box.Right - 36, box.Center.Y + 6, 18, 8), new Color(180, 40, 30) * fade);
+			float now = Main.GlobalTimeWrappedHourly;
+			float dt = now - _mapClock;
+			if (dt < 0f || dt > 0.12f)
+				dt = 1f / 60f;
+			_mapClock = now;
+			const float grav = 14f;
+			const float jump = -5.6f;
+			foreach (MapWalker w in Walkers) {
+				w.NextJump -= dt;
+				w.Vy += grav * dt;
+				w.X += w.Vx * 28f * dt;
+				w.Y += w.Vy * 18f * dt;
+				float ground = grassY - 8f;
+				if (w.Y >= ground) {
+					w.Y = ground;
+					w.Vy = 0f;
+					if (w.NextJump <= 0f) {
+						w.Vy = jump;
+						w.NextJump = 1.4f + (w.Head % 5) * 0.35f;
+					}
+				}
+
+				if (w.X < left) {
+					w.X = left;
+					w.Vx = Math.Abs(w.Vx);
+				}
+				else if (w.X > right) {
+					w.X = right;
+					w.Vx = -Math.Abs(w.Vx);
+				}
+			}
+		}
+
+		private static void DrawWalkers(SpriteBatch spriteBatch, Rectangle box, float fade)
+		{
+			foreach (MapWalker w in Walkers) {
+				Texture2D head = TownHead(w.Head);
+				if (head == null)
+					continue;
+				const int size = 16;
+				var dest = new Rectangle((int)w.X - size / 2, (int)w.Y - size / 2, size, size);
+				if (!box.Intersects(dest))
+					continue;
+				SpriteEffects flip = w.Vx < 0f ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+				var pos = new Vector2(dest.X + size * 0.5f, dest.Y + size * 0.5f);
+				float s = size / (float)Math.Max(1, Math.Max(head.Width, head.Height));
+				spriteBatch.Draw(head, pos, null, Color.White * fade, 0f, new Vector2(head.Width, head.Height) * 0.5f, s, flip, 0f);
+			}
+		}
+
+		private static Texture2D TownHead(int slot)
+		{
+			try {
+				if (TextureAssets.NpcHead != null && slot >= 0 && slot < TextureAssets.NpcHead.Length)
+					return SafeTex(TextureAssets.NpcHead[slot]?.Value);
+			}
+			catch {
+			}
+
+			return null;
 		}
 
 		private static Rectangle Inset(Rectangle box, int pad) =>
@@ -1084,6 +1074,16 @@ namespace DieWithASmile.Engine.Settings
 			catch {
 				return null;
 			}
+		}
+
+		private sealed class MapWalker
+		{
+			internal float X;
+			internal float Y;
+			internal float Vx;
+			internal float Vy;
+			internal float NextJump;
+			internal int Head;
 		}
 
 		private sealed class WePreviewBar : IBigProgressBar
