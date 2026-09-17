@@ -359,6 +359,7 @@ UI: {
 	NeoBossBar: Boss bar
 	NeoBossFull: Full
 	NeoBossLive: Live
+	NeoBossFight: Fight
 	NeoSmartCursor: Smart cursor
 	NeoSmartBlocks: Smart placement
 	NeoSmartAxe: Axe after pickaxe

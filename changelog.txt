@@ -1,3 +1,8 @@
+Version 3.0.20
+
+Title
+- Settings: Health and mana preview builds Classic/Fancy/Bars inside a card from pack textures. Boss bar simulates an Empress of Light fight: vanilla and Overhaul use a fit-to-width bar, Calamity keeps native strips, Infernum keeps aspect.
+
 Version 3.0.19
 
 Title
