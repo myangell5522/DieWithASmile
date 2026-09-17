@@ -48,6 +48,7 @@ namespace DieWithASmile.Engine.Content
 			DiscordFeed.Unload();
 			WePlaylist.Unload();
 			WePresetLogos.Unload();
+			WeNeoHud.Unload();
 			WeDraw.Unload();
 			ClientChrome.Unload();
 			WeType.Unload();

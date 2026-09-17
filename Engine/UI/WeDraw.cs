@@ -186,6 +186,142 @@ namespace DieWithASmile.Engine.UI
 			spriteBatch.Draw(Pixel, new Rectangle(rect.Right - 2, rect.Y, 2, rect.Height), color);
 		}
 
+		internal static void Frame(SpriteBatch spriteBatch, Rectangle rect, float fade)
+		{
+			if (rect.Width < 8 || rect.Height < 8)
+				return;
+			Border(spriteBatch, rect, WeAccent.Mid * (0.95f * fade));
+			var inset = new Rectangle(rect.X + 3, rect.Y + 3, rect.Width - 6, rect.Height - 6);
+			if (inset.Width > 4 && inset.Height > 4)
+				Border(spriteBatch, inset, WeAccent.Light * (0.24f * fade));
+			Hairline(spriteBatch, rect, fade);
+		}
+
+		internal static void Hairline(SpriteBatch spriteBatch, Rectangle rect, float fade)
+		{
+			if (rect.Width < 6 || rect.Height < 6)
+				return;
+			Fill(spriteBatch, new Rectangle(rect.X + 2, rect.Y + 2, rect.Width - 4, 1), Color.White * (0.16f * fade));
+		}
+
+		internal static void Corners(SpriteBatch spriteBatch, Rectangle rect, float fade, int arm = 12, int thick = 2)
+		{
+			if (rect.Width < 8 || rect.Height < 8)
+				return;
+			arm = Math.Clamp(arm, 6, Math.Min(rect.Width, rect.Height) / 2);
+			thick = Math.Max(1, thick);
+			Color c = WeAccent.Light * fade;
+			Fill(spriteBatch, new Rectangle(rect.X, rect.Y, arm, thick), c);
+			Fill(spriteBatch, new Rectangle(rect.X, rect.Y, thick, arm), c);
+			Fill(spriteBatch, new Rectangle(rect.Right - arm, rect.Y, arm, thick), c);
+			Fill(spriteBatch, new Rectangle(rect.Right - thick, rect.Y, thick, arm), c);
+			Fill(spriteBatch, new Rectangle(rect.X, rect.Bottom - thick, arm, thick), c);
+			Fill(spriteBatch, new Rectangle(rect.X, rect.Bottom - arm, thick, arm), c);
+			Fill(spriteBatch, new Rectangle(rect.Right - arm, rect.Bottom - thick, arm, thick), c);
+			Fill(spriteBatch, new Rectangle(rect.Right - thick, rect.Bottom - arm, thick, arm), c);
+		}
+
+		internal static void VignetteBox(SpriteBatch spriteBatch, Rectangle r, float amount)
+		{
+			if (amount < 0.01f || r.Width < 8 || r.Height < 8)
+				return;
+			int band = Math.Max(10, Math.Min(r.Width, r.Height) / 5);
+			const int slices = 10;
+			for (int i = 0; i < slices; i++) {
+				float a = amount * (1f - i / (float)slices);
+				a *= a;
+				Color c = Color.Black * a;
+				int t = (int)(band * i / (float)slices);
+				int th = Math.Max(1, band / slices + 1);
+				Fill(spriteBatch, new Rectangle(r.X, r.Y + t, r.Width, th), c);
+				Fill(spriteBatch, new Rectangle(r.X, r.Bottom - t - th, r.Width, th), c);
+				Fill(spriteBatch, new Rectangle(r.X + t, r.Y, th, r.Height), c);
+				Fill(spriteBatch, new Rectangle(r.Right - t - th, r.Y, th, r.Height), c);
+			}
+		}
+
+		internal static bool WithOffscreen(SpriteBatch spriteBatch, RenderTarget2D rt, Action draw)
+		{
+			if (spriteBatch == null || rt == null || rt.IsDisposed || draw == null)
+				return false;
+			GraphicsDevice gd = Main.instance.GraphicsDevice;
+			RenderTargetBinding[] prev;
+			try {
+				prev = gd.GetRenderTargets();
+			}
+			catch {
+				prev = Array.Empty<RenderTargetBinding>();
+			}
+
+			Rectangle oldScissor = gd.ScissorRectangle;
+			Viewport oldView = gd.Viewport;
+			Rectangle? previous = Scissor;
+			try {
+				spriteBatch.End();
+			}
+			catch {
+			}
+
+			Scissor = null;
+			bool ok = false;
+			try {
+				gd.SetRenderTarget(rt);
+				gd.Viewport = new Viewport(0, 0, rt.Width, rt.Height);
+				gd.ScissorRectangle = new Rectangle(0, 0, rt.Width, rt.Height);
+				gd.Clear(Color.Transparent);
+				spriteBatch.Begin(
+					SpriteSortMode.Deferred,
+					BlendState.AlphaBlend,
+					SamplerState.PointClamp,
+					DepthStencilState.None,
+					RasterizerState.CullCounterClockwise,
+					null,
+					Matrix.Identity);
+				draw();
+				spriteBatch.End();
+				ok = true;
+			}
+			catch {
+				try {
+					spriteBatch.End();
+				}
+				catch {
+				}
+			}
+			finally {
+				try {
+					if (prev == null || prev.Length == 0)
+						gd.SetRenderTarget(null);
+					else
+						gd.SetRenderTargets(prev);
+				}
+				catch {
+					try {
+						gd.SetRenderTarget(null);
+					}
+					catch {
+					}
+				}
+
+				try {
+					gd.Viewport = oldView;
+				}
+				catch {
+				}
+
+				Scissor = previous;
+				try {
+					gd.ScissorRectangle = previous ?? oldScissor;
+				}
+				catch {
+				}
+
+				BeginUi(spriteBatch);
+			}
+
+			return ok;
+		}
+
 		internal static void DrawVerticalGradient(SpriteBatch spriteBatch, Rectangle rect, Color top, Color bottom, float alpha)
 		{
 			const int slices = 36;

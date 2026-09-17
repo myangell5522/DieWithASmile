@@ -5,6 +5,7 @@ using System.Reflection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
+using ReLogic.Content;
 using Terraria.GameContent;
 using Terraria.GameContent.UI.BigProgressBar;
 using Terraria.ID;
@@ -19,13 +20,17 @@ namespace DieWithASmile.Engine.Settings
 	{
 		internal const int BossExtraH = 320;
 		internal const int MapExtraH = 264;
-		internal const int HealthExtraH = 168;
+		internal const int HealthExtraH = 180;
 		private const float VanillaBarW = 516f;
 		private static readonly WePreviewBar Dummy = new();
 		private static readonly List<MapWalker> Walkers = new();
 		private static float _mapClock;
 		private static int _mapW;
 		private static int _mapH;
+		private static RenderTarget2D _hudRt;
+		private static int _hudRtW;
+		private static int _hudRtH;
+		private static Asset<Texture2D> _healthBg;
 
 		private static BigProgressBarInfo _fancyInfo;
 		private static SpriteBatch _fancyBatch;
@@ -150,11 +155,30 @@ namespace DieWithASmile.Engine.Settings
 			}
 		}
 
+		internal static void Unload()
+		{
+			RenderTarget2D rt = _hudRt;
+			_hudRt = null;
+			_hudRtW = 0;
+			_hudRtH = 0;
+			_healthBg = null;
+			if (rt == null || rt.IsDisposed)
+				return;
+			Main.QueueMainThreadAction(() => {
+				try {
+					if (!rt.IsDisposed)
+						rt.Dispose();
+				}
+				catch {
+				}
+			});
+		}
+
 		internal static void HealthPreview(SpriteBatch spriteBatch, Rectangle view, int y, float fade)
 		{
 			var box = HealthBox(view, y);
-			DrawCard(spriteBatch, box, fade);
-			var inner = Inset(box, 12);
+			DrawHealthScene(spriteBatch, box, fade);
+			var inner = Inset(box, 16);
 			WeDraw.WithClip(spriteBatch, inner, () => DrawHealthHud(spriteBatch, inner, fade));
 		}
 
@@ -195,6 +219,8 @@ namespace DieWithASmile.Engine.Settings
 			if (draw == null)
 				return false;
 			try {
+				if (DrawActiveSetRt(spriteBatch, inner, set, draw))
+					return true;
 				WithPreviewStats(() => {
 					WeDraw.WithTransform(spriteBatch, HealthFitMatrix(inner), () => draw.Invoke(set, null));
 				});
@@ -203,6 +229,83 @@ namespace DieWithASmile.Engine.Settings
 			catch {
 				return false;
 			}
+		}
+
+		private static bool DrawActiveSetRt(SpriteBatch spriteBatch, Rectangle inner, object set, MethodInfo draw)
+		{
+			int w = Math.Max(64, Main.screenWidth);
+			const int h = 160;
+			RenderTarget2D rt = HudRt(w, h);
+			if (rt == null)
+				return false;
+			bool painted = false;
+			if (!WeDraw.WithOffscreen(spriteBatch, rt, () => {
+				    WithPreviewStats(() => draw.Invoke(set, null));
+				    painted = true;
+			    }) || !painted)
+				return false;
+
+			Rectangle crop = Rectangle.Intersect(HudCrop(), new Rectangle(0, 0, rt.Width, rt.Height));
+			if (crop.Width < 8 || crop.Height < 8)
+				return false;
+			float scale = Math.Min(inner.Width / (float)crop.Width, inner.Height / (float)crop.Height);
+			scale = Math.Clamp(scale, 0.45f, 3f);
+			int dw = Math.Max(8, (int)(crop.Width * scale));
+			int dh = Math.Max(8, (int)(crop.Height * scale));
+			var dest = new Rectangle(inner.X + (inner.Width - dw) / 2, inner.Y + (inner.Height - dh) / 2, dw, dh);
+			WeDraw.WithPoint(spriteBatch, () => spriteBatch.Draw(rt, dest, crop, Color.White));
+			return true;
+		}
+
+		private static RenderTarget2D HudRt(int w, int h)
+		{
+			w = Math.Max(64, w);
+			h = Math.Max(64, h);
+			if (_hudRt != null && !_hudRt.IsDisposed && _hudRtW == w && _hudRtH == h)
+				return _hudRt;
+			try {
+				_hudRt?.Dispose();
+			}
+			catch {
+			}
+
+			_hudRt = new RenderTarget2D(
+				Main.instance.GraphicsDevice, w, h, false, SurfaceFormat.Color, DepthFormat.None, 0,
+				RenderTargetUsage.PreserveContents);
+			_hudRtW = w;
+			_hudRtH = h;
+			return _hudRt;
+		}
+
+		private static Rectangle HudCrop()
+		{
+			int sw = Main.screenWidth;
+			string key = "";
+			try {
+				key = Main.ResourceSetsManager?.ActiveSetKeyName ?? "";
+			}
+			catch {
+			}
+
+			bool bars = key.Contains("HorizontalBars", StringComparison.OrdinalIgnoreCase);
+			if (!bars) {
+				try {
+					string shown = Main.ResourceSetsManager?.ActiveSet?.DisplayedName ?? "";
+					bars = shown.Contains("Bars", StringComparison.OrdinalIgnoreCase);
+				}
+				catch {
+				}
+			}
+
+			if (bars) {
+				bool text = key.Contains("Text", StringComparison.OrdinalIgnoreCase) ||
+				            key.Contains("Full", StringComparison.OrdinalIgnoreCase);
+				int bw = text ? 400 : 240;
+				int bh = text ? 88 : 80;
+				return new Rectangle(Math.Max(0, sw - bw - 8), 4, bw, bh);
+			}
+
+			return new Rectangle(Math.Max(0, sw - 310), 0, 300, 90);
 		}
 
 		private static void WithPreviewStats(Action draw)
@@ -228,14 +331,15 @@ namespace DieWithASmile.Engine.Settings
 			bool ghost = player.ghost;
 			try {
 				player.ghost = false;
-				int maxL = Math.Max(100, Math.Max(lifeMax, lifeMax2));
-				int maxM = Math.Max(20, Math.Max(manaMax, manaMax2));
+				const int maxL = 100;
+				const int maxM = 20;
+				float wave = 0.5f + 0.5f * MathF.Sin(Main.GlobalTimeWrappedHourly * MathHelper.Pi / 2f);
 				player.statLifeMax = maxL;
 				player.statLifeMax2 = maxL;
 				player.statManaMax = maxM;
 				player.statManaMax2 = maxM;
-				player.statLife = maxL;
-				player.statMana = maxM;
+				player.statLife = (int)MathF.Round(MathHelper.Lerp(10f, maxL, wave));
+				player.statMana = (int)MathF.Round(MathHelper.Lerp(4f, maxM, wave));
 				draw();
 			}
 			finally {
@@ -251,18 +355,7 @@ namespace DieWithASmile.Engine.Settings
 
 		private static Matrix HealthFitMatrix(Rectangle inner)
 		{
-			int manaMax = 20;
-			try {
-				Player player = Main.LocalPlayer;
-				if (player != null)
-					manaMax = Math.Max(20, Math.Max(player.statManaMax, player.statManaMax2));
-			}
-			catch {
-			}
-
-			int stars = Math.Max(1, manaMax / 20);
-			int h = Math.Max(90, 28 + stars * 26);
-			var bbox = new Rectangle(Main.screenWidth - 310, 0, 300, h);
+			var bbox = HudCrop();
 			float scale = Math.Min(inner.Width / (float)Math.Max(1, bbox.Width), inner.Height / (float)Math.Max(1, bbox.Height));
 			scale = Math.Clamp(scale, 0.4f, 3f);
 			var origin = bbox.Center.ToVector2();
@@ -498,6 +591,33 @@ namespace DieWithASmile.Engine.Settings
 
 			int textX = row.X + (icon != null ? iconS + 10 : 4);
 			DrawString(spriteBatch, EmpressName(), new Vector2(textX, row.Y + (row.Height - 18) * 0.5f), 0.85f, Color.White * fade);
+		}
+
+		private static void DrawHealthScene(SpriteBatch spriteBatch, Rectangle box, float fade)
+		{
+			WeDraw.Shadow(spriteBatch, box, fade);
+			Texture2D bg = HealthBg();
+			if (bg != null)
+				WeDraw.DrawCover(spriteBatch, bg, box, Color.White * fade);
+			else
+				WeDraw.Fill(spriteBatch, box, new Color(12, 14, 18) * (0.88f * fade));
+			WeDraw.VignetteBox(spriteBatch, box, 0.58f * fade);
+			WeDraw.Frame(spriteBatch, box, fade);
+			WeDraw.Corners(spriteBatch, box, fade, 14);
+		}
+
+		private static Texture2D HealthBg()
+		{
+			try {
+				_healthBg ??= ModContent.Request<Texture2D>(
+					"DieWithASmile/Assets/Textures/UI/HealthPreviewBg", AssetRequestMode.ImmediateLoad);
+				if (_healthBg.IsLoaded)
+					return _healthBg.Value;
+			}
+			catch {
+			}
+
+			return null;
 		}
 
 		private static void DrawCard(SpriteBatch spriteBatch, Rectangle box, float fade)

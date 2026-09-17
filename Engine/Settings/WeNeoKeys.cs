@@ -22,6 +22,9 @@ namespace DieWithASmile.Engine.Settings
 		private static string _listen;
 		private static string _pick = "Up";
 		private static int _filter;
+		private static int _listScroll;
+		private static int _listMax;
+		private static Rectangle _listHit;
 		private static readonly string[] Filters = { "All", "Move", "Inv", "Misc", "Mods" };
 		private static readonly string[] FilterKeys = { "NeoKeysAll", "NeoKeysMove", "NeoKeysInv", "NeoKeysMisc", "NeoKeysMods" };
 
@@ -124,11 +127,21 @@ namespace DieWithASmile.Engine.Settings
 			return false;
 		}
 
+		internal static bool ApplyWheel(int delta)
+		{
+			if (delta == 0 || _listHit.Width < 8 || !_listHit.Contains(Main.mouseX, Main.mouseY) || _listMax < 1)
+				return false;
+			_listScroll = Math.Clamp(_listScroll - delta / 6, 0, _listMax);
+			return true;
+		}
+
 		private static void DrawKeyboard(SpriteBatch spriteBatch, Rectangle box, float fade)
 		{
-			WeDraw.Fill(spriteBatch, box, new Color(16, 18, 24) * fade);
-			WeDraw.Border(spriteBatch, box, WeAccent.Mid * (0.5f * fade));
+			WeDraw.Fill(spriteBatch, box, new Color(14, 16, 22) * fade);
+			WeDraw.Frame(spriteBatch, box, fade * 0.9f);
+			WeDraw.Corners(spriteBatch, box, fade, 8);
 			HashSet<string> used = UsedKeys();
+			string pickKey = PickKey();
 			int rowH = (box.Height - 12) / Rows.Length;
 			for (int r = 0; r < Rows.Length; r++) {
 				string[] row = Rows[r];
@@ -144,10 +157,18 @@ namespace DieWithASmile.Engine.Settings
 					if (hit.Width < 8)
 						break;
 					bool on = used.Contains(id);
+					bool mine = string.Equals(pickKey, id, StringComparison.OrdinalIgnoreCase);
 					bool hover = hit.Contains(Main.mouseX, Main.mouseY);
 					bool listen = Capturing && hover;
-					WeDraw.Fill(spriteBatch, hit, (on || listen ? WeAccent.Deep : new Color(28, 30, 36)) * fade);
-					WeDraw.Border(spriteBatch, hit, (on || hover ? WeAccent.Light : Color.White * 0.18f) * fade);
+					Color fill = listen || mine
+						? WeAccent.Mid
+						: on
+							? WeAccent.Deep
+							: new Color(30, 32, 40);
+					WeDraw.Fill(spriteBatch, hit, fill * fade);
+					WeDraw.Fill(spriteBatch, new Rectangle(hit.X + 1, hit.Y + 1, hit.Width - 2, 1), Color.White * (0.2f * fade));
+					WeDraw.Fill(spriteBatch, new Rectangle(hit.X + 1, hit.Bottom - 2, hit.Width - 2, 1), Color.Black * (0.35f * fade));
+					WeDraw.Border(spriteBatch, hit, (on || hover || mine ? WeAccent.Light : Color.White * 0.16f) * fade);
 					string label = Short(id);
 					Vector2 size = FontAssets.MouseText.Value.MeasureString(label) * 0.52f;
 					ChatManager.DrawColorCodedStringWithShadow(
@@ -193,39 +214,66 @@ namespace DieWithASmile.Engine.Settings
 
 		private static void DrawList(SpriteBatch spriteBatch, Rectangle box, float fade)
 		{
-			WeDraw.Fill(spriteBatch, box, new Color(16, 18, 24) * fade);
-			WeDraw.Border(spriteBatch, box, WeAccent.Mid * (0.5f * fade));
+			_listHit = box;
+			WeDraw.Fill(spriteBatch, box, new Color(14, 16, 22) * fade);
+			WeDraw.Frame(spriteBatch, box, fade * 0.9f);
 			int fw = (box.Width - 10) / Filters.Length;
 			for (int i = 0; i < Filters.Length; i++) {
 				var chip = new Rectangle(box.X + 4 + i * fw, box.Y + 4, fw - 3, 20);
 				bool on = _filter == i;
 				WeDraw.Fill(spriteBatch, chip, (on ? WeAccent.Deep : new Color(28, 30, 36)) * fade);
+				if (on)
+					WeDraw.Hairline(spriteBatch, chip, fade);
+				WeDraw.Border(spriteBatch, chip, (on ? WeAccent.Light : Color.White * 0.14f) * fade);
 				ChatManager.DrawColorCodedStringWithShadow(
 					spriteBatch, FontAssets.MouseText.Value, WeText.UI(FilterKeys[i]),
 					new Vector2(chip.X + 4, chip.Y + 2), Color.White * fade, 0f, Vector2.Zero, new Vector2(0.5f));
 			}
 
 			List<(string id, string label, string value)> acts = Actions();
-			int rowY = box.Y + 28;
-			int shown = 0;
-			foreach ((string id, string label, string value) in acts) {
-				if (rowY + 18 > box.Bottom - 4)
-					break;
-				var hit = new Rectangle(box.X + 4, rowY, box.Width - 8, 18);
-				bool on = _pick == id || _listen == id;
-				bool hover = hit.Contains(Main.mouseX, Main.mouseY);
-				if (on || hover)
-					WeDraw.Fill(spriteBatch, hit, WeAccent.Deep * (0.55f * fade));
+			var rows = new Rectangle(box.X + 2, box.Y + 28, box.Width - 4, box.Height - 32);
+			_listMax = Math.Max(0, acts.Count * 22 - rows.Height);
+			_listScroll = Math.Clamp(_listScroll, 0, _listMax);
+			if (acts.Count == 0) {
+				string empty = WeText.UI(_filter == 4 ? "NeoKeysNoMods" : "NeoKeysHint");
 				ChatManager.DrawColorCodedStringWithShadow(
-					spriteBatch, FontAssets.MouseText.Value, label,
-					new Vector2(hit.X + 4, hit.Y + 1), Color.White * fade, 0f, Vector2.Zero, new Vector2(0.58f));
-				Vector2 vs = FontAssets.MouseText.Value.MeasureString(value) * 0.58f;
-				ChatManager.DrawColorCodedStringWithShadow(
-					spriteBatch, FontAssets.MouseText.Value, value,
-					new Vector2(hit.Right - 4 - vs.X, hit.Y + 1), WeAccent.Light * fade, 0f, Vector2.Zero, new Vector2(0.58f));
-				rowY += 20;
-				shown++;
+					spriteBatch, FontAssets.MouseText.Value, empty,
+					new Vector2(rows.X + 8, rows.Y + 8), Color.White * (0.55f * fade), 0f, Vector2.Zero,
+					new Vector2(0.58f));
+				return;
 			}
+
+			WeDraw.WithClip(spriteBatch, rows, () => {
+				int rowY = rows.Y - _listScroll;
+				foreach ((string id, string label, string value) in acts) {
+					if (rowY + 22 < rows.Y) {
+						rowY += 22;
+						continue;
+					}
+
+					if (rowY > rows.Bottom)
+						break;
+					var hit = new Rectangle(rows.X + 2, rowY, rows.Width - 4, 20);
+					bool on = _pick == id || _listen == id;
+					bool hover = hit.Contains(Main.mouseX, Main.mouseY);
+					if (on || hover)
+						WeDraw.Fill(spriteBatch, hit, WeAccent.Deep * ((on ? 0.7f : 0.45f) * fade));
+					if (on)
+						WeDraw.Fill(spriteBatch, new Rectangle(hit.X, hit.Y, 3, hit.Height), WeAccent.Light * fade);
+					ChatManager.DrawColorCodedStringWithShadow(
+						spriteBatch, FontAssets.MouseText.Value, label,
+						new Vector2(hit.X + 8, hit.Y + 2), Color.White * fade, 0f, Vector2.Zero, new Vector2(0.56f));
+					string shown = string.IsNullOrEmpty(value) ? "-" : value;
+					Vector2 vs = FontAssets.MouseText.Value.MeasureString(shown) * 0.52f;
+					var chip = new Rectangle(hit.Right - (int)vs.X - 14, hit.Y + 2, (int)vs.X + 10, hit.Height - 4);
+					WeDraw.Fill(spriteBatch, chip, WeAccent.Deep * (0.85f * fade));
+					WeDraw.Border(spriteBatch, chip, WeAccent.Mid * fade);
+					ChatManager.DrawColorCodedStringWithShadow(
+						spriteBatch, FontAssets.MouseText.Value, shown,
+						new Vector2(chip.X + 5, chip.Y + 1), WeAccent.Light * fade, 0f, Vector2.Zero, new Vector2(0.52f));
+					rowY += 22;
+				}
+			});
 		}
 
 		private static bool ClickList(Rectangle box)
@@ -235,23 +283,30 @@ namespace DieWithASmile.Engine.Settings
 				var chip = new Rectangle(box.X + 4 + i * fw, box.Y + 4, fw - 3, 20);
 				if (chip.Contains(Main.mouseX, Main.mouseY)) {
 					_filter = i;
+					_listScroll = 0;
 					return true;
 				}
 			}
 
 			List<(string id, string label, string value)> acts = Actions();
-			int rowY = box.Y + 28;
+			var rows = new Rectangle(box.X + 2, box.Y + 28, box.Width - 4, box.Height - 32);
+			int rowY = rows.Y - _listScroll;
 			foreach ((string id, string label, string value) in acts) {
-				var hit = new Rectangle(box.X + 4, rowY, box.Width - 8, 18);
+				if (rowY + 22 < rows.Y) {
+					rowY += 22;
+					continue;
+				}
+
+				if (rowY > rows.Bottom)
+					break;
+				var hit = new Rectangle(rows.X + 2, rowY, rows.Width - 4, 20);
 				if (hit.Contains(Main.mouseX, Main.mouseY)) {
 					_pick = id;
 					_listen = id;
 					return true;
 				}
 
-				rowY += 20;
-				if (rowY + 18 > box.Bottom - 4)
-					break;
+				rowY += 22;
 			}
 
 			return false;
@@ -263,6 +318,8 @@ namespace DieWithASmile.Engine.Settings
 			string q = WeNeoMenu.Search;
 			Dictionary<string, List<string>> map = KeyMap();
 			foreach (KeyValuePair<string, List<string>> pair in map) {
+				if (IsModStatusKey(pair.Key))
+					continue;
 				int bucket = Bucket(pair.Key);
 				if (_filter != 0 && _filter != 4 && bucket != _filter)
 					continue;
@@ -297,6 +354,9 @@ namespace DieWithASmile.Engine.Settings
 				return 2;
 			return 3;
 		}
+
+		private static bool IsModStatusKey(string id) =>
+			!string.IsNullOrEmpty(id) && (id.Contains('/') || id.Contains(':'));
 
 		private static Dictionary<string, List<string>> KeyMap()
 		{
