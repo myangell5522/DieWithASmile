@@ -197,7 +197,10 @@ namespace DieWithASmile.Engine.UI
 			}
 		}
 
-		internal static void BeginUi(SpriteBatch spriteBatch)
+		internal static void BeginUi(SpriteBatch spriteBatch) =>
+			BeginUi(spriteBatch, Main.UIScaleMatrix);
+
+		internal static void BeginUi(SpriteBatch spriteBatch, Matrix transform)
 		{
 			RasterizerState rast = Scissor.HasValue ? ClipRast : RasterizerState.CullCounterClockwise;
 			spriteBatch.Begin(
@@ -207,9 +210,20 @@ namespace DieWithASmile.Engine.UI
 				DepthStencilState.None,
 				rast,
 				null,
-				Main.UIScaleMatrix);
+				transform);
 			if (Scissor.HasValue)
 				Main.instance.GraphicsDevice.ScissorRectangle = Scissor.Value;
+		}
+
+		internal static void WithTransform(SpriteBatch spriteBatch, Matrix extra, Action draw)
+		{
+			if (spriteBatch == null || draw == null)
+				return;
+			spriteBatch.End();
+			BeginUi(spriteBatch, extra * Main.UIScaleMatrix);
+			draw();
+			spriteBatch.End();
+			BeginUi(spriteBatch);
 		}
 
 		internal static void WithLinear(SpriteBatch spriteBatch, Action draw, Action beforeDraw = null)

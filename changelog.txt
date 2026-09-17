@@ -1,3 +1,8 @@
+Version 3.0.18
+
+Title
+- Settings: boss bar preview uses the selected Vanilla/Calamity/Infernum style. Minimap sits in a square frame. Health and mana cycles every set with a live preview. Smart cursor shows the diamond grid.
+
 Version 3.0.17
 
 Title

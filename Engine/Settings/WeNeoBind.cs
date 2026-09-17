@@ -439,11 +439,14 @@ namespace DieWithASmile.Engine.Settings
 				() => (int)Math.Round(Main.MapScale * 100f) + "%",
 				t => { Main.MapScale = 0.5f + t * 0.5f; PersistSoft(); });
 			Cycle(list, WeNeoCat.Interface, hud, "bars", () => T("NeoHealthStyle"),
-				() => Main.ResourceSetsManager?.ActiveSet?.DisplayedName ?? "",
+				() => WeNeoHud.ResourceName(),
 				() => {
-					WeNeoFld.Call(Main.ResourceSetsManager, "CycleSelection");
+					WeNeoHud.CycleResources();
 					PersistSoft();
 				});
+			list[^1].ExtraH = WeNeoHud.HealthExtraH;
+			list[^1].ExtraDraw = WeNeoHud.HealthPreview;
+			list[^1].ExtraClick = (view, y, left, right) => WeNeoHud.HealthClick(view, y, left);
 			Cycle(list, WeNeoCat.Interface, hud, "bossbar", () => T("NeoBossBar"),
 				() => BossBarText(),
 				() => {
@@ -970,8 +973,15 @@ namespace DieWithASmile.Engine.Settings
 		{
 			if (target == null)
 				return null;
-			MethodInfo m = target.GetType().GetMethod(method, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-			return m?.Invoke(target, null);
+			const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+			Type type = target.GetType();
+			MethodInfo m = type.GetMethod(method, flags, binder: null, types: Type.EmptyTypes, modifiers: null);
+			if (m != null)
+				return m.Invoke(target, null);
+			m = type.GetMethod(method, flags);
+			if (m != null && m.GetParameters().Length == 0)
+				return m.Invoke(target, null);
+			return null;
 		}
 
 		internal static object CallStatic(Type type, string method, out object extra)

@@ -77,8 +77,13 @@ namespace DieWithASmile.Engine.Settings
 
 		private static void DrawKind(SpriteBatch spriteBatch, Vector2 center, int kind, float fade)
 		{
+			if (kind == 2) {
+				DrawSmart(spriteBatch, center, fade);
+				return;
+			}
+
 			float scale = kind == 1 ? 1.7f : 1.15f;
-			Texture2D tex = CursorTex();
+			Texture2D tex = CursorAt(0) ?? CursorTex();
 			Color fill = Main.mouseColor * fade;
 			Color edge = WeNeoBind.BorderColor * fade;
 			if (tex != null && !tex.IsDisposed) {
@@ -98,25 +103,111 @@ namespace DieWithASmile.Engine.Settings
 				WeDraw.Fill(spriteBatch, box, fill);
 				WeDraw.Border(spriteBatch, box, edge);
 			}
-
-			if (kind == 2) {
-				int s = 22;
-				var ring = new Rectangle((int)center.X - s / 2, (int)center.Y - s / 2, s, s);
-				WeDraw.Border(spriteBatch, ring, WeAccent.Light * fade);
-			}
 		}
 
-		private static Texture2D CursorTex()
+		private static void DrawSmart(SpriteBatch spriteBatch, Vector2 center, float fade)
+		{
+			int tile = 12;
+			for (int i = -1; i <= 1; i++) {
+				for (int j = -1; j <= 1; j++) {
+					var cell = new Rectangle(
+						(int)center.X + i * tile - tile / 2,
+						(int)center.Y + j * tile - tile / 2,
+						tile, tile);
+					WeDraw.Border(spriteBatch, cell, Color.White * (0.28f * fade));
+				}
+			}
+
+			Color fill = Main.mouseColor * fade;
+			Color edge = WeNeoBind.BorderColor * fade;
+			Texture2D tex = SmartTex();
+			if (tex != null && !tex.IsDisposed) {
+				float scale = 1.15f;
+				Vector2 origin = tex.Size() * 0.5f;
+				for (int ox = -1; ox <= 1; ox++) {
+					for (int oy = -1; oy <= 1; oy++) {
+						if (ox == 0 && oy == 0)
+							continue;
+						spriteBatch.Draw(tex, center + new Vector2(ox, oy) * scale, null, edge, 0f, origin, scale, SpriteEffects.None, 0f);
+					}
+				}
+
+				spriteBatch.Draw(tex, center, null, fill, 0f, origin, scale, SpriteEffects.None, 0f);
+				return;
+			}
+
+			Texture2D pixel = TextureAssets.MagicPixel.Value;
+			Vector2 diamond = new(18f, 18f);
+			spriteBatch.Draw(pixel, center, null, edge, MathHelper.PiOver4, new Vector2(0.5f, 0.5f), diamond + new Vector2(2f), SpriteEffects.None, 0f);
+			spriteBatch.Draw(pixel, center, null, fill, MathHelper.PiOver4, new Vector2(0.5f, 0.5f), diamond, SpriteEffects.None, 0f);
+		}
+
+		private static Texture2D SmartTex()
+		{
+			int[] prefer = { 2, 15, 16, 13, 11, 12, 1 };
+			foreach (int i in prefer) {
+				Texture2D tex = CursorAt(i);
+				if (LooksSmart(tex))
+					return tex;
+			}
+
+			for (int i = 1; i < 32; i++) {
+				Texture2D tex = CursorAt(i);
+				if (LooksSmart(tex))
+					return tex;
+			}
+
+			int[] extra = { 2, 15, 16, 13 };
+			foreach (int i in extra) {
+				Texture2D tex = ExtraAt(i);
+				if (LooksSmart(tex))
+					return tex;
+			}
+
+			return null;
+		}
+
+		private static bool LooksSmart(Texture2D tex)
+		{
+			if (tex == null || tex.IsDisposed || tex.Width < 8 || tex.Height < 8)
+				return false;
+			return tex.Width >= tex.Height * 0.72f;
+		}
+
+		private static Texture2D CursorAt(int index)
 		{
 			try {
 				object arr = typeof(TextureAssets).GetField("Cursors")?.GetValue(null)
 				             ?? typeof(TextureAssets).GetProperty("Cursors")?.GetValue(null);
-				if (arr is Array list && list.Length > 0) {
-					Texture2D from = AssetTex(list.GetValue(0));
-					if (from != null)
-						return from;
-				}
+				if (arr is Array list && index >= 0 && index < list.Length)
+					return AssetTex(list.GetValue(index));
+			}
+			catch {
+			}
 
+			return null;
+		}
+
+		private static Texture2D ExtraAt(int index)
+		{
+			try {
+				object arr = typeof(TextureAssets).GetField("Extra")?.GetValue(null)
+				             ?? typeof(TextureAssets).GetProperty("Extra")?.GetValue(null);
+				if (arr is Array list && index >= 0 && index < list.Length)
+					return AssetTex(list.GetValue(index));
+			}
+			catch {
+			}
+
+			return null;
+		}
+
+		private static Texture2D CursorTex()
+		{
+			Texture2D from = CursorAt(0);
+			if (from != null)
+				return from;
+			try {
 				object single = typeof(TextureAssets).GetField("Cursor")?.GetValue(null)
 				                ?? typeof(TextureAssets).GetProperty("Cursor")?.GetValue(null);
 				Texture2D tex = AssetTex(single);
