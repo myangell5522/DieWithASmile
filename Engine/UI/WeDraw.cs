@@ -148,6 +148,12 @@ namespace DieWithASmile.Engine.UI
 		internal static void Fill(SpriteBatch spriteBatch, Rectangle rect, Color color) =>
 			spriteBatch.Draw(Pixel, rect, color);
 
+		internal static void Shadow(SpriteBatch spriteBatch, Rectangle rect, float fade)
+		{
+			Fill(spriteBatch, new Rectangle(rect.X + 2, rect.Y + 3, rect.Width, rect.Height), Color.Black * (0.28f * fade));
+			Fill(spriteBatch, new Rectangle(rect.X, rect.Bottom, rect.Width, 2), Color.Black * (0.22f * fade));
+		}
+
 		internal static void DrawCover(SpriteBatch spriteBatch, Texture2D tex, Rectangle dest, Color color)
 		{
 			if (tex == null || dest.Width < 1 || dest.Height < 1)

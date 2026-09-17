@@ -403,7 +403,8 @@ UI: {
 	NeoKeysResetAll: 모두 초기화
 	NeoHubTitle: 창작마당
 	NeoHubHint: 모드, 다운로드, 팩, 월드, 로그를 여기서 다룹니다. 바닐라 화면으로 나가지 않습니다.
-	NeoDevelop: 모드 개발
+	NeoDevelop: 빌드 및 게시
+	NeoDevelopSub: 빌드 · 리로드 · 게시
 	NeoImportWorlds: 월드 가져오기
 	NeoLogs: 로그
 	NeoBack: 뒤로
@@ -448,9 +449,45 @@ UI: {
 	NeoPacksHint: 켜 둔 모드 묶음입니다. 타이틀에서 클릭하면 불러옵니다.
 	NeoPacksFolder: 팩 폴더
 	NeoLoadPack: 불러오기
-	NeoResHint: 리소스 팩입니다. 켠 뒤 적용을 누르세요.
+	NeoResHint: 리소스 팩입니다. 켠 뒤 적용을 누르세요. 줄을 끌어 순서를 바꿉니다.
 	NeoApplyPacks: 팩 적용
-	NeoDevelopHint: ModSources 프로젝트입니다. 클릭하면 폴더가 열립니다.
+	NeoSortAz: A–Z
+	NeoSortNew: 최근
+	NeoSortHot: 인기
+	NeoSortDown: 다운로드
+	NeoExtract: 추출
+	NeoDelete: 삭제
+	NeoConfirm: 확인
+	NeoLoadingMore: 더 불러오는 중…
+	NeoCreateMod: 모드 만들기
+	NeoBuildAll: 모두 빌드
+	NeoBuild: 빌드
+	NeoBuildReload: 빌드 + 리로드
+	NeoPublish: 게시
+	NeoPublishServer: 서버 게시
+	NeoOpenFolder: 폴더
+	NeoOpenCsproj: .csproj
+	NeoPorter: Porter
+	NeoBuilt: 빌드됨
+	NeoBuiltJust: 방금
+	NeoBuiltMins: "{0}분 전"
+	NeoBuiltHours: "{0}시간 전"
+	NeoSectionTml: tModLoader
+	NeoDownloadMods: 서버에서 모드 다운로드
+	NeoAutoReload: 나갈 때 자동 리로드
+	NeoRemoveMinZoom: 최소 줌 제거
+	NeoNotifyThemes: 새 메뉴 테마 알림
+	NeoShowUpdatedMods: 업데이트된 모드 정보
+	NeoConfirmAllMods: 모두 켜기/끄기 확인
+	NeoExperimental: 실험적 기능
+	NeoCloudDefault: 클라우드 저장 기본값
+	NeoSupport4K: 4K 지원
+	NeoSupport8K: 8K 지원
+	NeoThrottle: 비활성 시 스로틀
+	NeoWaterfall: 폭포 한도
+	NeoBossHpText: 보스 체력 텍스트
+	NeoFlashEvents: 이벤트 아이콘 깜빡임
+	NeoDevelopHint: ModSources를 빌드·리로드·게시합니다. Steam 게시는 tModLoader 마법사를 사용합니다.
 	NeoOpenSources: ModSources 열기
 	NeoWorldsHint: .wld 파일을 월드 폴더로 복사합니다.
 	NeoImportWorld: 월드 파일 가져오기

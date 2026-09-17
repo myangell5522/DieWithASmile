@@ -403,7 +403,8 @@ UI: {
 	NeoKeysResetAll: 全部重置
 	NeoHubTitle: 工坊
 	NeoHubHint: 模组、下载、资源包、世界和日志都在这里，不再跳出 Terraria 界面。
-	NeoDevelop: 开发模组
+	NeoDevelop: 构建与发布
+	NeoDevelopSub: 构建 · 重载 · 发布
 	NeoImportWorlds: 导入世界
 	NeoLogs: 日志
 	NeoBack: 返回
@@ -448,9 +449,45 @@ UI: {
 	NeoPacksHint: 已启用模组的打包。点击可在标题画面加载。
 	NeoPacksFolder: 模组包文件夹
 	NeoLoadPack: 加载
-	NeoResHint: 资源包。切换后点应用。
+	NeoResHint: 资源包。切换后点应用。拖动一行可排序。
 	NeoApplyPacks: 应用资源包
-	NeoDevelopHint: ModSources 工程。点击打开文件夹。
+	NeoSortAz: A–Z
+	NeoSortNew: 最近
+	NeoSortHot: 热门
+	NeoSortDown: 下载
+	NeoExtract: 导出
+	NeoDelete: 删除
+	NeoConfirm: 确认
+	NeoLoadingMore: 加载更多…
+	NeoCreateMod: 创建模组
+	NeoBuildAll: 全部构建
+	NeoBuild: 构建
+	NeoBuildReload: 构建并重载
+	NeoPublish: 发布
+	NeoPublishServer: 发布服务器
+	NeoOpenFolder: 文件夹
+	NeoOpenCsproj: .csproj
+	NeoPorter: Porter
+	NeoBuilt: 已构建
+	NeoBuiltJust: 刚刚
+	NeoBuiltMins: "{0} 分钟前"
+	NeoBuiltHours: "{0} 小时前"
+	NeoSectionTml: tModLoader
+	NeoDownloadMods: 从服务器下载模组
+	NeoAutoReload: 离开时自动重载
+	NeoRemoveMinZoom: 取消最小缩放
+	NeoNotifyThemes: 新菜单主题提示
+	NeoShowUpdatedMods: 模组更新信息
+	NeoConfirmAllMods: 确认全部启用/禁用
+	NeoExperimental: 实验性功能
+	NeoCloudDefault: 默认云存档
+	NeoSupport4K: 4K 支持
+	NeoSupport8K: 8K 支持
+	NeoThrottle: 非活动时降速
+	NeoWaterfall: 瀑布上限
+	NeoBossHpText: Boss 血条数字
+	NeoFlashEvents: 事件图标闪烁
+	NeoDevelopHint: 构建、重载并发布 ModSources。Steam 发布走 tModLoader 向导。
 	NeoOpenSources: 打开 ModSources
 	NeoWorldsHint: 把 .wld 复制到世界文件夹。
 	NeoImportWorld: 导入世界

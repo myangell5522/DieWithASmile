@@ -403,7 +403,8 @@ UI: {
 	NeoKeysResetAll: Сбросить всё
 	NeoHubTitle: Мастерская
 	NeoHubHint: Моды, загрузки, паки, миры и логи здесь. Без лишних экранов Terraria.
-	NeoDevelop: Разработка
+	NeoDevelop: Сборка и публикация
+	NeoDevelopSub: Сборка · Reload · Публикация
 	NeoImportWorlds: Импорт миров
 	NeoLogs: Логи
 	NeoBack: Назад
@@ -448,9 +449,45 @@ UI: {
 	NeoPacksHint: Наборы включённых модов. Клик загружает пак в меню.
 	NeoPacksFolder: Папка паков
 	NeoLoadPack: Загрузить
-	NeoResHint: Пакеты ресурсов. Переключи и нажми Применить.
+	NeoResHint: Пакеты ресурсов. Переключи и нажми Применить. Перетащи ряд, чтобы поменять порядок.
 	NeoApplyPacks: Применить паки
-	NeoDevelopHint: Проекты ModSources. Клик открывает папку.
+	NeoSortAz: А–Я
+	NeoSortNew: Недавние
+	NeoSortHot: Популярные
+	NeoSortDown: Загрузки
+	NeoExtract: Извлечь
+	NeoDelete: Удалить
+	NeoConfirm: Да
+	NeoLoadingMore: Ещё…
+	NeoCreateMod: Создать мод
+	NeoBuildAll: Собрать всё
+	NeoBuild: Собрать
+	NeoBuildReload: Собрать + Reload
+	NeoPublish: Опубликовать
+	NeoPublishServer: Сервер
+	NeoOpenFolder: Папка
+	NeoOpenCsproj: .csproj
+	NeoPorter: Porter
+	NeoBuilt: Сборка
+	NeoBuiltJust: только что
+	NeoBuiltMins: "{0} мин назад"
+	NeoBuiltHours: "{0} ч назад"
+	NeoSectionTml: tModLoader
+	NeoDownloadMods: Скачивать моды с серверов
+	NeoAutoReload: Автоперезагрузка при выходе
+	NeoRemoveMinZoom: Убрать мин. зум
+	NeoNotifyThemes: Уведомление о темах меню
+	NeoShowUpdatedMods: Инфо об обновлениях модов
+	NeoConfirmAllMods: Подтверждать вкл/выкл всех
+	NeoExperimental: Экспериментальные функции
+	NeoCloudDefault: Облако по умолчанию
+	NeoSupport4K: Поддержка 4K
+	NeoSupport8K: Поддержка 8K
+	NeoThrottle: Троттлинг в фоне
+	NeoWaterfall: Лимит водопадов
+	NeoBossHpText: HP на полоске босса
+	NeoFlashEvents: Иконка событий
+	NeoDevelopHint: Сборка, reload и публикация ModSources. Публикация идёт через мастер tModLoader.
 	NeoOpenSources: Открыть ModSources
 	NeoWorldsHint: Скопировать .wld в папку миров.
 	NeoImportWorld: Импорт мира

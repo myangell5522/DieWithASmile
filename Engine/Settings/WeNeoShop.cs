@@ -44,9 +44,13 @@ namespace DieWithASmile.Engine.Settings
 		private static int _clickTick;
 		private static int _packDrag = -1;
 		private static int _filter;
+		private static int _modSort;
+		private static string _pendingDelete;
 
 		internal static void Draw(SpriteBatch spriteBatch, Rectangle view, ref int y, float fade)
 		{
+			if (WeNeoMenu.Page != WeNeoPage.Resources && _packDrag >= 0)
+				_packDrag = -1;
 			int origin = y + (int)WeNeoMenu.Scroll;
 			int cy = origin;
 			if (WeNeoMenu.Page != WeNeoPage.Hub)
@@ -69,6 +73,7 @@ namespace DieWithASmile.Engine.Settings
 					case WeNeoPage.Resources:
 						DrawResourcesChrome(spriteBatch, view, ref cy, fade);
 						y = DrawClippedList(spriteBatch, view, origin, cy, fade, DrawResourcesList);
+						DrawPackGhost(spriteBatch, view, fade);
 						break;
 					case WeNeoPage.Develop:
 						DrawDevelopChrome(spriteBatch, view, ref cy, fade);
@@ -271,7 +276,7 @@ namespace DieWithASmile.Engine.Settings
 					case WeNeoPage.ModPacks:
 						return WeTml.ModPackItems().Count.ToString();
 					case WeNeoPage.Develop:
-						return WeTml.DevItems().Count.ToString();
+						return WeText.UI("NeoDevelopSub");
 					case WeNeoPage.Browser: {
 						if (WeWorkshop.Busy && WeWorkshop.Items(WeNeoMenu.Search).Count == 0)
 							return "…";
@@ -301,10 +306,13 @@ namespace DieWithASmile.Engine.Settings
 			bar.Tools[4] = new Rectangle(view.X + 4, y, hw - 4, 30);
 			bar.Tools[5] = new Rectangle(view.X + view.Width / 2 + 4, y, hw - 4, 30);
 			y += 38;
-			int chip = Math.Max(60, Math.Min(88, (view.Width - 170) / 4));
+			int chip = Math.Max(56, Math.Min(80, (view.Width - 220) / 4));
 			bar.Filters = new Rectangle[4];
 			for (int i = 0; i < 4; i++)
 				bar.Filters[i] = new Rectangle(view.X + 4 + i * (chip + 4), y, chip, 26);
+			int sortW = 72;
+			bar.SortAz = new Rectangle(view.Right - 12 - sortW * 2 - 4, y, sortW, 26);
+			bar.SortNew = new Rectangle(view.Right - 12 - sortW, y, sortW, 26);
 			y += 34;
 			if (!string.IsNullOrEmpty(_info)) {
 				bar.Info = new Rectangle(view.X + 4, y, view.Width - 8, 72);
@@ -337,19 +345,8 @@ namespace DieWithASmile.Engine.Settings
 			string[] filters = { "NeoFilterAll", "NeoFilterOn", "NeoFilterOff", "NeoFilterClient" };
 			for (int i = 0; i < 4; i++)
 				DrawChip(spriteBatch, bar.Filters[i], WeText.UI(filters[i]), _filter == i, fade);
-
-			List<WeLocalMod> all = WeTml.LocalMods();
-			int on = 0;
-			for (int i = 0; i < all.Count; i++) {
-				if (all[i].Enabled)
-					on++;
-			}
-
-			string count = string.Format(WeText.UI("NeoEnabledCount"), on, all.Count);
-			Vector2 cs = FontAssets.MouseText.Value.MeasureString(count) * WeNeoShell.TypeSmall;
-			ChatManager.DrawColorCodedStringWithShadow(
-				spriteBatch, FontAssets.MouseText.Value, count,
-				new Vector2(view.Right - 22 - cs.X, bar.Filters[0].Y + 4), Color.White * (0.6f * fade), 0f, Vector2.Zero, new Vector2(WeNeoShell.TypeSmall));
+			DrawChip(spriteBatch, bar.SortAz, WeText.UI("NeoSortAz"), _modSort == 0, fade);
+			DrawChip(spriteBatch, bar.SortNew, WeText.UI("NeoSortNew"), _modSort == 1, fade);
 
 			if (bar.Info.Width > 0) {
 				WeDraw.Fill(spriteBatch, bar.Info, new Color(18, 20, 26) * fade);
@@ -425,6 +422,18 @@ namespace DieWithASmile.Engine.Settings
 					return;
 				}
 
+				if (bar.SortAz.Contains(Main.mouseX, Main.mouseY)) {
+					_modSort = 0;
+					Tick();
+					return;
+				}
+
+				if (bar.SortNew.Contains(Main.mouseX, Main.mouseY)) {
+					_modSort = 1;
+					Tick();
+					return;
+				}
+
 				return;
 			}
 
@@ -435,8 +444,8 @@ namespace DieWithASmile.Engine.Settings
 				return;
 			}
 
-			foreach (WeLocalMod mod in shown) {
-				ModCard card = NextModCard(view, ref ly);
+				foreach (WeLocalMod mod in shown) {
+				ModCard card = NextModCard(view, ref ly, mod);
 				if (!left || !card.Hit.Contains(Main.mouseX, Main.mouseY))
 					continue;
 				if (card.Pill.Contains(Main.mouseX, Main.mouseY)) {
@@ -445,7 +454,24 @@ namespace DieWithASmile.Engine.Settings
 				}
 
 				if (card.Gear.Contains(Main.mouseX, Main.mouseY)) {
-					WeFiles.OpenFolder(WeTml.ConfigsFolder());
+					if (mod.HasConfig)
+						WeNeoBuild.OpenConfig(mod);
+					Tick();
+					return;
+				}
+
+				if (card.Extract.Contains(Main.mouseX, Main.mouseY)) {
+					WeNeoBuild.Extract(mod);
+					return;
+				}
+
+				if (card.Del.Contains(Main.mouseX, Main.mouseY)) {
+					if (_pendingDelete == mod.Name) {
+						WeNeoBuild.Delete(mod);
+						_pendingDelete = null;
+					}
+					else
+						_pendingDelete = mod.Name;
 					Tick();
 					return;
 				}
@@ -502,29 +528,35 @@ namespace DieWithASmile.Engine.Settings
 				list.Add(mod);
 			}
 
-			list.Sort((a, b) => string.Compare(a.Display, b.Display, StringComparison.OrdinalIgnoreCase));
+			list.Sort((a, b) => _modSort == 1
+				? FileTime(b).CompareTo(FileTime(a))
+				: string.Compare(a.Display, b.Display, StringComparison.OrdinalIgnoreCase));
 			return list;
+		}
+
+		private static DateTime FileTime(WeLocalMod mod)
+		{
+			try {
+				if (!string.IsNullOrEmpty(mod.Path) && File.Exists(mod.Path))
+					return File.GetLastWriteTimeUtc(mod.Path);
+			}
+			catch {
+			}
+
+			return DateTime.MinValue;
 		}
 
 		private static void DrawModCard(SpriteBatch spriteBatch, Rectangle view, ref int y, WeLocalMod mod, float fade)
 		{
-			ModCard card = NextModCard(view, ref y);
+			WeTml.EnsureArt(mod);
+			ModCard card = NextModCard(view, ref y, mod);
 			bool hover = card.Hit.Contains(Main.mouseX, Main.mouseY) || _selected == mod.Name;
 			Color edge = mod.Edge.A == 0 ? WeAccent.Mid : mod.Edge;
 			Texture2D gif = PlayGif(mod);
-			WeDraw.Fill(spriteBatch, card.Hit, (hover ? WeAccent.Deep : new Color(22, 24, 30)) * fade);
-			if (gif != null)
-				WeDraw.DrawCover(spriteBatch, gif, card.Hit, Color.White * (0.22f * fade));
-			else
-				Shimmer(spriteBatch, card.Hit, edge, fade);
-			WeDraw.Fill(spriteBatch, card.Hit, new Color(12, 14, 18) * (0.35f * fade));
-			if (hover)
-				WeDraw.Fill(spriteBatch, new Rectangle(card.Hit.X, card.Hit.Y, 4, card.Hit.Height), edge * fade);
-			WeDraw.Border(spriteBatch, card.Hit, (hover ? edge : edge * 0.7f) * fade);
-			WeDraw.Fill(spriteBatch, new Rectangle(card.Hit.X, card.Hit.Y, 3, card.Hit.Height), edge * fade);
-
+			DrawCardShell(spriteBatch, card.Hit, edge, hover, fade, gif);
 			var icon = new Rectangle(card.Hit.X + 8, card.Hit.Y + 8, IconPx, IconPx);
 			DrawModIcon(spriteBatch, icon, mod, fade);
+			DrawIconFrame(spriteBatch, icon, fade);
 
 			ChatManager.DrawColorCodedStringWithShadow(
 				spriteBatch, FontAssets.MouseText.Value, Trim(mod.Display, 34),
@@ -535,12 +567,35 @@ namespace DieWithASmile.Engine.Settings
 				new Vector2(card.Hit.X + 80, card.Hit.Y + 30), Color.White * (0.55f * fade), 0f, Vector2.Zero, new Vector2(WeNeoShell.TypeSmall));
 
 			DrawBtn(spriteBatch, card.Ask, "?", fade);
-			DrawIconBtn(spriteBatch, card.Gear, WeIcons.Get(WeIcons.Setting), fade);
+			if (mod.HasConfig)
+				DrawIconBtn(spriteBatch, card.Gear, WeIcons.Get(WeIcons.Setting), fade);
 			DrawPill(spriteBatch, card.Pill, WeText.UI(mod.Enabled ? "NeoOn" : "NeoOff"), mod.Enabled, fade);
+			DrawIconBtn(spriteBatch, card.Extract, WeIcons.Get(WeIcons.Upload), fade);
+			DrawIconBtn(spriteBatch, card.Del, WeIcons.Get(WeIcons.Trash), fade, _pendingDelete == mod.Name);
 			if (mod.HasConfig)
 				ChatManager.DrawColorCodedStringWithShadow(
 					spriteBatch, FontAssets.MouseText.Value, WeText.UI("NeoConfigMark"),
 					new Vector2(card.Hit.X + 80, card.Hit.Y + 52), WeAccent.Light * (0.8f * fade), 0f, Vector2.Zero, new Vector2(0.58f));
+		}
+
+		private static void DrawCardShell(SpriteBatch spriteBatch, Rectangle hit, Color edge, bool hover, float fade, Texture2D gif)
+		{
+			WeDraw.Shadow(spriteBatch, hit, fade);
+			Color fill = hover ? Color.Lerp(new Color(22, 24, 30), WeAccent.Deep, 0.55f) : new Color(22, 24, 30);
+			WeDraw.Fill(spriteBatch, hit, fill * fade);
+			if (gif != null)
+				WeDraw.DrawCover(spriteBatch, gif, hit, Color.White * (0.35f * fade));
+			else
+				Shimmer(spriteBatch, hit, edge, fade);
+			WeDraw.Fill(spriteBatch, hit, new Color(12, 14, 18) * (0.28f * fade));
+			if (hover)
+				WeDraw.Fill(spriteBatch, new Rectangle(hit.X, hit.Y, 3, hit.Height), edge * fade);
+			WeDraw.Border(spriteBatch, hit, (hover ? edge : edge * 0.65f) * fade);
+		}
+
+		private static void DrawIconFrame(SpriteBatch spriteBatch, Rectangle dest, float fade)
+		{
+			WeDraw.Border(spriteBatch, dest, Color.White * (0.16f * fade));
 		}
 
 		private static void Shimmer(SpriteBatch spriteBatch, Rectangle hit, Color edge, float fade)
@@ -549,32 +604,38 @@ namespace DieWithASmile.Engine.Settings
 			WeDraw.Fill(spriteBatch, new Rectangle(hit.X, hit.Y, hit.Width, hit.Height), edge * (0.08f * wave * fade));
 		}
 
-		private static Texture2D PlayGif(WeLocalMod mod)
+		private static Texture2D PlayGif(WeLocalMod mod) => PlayClip(mod?.Gif);
+
+		private static Texture2D PlayClip(WeClip clip)
 		{
-			if (mod.Gif == null)
+			if (clip == null)
 				return null;
 			bool prev = WeAnim.CanUpload;
 			WeAnim.CanUpload = true;
 			try {
-				mod.Gif.Present();
+				clip.Present();
 			}
 			finally {
 				WeAnim.CanUpload = prev;
 			}
 
-			Texture2D cur = mod.Gif.Current();
+			Texture2D cur = clip.Current();
 			return cur != null && !cur.IsDisposed ? cur : null;
 		}
 
-		private static ModCard NextModCard(Rectangle view, ref int y)
+		private static ModCard NextModCard(Rectangle view, ref int y, WeLocalMod mod)
 		{
 			var hit = new Rectangle(view.X + 4, y, view.Width - 8, CardH);
 			int right = hit.Right - 10;
-			var pill = new Rectangle(right - 58, hit.Y + 28, 58, 24);
-			var ask = new Rectangle(pill.X - 30, hit.Y + 28, 24, 24);
-			var gear = new Rectangle(ask.X - 30, hit.Y + 28, 24, 24);
-			y += CardH + 6;
-			return new ModCard { Hit = hit, Pill = pill, Ask = ask, Gear = gear };
+			var pill = new Rectangle(right - 58, hit.Y + 8, 58, 24);
+			var ask = new Rectangle(pill.X - 30, hit.Y + 8, 24, 24);
+			var gear = mod != null && mod.HasConfig
+				? new Rectangle(ask.X - 30, hit.Y + 8, 24, 24)
+				: Rectangle.Empty;
+			var del = new Rectangle(right - 26, hit.Y + 48, 24, 24);
+			var extract = new Rectangle(del.X - 28, hit.Y + 48, 24, 24);
+			y += CardH + 8;
+			return new ModCard { Hit = hit, Pill = pill, Ask = ask, Gear = gear, Extract = extract, Del = del };
 		}
 
 		private static void DrawModIcon(SpriteBatch spriteBatch, Rectangle dest, WeLocalMod mod, float fade)
@@ -582,13 +643,15 @@ namespace DieWithASmile.Engine.Settings
 			if (mod.Name == "DieWithASmile" && WeModListLook.DrawIcon(spriteBatch, dest, fade))
 				return;
 
-			Texture2D tex = mod.Icon != null && !mod.Icon.IsDisposed ? mod.Icon : PlayGif(mod);
+			Texture2D gif = PlayGif(mod);
+			Texture2D tex = gif ?? (mod.Icon != null && !mod.Icon.IsDisposed ? mod.Icon : null);
 			if (tex != null) {
 				WeDraw.DrawCover(spriteBatch, tex, dest, Color.White * fade);
 				return;
 			}
 
-			WeDraw.Fill(spriteBatch, dest, new Color(40, 44, 52) * fade);
+			WeDraw.Fill(spriteBatch, dest, new Color(16, 18, 24) * fade);
+			Shimmer(spriteBatch, dest, mod.Edge.A == 0 ? WeAccent.Mid : mod.Edge, fade);
 		}
 
 		private static string JoinMeta(WeLocalMod mod)
@@ -628,6 +691,13 @@ namespace DieWithASmile.Engine.Settings
 			y += 22;
 			DrawBtn(spriteBatch, new Rectangle(view.X + 4, y, view.Width - 8, 32), WeText.UI("NeoOpenSteam"), fade);
 			y += 40;
+			int cw = Math.Max(70, (view.Width - 24) / 3);
+			DrawChip(spriteBatch, new Rectangle(view.X + 4, y, cw, 26), WeText.UI("NeoSortHot"), WeWorkshop.Sort == 0, fade);
+			DrawChip(spriteBatch, new Rectangle(view.X + 8 + cw, y, cw, 26), WeText.UI("NeoSortNew"), WeWorkshop.Sort == 1, fade);
+			DrawChip(spriteBatch, new Rectangle(view.X + 12 + cw * 2, y, cw, 26), WeText.UI("NeoSortDown"), WeWorkshop.Sort == 2, fade);
+			y += 34;
+			if (WeNeoMenu.NearListEnd())
+				WeWorkshop.WantMore();
 		}
 
 		private static void DrawBrowserList(SpriteBatch spriteBatch, Rectangle view, ref int y, float fade)
@@ -645,26 +715,37 @@ namespace DieWithASmile.Engine.Settings
 					continue;
 				ShopCard card = NextShopCard(view, ref y, item);
 				bool hover = card.Hit.Contains(Main.mouseX, Main.mouseY);
-				WeDraw.Fill(spriteBatch, card.Hit, (hover ? WeAccent.Deep : new Color(22, 24, 30)) * fade);
-				WeDraw.Border(spriteBatch, card.Hit, (hover ? WeAccent.Light : WeAccent.Mid) * fade);
-				WeDraw.Fill(spriteBatch, new Rectangle(card.Hit.X + 8, card.Hit.Y + 10, 36, 36), new Color(40, 44, 52) * fade);
+				DrawCardShell(spriteBatch, card.Hit, hover ? WeAccent.Light : WeAccent.Mid, hover, fade, PlayClip(item.Gif));
+				var icon = new Rectangle(card.Hit.X + 8, card.Hit.Y + 8, 64, 64);
+				Texture2D art = PlayClip(item.Gif) ?? (item.Icon != null && !item.Icon.IsDisposed ? item.Icon : null);
+				if (art != null)
+					WeDraw.DrawCover(spriteBatch, art, icon, Color.White * fade);
+				else {
+					WeDraw.Fill(spriteBatch, icon, new Color(16, 18, 24) * fade);
+					Shimmer(spriteBatch, icon, WeAccent.Mid, fade);
+				}
+
+				DrawIconFrame(spriteBatch, icon, fade);
 				ChatManager.DrawColorCodedStringWithShadow(
 					spriteBatch, FontAssets.MouseText.Value, Trim(item.Name, 26),
-					new Vector2(card.Hit.X + 52, card.Hit.Y + 8), Color.White * fade, 0f, Vector2.Zero, new Vector2(0.78f));
+					new Vector2(card.Hit.X + 80, card.Hit.Y + 10), Color.White * fade, 0f, Vector2.Zero, new Vector2(0.78f));
 				string meta = item.Pending && !item.Installed
 					? WeText.UI("NeoWorkshopPending")
 					: (string.IsNullOrEmpty(item.Meta) ? item.Id : item.Meta);
 				ChatManager.DrawColorCodedStringWithShadow(
 					spriteBatch, FontAssets.MouseText.Value, Trim(meta, 42),
-					new Vector2(card.Hit.X + 52, card.Hit.Y + 30), Color.White * (0.55f * fade), 0f, Vector2.Zero, new Vector2(WeNeoShell.TypeSmall));
+					new Vector2(card.Hit.X + 80, card.Hit.Y + 32), Color.White * (0.55f * fade), 0f, Vector2.Zero, new Vector2(WeNeoShell.TypeSmall));
 				if (item.Installed)
 					ChatManager.DrawColorCodedStringWithShadow(
 						spriteBatch, FontAssets.MouseText.Value, WeText.UI("NeoInstalled"),
-						new Vector2(card.Hit.X + 52, card.Hit.Y + 46), WeAccent.Light * fade, 0f, Vector2.Zero, new Vector2(0.58f));
+						new Vector2(card.Hit.X + 80, card.Hit.Y + 50), WeAccent.Light * fade, 0f, Vector2.Zero, new Vector2(0.58f));
 				if (!item.Installed)
 					DrawBtn(spriteBatch, card.Sub, WeText.UI(item.Subscribed ? "NeoSubscribed" : "NeoSubscribe"), fade);
 				DrawBtn(spriteBatch, card.Page, WeText.UI("NeoOpenPage"), fade);
 			}
+
+			if (WeWorkshop.Busy || WeWorkshop.HasMore)
+				DrawEmpty(spriteBatch, view, ref y, WeText.UI("NeoLoadingMore"), fade);
 		}
 
 		private static void ClickBrowser(Rectangle view, ref int y, bool left)
@@ -672,8 +753,31 @@ namespace DieWithASmile.Engine.Settings
 			y += 22;
 			var steam = new Rectangle(view.X + 4, y, view.Width - 8, 32);
 			y += 40;
+			int cw = Math.Max(70, (view.Width - 24) / 3);
+			var hot = new Rectangle(view.X + 4, y, cw, 26);
+			var recent = new Rectangle(view.X + 8 + cw, y, cw, 26);
+			var down = new Rectangle(view.X + 12 + cw * 2, y, cw, 26);
+			y += 34;
 			if (left && steam.Contains(Main.mouseX, Main.mouseY)) {
 				WeTml.OpenSteamWorkshop();
+				Tick();
+				return;
+			}
+
+			if (left && hot.Contains(Main.mouseX, Main.mouseY)) {
+				WeWorkshop.Sort = 0;
+				Tick();
+				return;
+			}
+
+			if (left && recent.Contains(Main.mouseX, Main.mouseY)) {
+				WeWorkshop.Sort = 1;
+				Tick();
+				return;
+			}
+
+			if (left && down.Contains(Main.mouseX, Main.mouseY)) {
+				WeWorkshop.Sort = 2;
 				Tick();
 				return;
 			}
@@ -709,11 +813,11 @@ namespace DieWithASmile.Engine.Settings
 
 		private static ShopCard NextShopCard(Rectangle view, ref int y, WeWorkshopItem item)
 		{
-			var hit = new Rectangle(view.X + 4, y, view.Width - 8, 64);
+			var hit = new Rectangle(view.X + 4, y, view.Width - 8, 80);
 			int right = hit.Right - 10;
-			var page = new Rectangle(right - 108, hit.Y + 18, 108, 28);
-			var sub = item.Installed ? Rectangle.Empty : new Rectangle(page.X - 112, hit.Y + 18, 104, 28);
-			y += 70;
+			var page = new Rectangle(right - 108, hit.Y + 26, 108, 28);
+			var sub = item.Installed ? Rectangle.Empty : new Rectangle(page.X - 112, hit.Y + 26, 104, 28);
+			y += 86;
 			return new ShopCard { Hit = hit, Page = page, Sub = sub };
 		}
 
@@ -823,31 +927,56 @@ namespace DieWithASmile.Engine.Settings
 				return;
 			}
 
+			int shown = 0;
 			for (int i = 0; i < packs.Count; i++) {
 				WeResPack pack = packs[i];
 				if (!WeNeoShell.Matches(WeNeoMenu.Search, pack.Name))
 					continue;
 				ResCard card = NextResCard(view, ref y);
+				bool hole = _packDrag >= 0 && shown == _packDrag;
 				bool hover = card.Hit.Contains(Main.mouseX, Main.mouseY);
 				Color edge = pack.Edge.A == 0 ? WeAccent.Mid : pack.Edge;
-				WeDraw.Fill(spriteBatch, card.Hit, (hover ? WeAccent.Deep : new Color(22, 24, 30)) * fade);
-				WeDraw.Border(spriteBatch, card.Hit, (hover ? edge : edge * 0.7f) * fade);
-				WeDraw.Fill(spriteBatch, new Rectangle(card.Hit.X, card.Hit.Y, 3, card.Hit.Height), edge * fade);
-				var icon = new Rectangle(card.Hit.X + 8, card.Hit.Y + 8, 48, 48);
-				if (pack.Icon != null && !pack.Icon.IsDisposed)
-					WeDraw.DrawCover(spriteBatch, pack.Icon, icon, Color.White * fade);
-				else
-					WeDraw.Fill(spriteBatch, icon, new Color(40, 44, 52) * fade);
-				ChatManager.DrawColorCodedStringWithShadow(
-					spriteBatch, FontAssets.MouseText.Value, Trim(pack.Name, 30),
-					new Vector2(card.Hit.X + 66, card.Hit.Y + 10), Color.White * fade, 0f, Vector2.Zero, new Vector2(0.78f));
-				ChatManager.DrawColorCodedStringWithShadow(
-					spriteBatch, FontAssets.MouseText.Value, WeText.UI("NeoActive"),
-					new Vector2(card.Hit.X + 66, card.Hit.Y + 34), (pack.Enabled ? WeAccent.Light : Color.White * 0.4f) * fade,
-					0f, Vector2.Zero, new Vector2(WeNeoShell.TypeSmall));
-				DrawBtn(spriteBatch, card.Up, WeText.UI("NeoMoveUp"), fade);
-				DrawBtn(spriteBatch, card.Down, WeText.UI("NeoMoveDown"), fade);
-				DrawPill(spriteBatch, card.Pill, WeText.UI(pack.Enabled ? "NeoOn" : "NeoOff"), pack.Enabled, fade);
+				if (hole) {
+					WeDraw.Fill(spriteBatch, card.Hit, WeAccent.Mid * (0.12f * fade));
+					WeDraw.Border(spriteBatch, card.Hit, WeAccent.Light * (0.35f * fade));
+					WeDraw.Fill(spriteBatch, new Rectangle(card.Hit.X + 8, card.Hit.Y + card.Hit.Height / 2 - 1, card.Hit.Width - 16, 2), WeAccent.Light * (0.7f * fade));
+				}
+				else {
+					DrawCardShell(spriteBatch, card.Hit, edge, hover, fade, null);
+					if (hover && _packDrag < 0) {
+						for (int r = 0; r < 3; r++) {
+							for (int c = 0; c < 2; c++)
+								WeDraw.Fill(spriteBatch, new Rectangle(card.Hit.X + 3 + c * 3, card.Hit.Y + 22 + r * 7, 2, 2),
+									Color.White * (0.4f * fade));
+						}
+					}
+					var icon = new Rectangle(card.Hit.X + 8, card.Hit.Y + 8, 48, 48);
+					if (pack.Icon != null && !pack.Icon.IsDisposed)
+						WeDraw.DrawCover(spriteBatch, pack.Icon, icon, Color.White * fade);
+					else {
+						WeDraw.Fill(spriteBatch, icon, new Color(16, 18, 24) * fade);
+						Shimmer(spriteBatch, icon, edge, fade);
+					}
+
+					DrawIconFrame(spriteBatch, icon, fade);
+					ChatManager.DrawColorCodedStringWithShadow(
+						spriteBatch, FontAssets.MouseText.Value, Trim(pack.Name, 30),
+						new Vector2(card.Hit.X + 66, card.Hit.Y + 10), Color.White * fade, 0f, Vector2.Zero, new Vector2(0.78f));
+					ChatManager.DrawColorCodedStringWithShadow(
+						spriteBatch, FontAssets.MouseText.Value, WeText.UI("NeoActive"),
+						new Vector2(card.Hit.X + 66, card.Hit.Y + 34), (pack.Enabled ? WeAccent.Light : Color.White * 0.4f) * fade,
+						0f, Vector2.Zero, new Vector2(WeNeoShell.TypeSmall));
+					DrawBtn(spriteBatch, card.Up, WeText.UI("NeoMoveUp"), fade);
+					DrawBtn(spriteBatch, card.Down, WeText.UI("NeoMoveDown"), fade);
+					DrawPill(spriteBatch, card.Pill, WeText.UI(pack.Enabled ? "NeoOn" : "NeoOff"), pack.Enabled, fade);
+				}
+
+				if (_packDrag >= 0 && hover && shown != _packDrag) {
+					int barY = Main.mouseY < card.Hit.Center.Y ? card.Hit.Y : card.Hit.Bottom - 2;
+					WeDraw.Fill(spriteBatch, new Rectangle(card.Hit.X, barY, card.Hit.Width, 2), WeAccent.Hover * fade);
+				}
+
+				shown++;
 			}
 		}
 
@@ -876,6 +1005,9 @@ namespace DieWithASmile.Engine.Settings
 				ly += 22;
 				return;
 			}
+
+			if (_packDrag >= 0)
+				return;
 
 			int shown = 0;
 			for (int i = 0; i < packs.Count; i++) {
@@ -906,6 +1038,8 @@ namespace DieWithASmile.Engine.Settings
 				shown++;
 			}
 		}
+
+		internal static void EndPackDrag() => _packDrag = -1;
 
 		internal static bool TryBeginPackDrag()
 		{
@@ -948,6 +1082,48 @@ namespace DieWithASmile.Engine.Settings
 			return -1;
 		}
 
+		private static void DrawPackGhost(SpriteBatch spriteBatch, Rectangle view, float fade)
+		{
+			if (_packDrag < 0)
+				return;
+			WeResPack pack = PackAtShown(_packDrag);
+			if (pack == null)
+				return;
+			int w = Math.Max(180, view.Width - 24);
+			var hit = new Rectangle(Main.mouseX - 20, Main.mouseY - 18, w, 64);
+			float ghost = 0.55f * fade;
+			WeDraw.Shadow(spriteBatch, hit, ghost);
+			WeDraw.Fill(spriteBatch, hit, new Color(22, 24, 30) * ghost);
+			WeDraw.Border(spriteBatch, hit, WeAccent.Light * ghost);
+			var icon = new Rectangle(hit.X + 8, hit.Y + 8, 48, 48);
+			if (pack.Icon != null && !pack.Icon.IsDisposed)
+				WeDraw.DrawCover(spriteBatch, pack.Icon, icon, Color.White * ghost);
+			else
+				WeDraw.Fill(spriteBatch, icon, new Color(16, 18, 24) * ghost);
+			DrawIconFrame(spriteBatch, icon, ghost);
+			ChatManager.DrawColorCodedStringWithShadow(
+				spriteBatch, FontAssets.MouseText.Value, Trim(pack.Name, 28),
+				new Vector2(hit.X + 66, hit.Y + 12), Color.White * ghost, 0f, Vector2.Zero, new Vector2(0.78f));
+			ChatManager.DrawColorCodedStringWithShadow(
+				spriteBatch, FontAssets.MouseText.Value, WeText.UI(pack.Enabled ? "NeoOn" : "NeoOff"),
+				new Vector2(hit.X + 66, hit.Y + 36), WeAccent.Light * ghost, 0f, Vector2.Zero, new Vector2(WeNeoShell.TypeSmall));
+		}
+
+		private static WeResPack PackAtShown(int shown)
+		{
+			List<WeResPack> packs = WeTml.ResourcePacks();
+			int n = 0;
+			for (int i = 0; i < packs.Count; i++) {
+				if (!WeNeoShell.Matches(WeNeoMenu.Search, packs[i].Name))
+					continue;
+				if (n == shown)
+					return packs[i];
+				n++;
+			}
+
+			return null;
+		}
+
 		private static ResCard NextResCard(Rectangle view, ref int y)
 		{
 			var hit = new Rectangle(view.X + 4, y, view.Width - 8, 64);
@@ -965,6 +1141,10 @@ namespace DieWithASmile.Engine.Settings
 				spriteBatch, FontAssets.MouseText.Value, WeText.UI("NeoDevelopHint"),
 				new Vector2(view.X + 8, y), Color.White * (0.55f * fade), 0f, Vector2.Zero, new Vector2(WeNeoShell.TypeSmall));
 			y += 22;
+			int hw = (view.Width - 16) / 2;
+			DrawBtn(spriteBatch, new Rectangle(view.X + 4, y, hw - 4, 32), WeText.UI("NeoCreateMod"), fade);
+			DrawBtn(spriteBatch, new Rectangle(view.X + view.Width / 2 + 4, y, hw - 4, 32), WeText.UI("NeoBuildAll"), fade);
+			y += 38;
 			DrawBtn(spriteBatch, new Rectangle(view.X + 4, y, view.Width - 8, 32), WeText.UI("NeoOpenSources"), fade);
 			y += 40;
 		}
@@ -980,26 +1160,59 @@ namespace DieWithASmile.Engine.Settings
 			foreach (WeDevItem item in items) {
 				if (!WeNeoShell.Matches(WeNeoMenu.Search, item.Display, item.Name))
 					continue;
-				var hit = new Rectangle(view.X + 4, y, view.Width - 8, 56);
-				bool hover = hit.Contains(Main.mouseX, Main.mouseY);
-				WeDraw.Fill(spriteBatch, hit, (hover ? WeAccent.Deep : new Color(22, 24, 30)) * fade);
-				WeDraw.Border(spriteBatch, hit, (hover ? WeAccent.Light : WeAccent.Mid) * fade);
+				DevCard card = NextDevCard(view, ref y);
+				bool hover = card.Hit.Contains(Main.mouseX, Main.mouseY);
+				DrawCardShell(spriteBatch, card.Hit, hover ? WeAccent.Light : WeAccent.Mid, hover, fade, null);
 				ChatManager.DrawColorCodedStringWithShadow(
-					spriteBatch, FontAssets.MouseText.Value, Trim(item.Display, 36),
-					new Vector2(hit.X + 12, hit.Y + 8), Color.White * fade, 0f, Vector2.Zero, new Vector2(0.78f));
-				string sub = item.Name + (item.Csproj ? "  ·  " + WeText.UI("NeoHasCsproj") : "");
+					spriteBatch, FontAssets.MouseText.Value, Trim(item.Display, 32),
+					new Vector2(card.Hit.X + 12, card.Hit.Y + 8), Color.White * fade, 0f, Vector2.Zero, new Vector2(0.8f));
+				if (item.HasTmod && item.Built.Year > 2000) {
+					string ago = BuiltAgo(item.Built);
+					Color age = BuiltColor(item.Built);
+					Vector2 size = FontAssets.MouseText.Value.MeasureString(ago) * WeNeoShell.TypeSmall;
+					ChatManager.DrawColorCodedStringWithShadow(
+						spriteBatch, FontAssets.MouseText.Value, ago,
+						new Vector2(card.Hit.Right - 14 - size.X, card.Hit.Y + 10), age * fade, 0f, Vector2.Zero, new Vector2(WeNeoShell.TypeSmall));
+				}
+
+				string sub = item.Name + (item.Csproj ? "  ·  " + WeText.UI("NeoHasCsproj") : "") +
+				             (item.HasTmod ? "  ·  " + WeText.UI("NeoBuilt") : "");
 				ChatManager.DrawColorCodedStringWithShadow(
-					spriteBatch, FontAssets.MouseText.Value, Trim(sub, 48),
-					new Vector2(hit.X + 12, hit.Y + 30), Color.White * (0.55f * fade), 0f, Vector2.Zero, new Vector2(WeNeoShell.TypeSmall));
-				y += 62;
+					spriteBatch, FontAssets.MouseText.Value, Trim(sub, 52),
+					new Vector2(card.Hit.X + 12, card.Hit.Y + 30), Color.White * (0.55f * fade), 0f, Vector2.Zero, new Vector2(WeNeoShell.TypeSmall));
+				DrawBtn(spriteBatch, card.Build, WeText.UI("NeoBuild"), fade);
+				DrawBtn(spriteBatch, card.Reload, WeText.UI("NeoBuildReload"), fade);
+				if (item.HasTmod)
+					DrawBtn(spriteBatch, card.Publish, WeText.UI(item.Server ? "NeoPublishServer" : "NeoPublish"), fade);
+				DrawBtn(spriteBatch, card.Folder, WeText.UI("NeoOpenFolder"), fade);
+				if (item.Csproj)
+					DrawBtn(spriteBatch, card.Csproj, WeText.UI("NeoOpenCsproj"), fade);
+				if (item.Csproj)
+					DrawBtn(spriteBatch, card.Porter, WeText.UI("NeoPorter"), fade);
 			}
 		}
 
 		private static void ClickDevelop(Rectangle view, ref int y, bool left)
 		{
 			y += 22;
+			int hw = (view.Width - 16) / 2;
+			var create = new Rectangle(view.X + 4, y, hw - 4, 32);
+			var all = new Rectangle(view.X + view.Width / 2 + 4, y, hw - 4, 32);
+			y += 38;
 			var open = new Rectangle(view.X + 4, y, view.Width - 8, 32);
 			y += 40;
+			if (left && create.Contains(Main.mouseX, Main.mouseY)) {
+				WeNeoBuild.CreateMod();
+				Tick();
+				return;
+			}
+
+			if (left && all.Contains(Main.mouseX, Main.mouseY)) {
+				WeNeoBuild.BuildAll();
+				Tick();
+				return;
+			}
+
 			if (left && open.Contains(Main.mouseX, Main.mouseY)) {
 				WeFiles.OpenFolder(WeTml.SourcesFolder());
 				Tick();
@@ -1016,14 +1229,97 @@ namespace DieWithASmile.Engine.Settings
 			foreach (WeDevItem item in items) {
 				if (!WeNeoShell.Matches(WeNeoMenu.Search, item.Display, item.Name))
 					continue;
-				var hit = new Rectangle(view.X + 4, ly, view.Width - 8, 56);
-				ly += 62;
-				if (left && hit.Contains(Main.mouseX, Main.mouseY)) {
+				DevCard card = NextDevCard(view, ref ly);
+				if (!left || !card.Hit.Contains(Main.mouseX, Main.mouseY))
+					continue;
+				if (card.Build.Contains(Main.mouseX, Main.mouseY)) {
+					WeNeoBuild.Build(item.Folder, false);
+					return;
+				}
+
+				if (card.Reload.Contains(Main.mouseX, Main.mouseY)) {
+					WeNeoBuild.Build(item.Folder, true);
+					return;
+				}
+
+				if (item.HasTmod && card.Publish.Contains(Main.mouseX, Main.mouseY)) {
+					WeNeoBuild.Publish(item);
+					return;
+				}
+
+				if (item.Csproj && card.Csproj.Contains(Main.mouseX, Main.mouseY)) {
+					WeNeoBuild.OpenCsproj(item);
+					Tick();
+					return;
+				}
+
+				if (item.Csproj && card.Porter.Contains(Main.mouseX, Main.mouseY)) {
+					WeNeoBuild.Porter(item);
+					Tick();
+					return;
+				}
+
+				if (card.Folder.Contains(Main.mouseX, Main.mouseY)) {
 					WeFiles.OpenFolder(item.Folder);
 					Tick();
 					return;
 				}
+
+				WeFiles.OpenFolder(item.Folder);
+				Tick();
+				return;
 			}
+		}
+
+		private static DevCard NextDevCard(Rectangle view, ref int y)
+		{
+			var hit = new Rectangle(view.X + 4, y, view.Width - 8, 96);
+			int bw = Math.Max(56, (hit.Width - 32) / 6);
+			int by = hit.Y + 58;
+			int x = hit.X + 10;
+			var build = new Rectangle(x, by, bw, 28);
+			var reload = new Rectangle(x + bw + 4, by, bw, 28);
+			var pub = new Rectangle(x + (bw + 4) * 2, by, bw, 28);
+			var folder = new Rectangle(x + (bw + 4) * 3, by, bw, 28);
+			var csproj = new Rectangle(x + (bw + 4) * 4, by, bw, 28);
+			var porter = new Rectangle(x + (bw + 4) * 5, by, bw, 28);
+			y += 104;
+			return new DevCard { Hit = hit, Build = build, Reload = reload, Publish = pub, Folder = folder, Csproj = csproj, Porter = porter };
+		}
+
+		private static string BuiltAgo(DateTime built)
+		{
+			TimeSpan span = DateTime.Now - built;
+			if (span.TotalMinutes < 5)
+				return WeText.UI("NeoBuiltJust");
+			if (span.TotalHours < 1)
+				return string.Format(WeText.UI("NeoBuiltMins"), (int)span.TotalMinutes);
+			if (span.TotalHours < 24)
+				return string.Format(WeText.UI("NeoBuiltHours"), (int)span.TotalHours);
+			return built.ToString("yyyy-MM-dd");
+		}
+
+		private static Color BuiltColor(DateTime built)
+		{
+			double sec = Math.Abs((DateTime.Now - built).TotalSeconds);
+			if (sec < 5 * 60)
+				return new Color(120, 220, 140);
+			if (sec < 60 * 60)
+				return new Color(230, 210, 90);
+			if (sec < 30 * 24 * 60 * 60)
+				return new Color(230, 160, 80);
+			return new Color(220, 90, 90);
+		}
+
+		private struct DevCard
+		{
+			internal Rectangle Hit;
+			internal Rectangle Build;
+			internal Rectangle Reload;
+			internal Rectangle Publish;
+			internal Rectangle Folder;
+			internal Rectangle Csproj;
+			internal Rectangle Porter;
 		}
 
 		private static void DrawWorlds(SpriteBatch spriteBatch, Rectangle view, ref int y, float fade)
@@ -1112,14 +1408,16 @@ namespace DieWithASmile.Engine.Settings
 				Color.White * fade, 0f, Vector2.Zero, new Vector2(WeNeoShell.TypeSmall));
 		}
 
-		private static void DrawIconBtn(SpriteBatch spriteBatch, Rectangle hit, Texture2D icon, float fade)
+		private static void DrawIconBtn(SpriteBatch spriteBatch, Rectangle hit, Texture2D icon, float fade, bool warn = false)
 		{
+			if (hit.Width < 2 || hit.Height < 2)
+				return;
 			bool hover = hit.Contains(Main.mouseX, Main.mouseY);
-			WeDraw.Fill(spriteBatch, hit, (hover ? WeAccent.Deep : new Color(28, 30, 38)) * fade);
-			WeDraw.Border(spriteBatch, hit, (hover ? WeAccent.Light : WeAccent.Mid) * fade);
+			WeDraw.Fill(spriteBatch, hit, (hover || warn ? WeAccent.Deep : new Color(28, 30, 38)) * fade);
+			WeDraw.Border(spriteBatch, hit, ((warn ? new Color(220, 90, 90) : hover ? WeAccent.Light : WeAccent.Mid)) * fade);
 			if (icon != null && !icon.IsDisposed) {
 				float s = 14f / Math.Max(icon.Width, icon.Height);
-				spriteBatch.Draw(icon, new Vector2(hit.Center.X, hit.Center.Y), null, WeAccent.Icon(hover) * fade, 0f, icon.Size() * 0.5f, s, SpriteEffects.None, 0f);
+				spriteBatch.Draw(icon, new Vector2(hit.Center.X, hit.Center.Y), null, WeAccent.Icon(hover || warn) * fade, 0f, icon.Size() * 0.5f, s, SpriteEffects.None, 0f);
 			}
 		}
 
@@ -1183,6 +1481,8 @@ namespace DieWithASmile.Engine.Settings
 		{
 			internal Rectangle[] Tools;
 			internal Rectangle[] Filters;
+			internal Rectangle SortAz;
+			internal Rectangle SortNew;
 			internal Rectangle Info;
 			internal bool Dirty;
 		}
@@ -1193,6 +1493,8 @@ namespace DieWithASmile.Engine.Settings
 			internal Rectangle Pill;
 			internal Rectangle Ask;
 			internal Rectangle Gear;
+			internal Rectangle Extract;
+			internal Rectangle Del;
 		}
 
 		private struct ResCard
@@ -1246,6 +1548,11 @@ namespace DieWithASmile.Engine.Settings
 		internal string Name = "";
 		internal string Display = "";
 		internal bool Csproj;
+		internal bool HasTmod;
+		internal bool Enabled;
+		internal bool Server;
+		internal DateTime Built;
+		internal object Local;
 	}
 
 	internal static class WeTml
@@ -1257,17 +1564,48 @@ namespace DieWithASmile.Engine.Settings
 		private static HashSet<string> _want;
 		private static HashSet<string> _loaded;
 		private static HashSet<string> _resWant;
+		private static bool _stale = true;
 		private static readonly Dictionary<string, Texture2D> Icons = new(StringComparer.OrdinalIgnoreCase);
 		private static readonly Dictionary<string, WeClip> Gifs = new(StringComparer.OrdinalIgnoreCase);
 		private static readonly Dictionary<string, Color> Edges = new(StringComparer.OrdinalIgnoreCase);
 		private static readonly Dictionary<string, Texture2D> PackIcons = new(StringComparer.OrdinalIgnoreCase);
-		private static bool _stale = true;
+		private static readonly HashSet<string> ArtTried = new(StringComparer.OrdinalIgnoreCase);
 
 		internal static void Touch()
 		{
 			_res = null;
 			_packs = null;
 			_dev = null;
+		}
+
+		internal static void Invalidate()
+		{
+			_stale = true;
+			_mods = null;
+			ArtTried.Clear();
+			Touch();
+		}
+
+		internal static Texture2D TextureFrom(byte[] data) => TexFrom(data);
+
+		internal static void EnsureArt(WeLocalMod mod)
+		{
+			if (mod == null || mod.Gif != null)
+				return;
+			if (ArtTried.Contains(mod.Name))
+				return;
+			object file = Prop(mod.Raw, "modFile") ?? Prop(mod.Raw, "ModFile") ?? Prop(mod.Raw, "File");
+			Mod loaded = null;
+			try {
+				ModLoader.TryGetMod(mod.Name, out loaded);
+			}
+			catch {
+			}
+
+			FillIcon(mod, file, loaded);
+			GraphicsDevice gd = Main.instance?.GraphicsDevice ?? Main.graphics?.GraphicsDevice;
+			if (gd != null || mod.Gif != null || mod.Icon != null)
+				ArtTried.Add(mod.Name);
 		}
 
 		internal static bool ReloadNeeded
@@ -1717,11 +2055,54 @@ namespace DieWithASmile.Engine.Settings
 
 		private static bool HasConfig(string name)
 		{
+			if (string.IsNullOrEmpty(name))
+				return false;
+			try {
+				Type type = typeof(ModLoader).Assembly.GetType("Terraria.ModLoader.Config.ConfigManager");
+				object configs = type?.GetField("Configs", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)?.GetValue(null)
+				                 ?? type?.GetProperty("Configs", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)?.GetValue(null);
+				if (configs is IDictionary dict) {
+					foreach (DictionaryEntry de in dict) {
+						if (!NameMatch(de.Key, name))
+							continue;
+						if (de.Value is ICollection col)
+							return col.Count > 0;
+						return de.Value != null;
+					}
+				}
+			}
+			catch {
+			}
+
+			try {
+				if (ModLoader.TryGetMod(name, out Mod loaded) && loaded?.Code != null) {
+					Type cfg = typeof(ModLoader).Assembly.GetType("Terraria.ModLoader.Config.ModConfig");
+					if (cfg != null) {
+						Type[] types;
+						try {
+							types = loaded.Code.GetTypes();
+						}
+						catch (ReflectionTypeLoadException ex) {
+							types = ex.Types;
+						}
+
+						if (types != null) {
+							foreach (Type t in types) {
+								if (t != null && !t.IsAbstract && cfg.IsAssignableFrom(t))
+									return true;
+							}
+						}
+					}
+				}
+			}
+			catch {
+			}
+
 			try {
 				string folder = ConfigsFolder();
 				if (!Directory.Exists(folder))
 					return false;
-				foreach (string file in Directory.GetFiles(folder)) {
+				foreach (string file in Directory.GetFiles(folder, "*.json")) {
 					if (Path.GetFileName(file).StartsWith(name, StringComparison.OrdinalIgnoreCase))
 						return true;
 				}
@@ -1730,6 +2111,13 @@ namespace DieWithASmile.Engine.Settings
 			}
 
 			return false;
+		}
+
+		private static bool NameMatch(object key, string name)
+		{
+			if (key is Mod mod)
+				return string.Equals(mod.Name, name, StringComparison.OrdinalIgnoreCase);
+			return key != null && string.Equals(key.ToString(), name, StringComparison.OrdinalIgnoreCase);
 		}
 
 		private static HashSet<string> ReadWant(List<WeLocalMod> mods, HashSet<string> loaded)
@@ -1794,6 +2182,26 @@ namespace DieWithASmile.Engine.Settings
 			catch {
 			}
 
+			WriteWant();
+		}
+
+		internal static void SetEnabledName(string name, bool on)
+		{
+			EnsureMods();
+			WeLocalMod found = null;
+			foreach (WeLocalMod mod in _mods) {
+				if (!string.Equals(mod.Name, name, StringComparison.OrdinalIgnoreCase))
+					continue;
+				found = mod;
+				break;
+			}
+
+			if (found != null)
+				SetEnabled(found, on);
+			else if (on)
+				_want.Add(name);
+			else
+				_want.Remove(name);
 			WriteWant();
 		}
 
@@ -2444,6 +2852,7 @@ namespace DieWithASmile.Engine.Settings
 						Csproj = Directory.GetFiles(dir, "*.csproj").Length > 0
 					};
 					string build = Path.Combine(dir, "build.txt");
+					string side = "";
 					if (File.Exists(build)) {
 						try {
 							foreach (string line in File.ReadAllLines(build)) {
@@ -2451,15 +2860,45 @@ namespace DieWithASmile.Engine.Settings
 								if (eq <= 0)
 									continue;
 								string key = line[..eq].Trim();
-								if (!key.Equals("displayName", StringComparison.OrdinalIgnoreCase))
-									continue;
 								string val = line[(eq + 1)..].Trim();
-								if (!string.IsNullOrEmpty(val))
+								if (key.Equals("displayName", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(val))
 									item.Display = val;
-								break;
+								if (key.Equals("side", StringComparison.OrdinalIgnoreCase))
+									side = val;
 							}
 						}
 						catch {
+						}
+					}
+
+					item.Server = side.IndexOf("server", StringComparison.OrdinalIgnoreCase) >= 0 &&
+					              side.IndexOf("client", StringComparison.OrdinalIgnoreCase) < 0;
+					foreach (WeLocalMod mod in LocalMods()) {
+						if (!string.Equals(mod.Name, name, StringComparison.OrdinalIgnoreCase))
+							continue;
+						item.Local = mod.Raw;
+						item.Enabled = mod.Enabled;
+						item.HasTmod = !string.IsNullOrEmpty(mod.Path) && File.Exists(mod.Path);
+						if (item.HasTmod) {
+							try {
+								item.Built = File.GetLastWriteTime(mod.Path);
+							}
+							catch {
+							}
+						}
+
+						break;
+					}
+
+					if (!item.HasTmod) {
+						string tmod = Path.Combine(ModsFolder(), name + ".tmod");
+						if (File.Exists(tmod)) {
+							item.HasTmod = true;
+							try {
+								item.Built = File.GetLastWriteTime(tmod);
+							}
+							catch {
+							}
 						}
 					}
 

@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.ModLoader;
 using DieWithASmile.Engine.Core;
@@ -24,6 +25,11 @@ namespace DieWithASmile.Engine.Settings
 		internal string Internal = "";
 		internal string Author = "";
 		internal string Meta = "";
+		internal string IconUrl = "";
+		internal Texture2D Icon;
+		internal WeClip Gif;
+		internal long Score;
+		internal DateTime When;
 		internal bool Installed;
 		internal bool Pending;
 		internal bool Subscribed;
@@ -31,14 +37,21 @@ namespace DieWithASmile.Engine.Settings
 
 	internal static class WeWorkshop
 	{
-		private const int PageSize = 48;
+		private const int PageSize = 30;
+		private const int MaxItems = 200;
 		private static readonly object Gate = new();
 		private static readonly HttpClient Http;
+		private static readonly Dictionary<string, Texture2D> IconCache = new(StringComparer.Ordinal);
+		private static readonly Dictionary<string, byte[]> IconBytes = new(StringComparer.Ordinal);
+		private static readonly HashSet<string> IconFetch = new(StringComparer.Ordinal);
 		private static List<WeWorkshopItem> _items;
 		private static string _live = "\u0001";
 		private static string _queued = "";
 		private static bool _busy;
 		private static bool _again;
+		private static bool _hasMore = true;
+		private static int _page = 1;
+		private static int _sort;
 		private static DateTime _typed = DateTime.MinValue;
 
 		static WeWorkshop()
@@ -49,7 +62,7 @@ namespace DieWithASmile.Engine.Settings
 			};
 			Http = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(10) };
 			Http.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent",
-				"Mozilla/5.0 (Windows NT 10.0; Win64; x64) DieWithASmile-tModLoader/3.0.14");
+				"Mozilla/5.0 (Windows NT 10.0; Win64; x64) DieWithASmile-tModLoader/3.0.16");
 			Http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/html"));
 		}
 
@@ -62,16 +75,57 @@ namespace DieWithASmile.Engine.Settings
 			}
 		}
 
+		internal static bool HasMore
+		{
+			get
+			{
+				lock (Gate)
+					return _hasMore;
+			}
+		}
+
+		internal static int Sort
+		{
+			get => _sort;
+			set
+			{
+				int v = Math.Clamp(value, 0, 2);
+				lock (Gate) {
+					if (_sort == v)
+						return;
+					_sort = v;
+					_items = null;
+					_live = "\u0001";
+					_page = 1;
+					_hasMore = true;
+				}
+			}
+		}
+
 		internal static List<WeWorkshopItem> Items(string search)
 		{
 			Pump(search ?? "");
 			List<WeWorkshopItem> list;
 			lock (Gate)
-				list = _items;
+				list = _items == null ? null : new List<WeWorkshopItem>(_items);
 			if (list == null)
 				return new List<WeWorkshopItem>();
 			Stamp(list);
+			ApplyIcons(list);
 			return list;
+		}
+
+		internal static void WantMore()
+		{
+			lock (Gate) {
+				if (_busy || !_hasMore || _items == null || _items.Count >= MaxItems)
+					return;
+				_page++;
+				_busy = true;
+				string q = _live;
+				int page = _page;
+				ThreadPool.QueueUserWorkItem(_ => Run(q, page, true));
+			}
 		}
 
 		internal static void Subscribe(WeWorkshopItem item)
@@ -112,23 +166,44 @@ namespace DieWithASmile.Engine.Settings
 		{
 			_busy = true;
 			_live = search;
+			_page = 1;
+			_hasMore = true;
 			string q = search;
-			ThreadPool.QueueUserWorkItem(_ => Run(q));
+			ThreadPool.QueueUserWorkItem(_ => Run(q, 1, false));
 		}
 
-		private static void Run(string search)
+		private static void Run(string search, int page, bool append)
 		{
-			List<WeWorkshopItem> list = null;
+			List<WeWorkshopItem> chunk = null;
 			try {
-				list = Fetch(search);
+				chunk = Fetch(search, page);
 			}
 			catch {
-				list = new List<WeWorkshopItem>();
+				chunk = new List<WeWorkshopItem>();
 			}
 			finally {
 				lock (Gate) {
-					if (search == _live)
-						_items = list ?? new List<WeWorkshopItem>();
+					if (search == _live) {
+						if (append && _items != null) {
+							var next = new List<WeWorkshopItem>(_items.Count + (chunk?.Count ?? 0));
+							var seen = new HashSet<string>(StringComparer.Ordinal);
+							foreach (WeWorkshopItem it in _items) {
+								seen.Add(it.Id);
+								next.Add(it);
+							}
+
+							foreach (WeWorkshopItem it in chunk ?? new List<WeWorkshopItem>()) {
+								if (seen.Add(it.Id))
+									next.Add(it);
+							}
+
+							_items = next;
+						}
+						else
+							_items = chunk ?? new List<WeWorkshopItem>();
+						_hasMore = chunk != null && chunk.Count >= PageSize && _items.Count < MaxItems;
+					}
+
 					_busy = false;
 					if (_queued != _live)
 						_again = true;
@@ -136,23 +211,28 @@ namespace DieWithASmile.Engine.Settings
 			}
 		}
 
-		private static List<WeWorkshopItem> Fetch(string search)
+		private static List<WeWorkshopItem> Fetch(string search, int page)
 		{
 			var map = new Dictionary<string, WeWorkshopItem>(StringComparer.Ordinal);
-			TryTml(search, map);
+			TryTml(search, map, page);
 			if (map.Count == 0)
-				TryHtml(search, map);
-			MergePending(map);
+				TryHtml(search, map, page);
+			if (page <= 1)
+				MergePending(map);
 			var list = new List<WeWorkshopItem>(map.Values);
-			list.Sort((a, b) => {
-				int pa = a.Pending ? 1 : 0;
-				int pb = b.Pending ? 1 : 0;
-				int c = pa.CompareTo(pb);
-				return c != 0 ? c : string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase);
-			});
+			ApplySort(list);
 			if (list.Count > PageSize)
 				list.RemoveRange(PageSize, list.Count - PageSize);
 			return list;
+		}
+
+		private static void ApplySort(List<WeWorkshopItem> list)
+		{
+			int sort = _sort;
+			if (sort == 1)
+				list.Sort((a, b) => b.When.CompareTo(a.When));
+			else if (sort == 2)
+				list.Sort((a, b) => b.Score.CompareTo(a.Score));
 		}
 
 		private static void Stamp(List<WeWorkshopItem> list)
@@ -172,13 +252,16 @@ namespace DieWithASmile.Engine.Settings
 					    (!string.IsNullOrEmpty(item.Internal) && string.Equals(mod.Name, item.Internal, StringComparison.OrdinalIgnoreCase)) ||
 					    (!string.IsNullOrEmpty(item.Name) && string.Equals(mod.Display, item.Name, StringComparison.OrdinalIgnoreCase))) {
 						item.Installed = true;
+						item.Gif ??= mod.Gif;
+						if (item.Icon == null && mod.Icon != null && !mod.Icon.IsDisposed)
+							item.Icon = mod.Icon;
 						break;
 					}
 				}
 			}
 		}
 
-		private static void TryTml(string search, Dictionary<string, WeWorkshopItem> map)
+		private static void TryTml(string search, Dictionary<string, WeWorkshopItem> map, int page)
 		{
 			try {
 				Assembly asm = typeof(ModLoader).Assembly;
@@ -188,10 +271,14 @@ namespace DieWithASmile.Engine.Settings
 				object stream = InvokeBrowser(asm, query) ?? InvokeHelper(asm, query);
 				if (stream == null)
 					return;
+				int skip = Math.Max(0, (page - 1) * PageSize);
+				int n = 0;
 				var sw = System.Diagnostics.Stopwatch.StartNew();
-				foreach (object raw in Enumerate(stream, PageSize)) {
+				foreach (object raw in Enumerate(stream, skip + PageSize)) {
 					if (sw.Elapsed.TotalSeconds > 14)
 						break;
+					if (n++ < skip)
+						continue;
 					WeWorkshopItem item = ReadItem(raw);
 					if (item == null || string.IsNullOrEmpty(item.Id) || map.ContainsKey(item.Id))
 						continue;
@@ -213,8 +300,13 @@ namespace DieWithASmile.Engine.Settings
 			SetMember(q, "searchText", search ?? "");
 			SetEnum(q, "queryType", "SearchAll", "SearchGeneric", "QueryAll");
 			SetEnum(q, "updateStatusFilter", "All");
-			SetEnum(q, "sortingParamater", "Hot", "Downloads", "TotalDownloads");
-			SetEnum(q, "sortingParameter", "Hot", "Downloads", "TotalDownloads");
+			if (_sort == 1)
+				SetEnum(q, "sortingParamater", "RecentlyUpdated", "LastUpdated", "Time", "Hot");
+			else if (_sort == 2)
+				SetEnum(q, "sortingParamater", "Downloads", "TotalDownloads", "Hot");
+			else
+				SetEnum(q, "sortingParamater", "Hot", "Downloads", "TotalDownloads");
+			SetEnum(q, "sortingParameter", _sort == 1 ? "RecentlyUpdated" : _sort == 2 ? "Downloads" : "Hot");
 			return q;
 		}
 
@@ -427,17 +519,25 @@ namespace DieWithASmile.Engine.Settings
 			object time = Prop(raw, "TimeStamp");
 			if (time is DateTime dt && dt.Year > 2000)
 				bits.Add(dt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+			item.IconUrl = Str(raw, "ModIconUrl") ?? Str(raw, "modIconUrl") ?? Str(raw, "ModIconURL") ?? "";
 			item.Meta = string.Join(" · ", bits);
 			item.Installed = Prop(raw, "IsInstalled") is true;
+			if (downloads != null && long.TryParse(downloads.ToString(), out long score))
+				item.Score = score;
+			if (time is DateTime when)
+				item.When = when;
 			return item;
 		}
 
-		private static void TryHtml(string search, Dictionary<string, WeWorkshopItem> map)
+		private static void TryHtml(string search, Dictionary<string, WeWorkshopItem> map, int page)
 		{
+			int p = Math.Max(1, page);
 			try {
-				string url = "https://steamcommunity.com/workshop/browse/?appid=1281930&section=readytouseitems&actualsort=trend&p=1&numperpage=30";
-				if (string.IsNullOrWhiteSpace(search))
-					url += "&browsesort=trend";
+				string url = "https://steamcommunity.com/workshop/browse/?appid=1281930&section=readytouseitems&p=" + p + "&numperpage=30";
+				if (string.IsNullOrWhiteSpace(search)) {
+					string sort = _sort == 1 ? "mostrecent" : _sort == 2 ? "totaluniquesubscribers" : "trend";
+					url += "&browsesort=" + sort;
+				}
 				else
 					url += "&browsesort=textsearch&searchtext=" + Uri.EscapeDataString(search.Trim());
 				string html = Http.GetStringAsync(url).GetAwaiter().GetResult();
@@ -449,7 +549,7 @@ namespace DieWithASmile.Engine.Settings
 			catch {
 			}
 
-			if (map.Count > 0)
+			if (map.Count > 0 || page > 1)
 				return;
 			try {
 				string rss = "https://steamcommunity.com/workshop/browse/?appid=1281930&browsesort=trend&section=readytouseitems&rss=1";
@@ -490,7 +590,8 @@ namespace DieWithASmile.Engine.Settings
 					Id = id,
 					Name = title,
 					Author = author,
-					Meta = author
+					Meta = author,
+					IconUrl = PreviewUrl(slice)
 				};
 				if (map.Count >= PageSize)
 					return;
@@ -528,6 +629,120 @@ namespace DieWithASmile.Engine.Settings
 				if (map.Count >= PageSize)
 					return;
 			}
+		}
+
+		private static string PreviewUrl(string html)
+		{
+			if (string.IsNullOrEmpty(html))
+				return "";
+			int tag = html.IndexOf("workshopItemPreviewImage", StringComparison.OrdinalIgnoreCase);
+			string area = tag < 0 ? html : html.Substring(Math.Max(0, tag - 280), Math.Min(html.Length - Math.Max(0, tag - 280), 900));
+			foreach (string key in new[] { "src=\"", "src='", "data-src=\"" }) {
+				int at = area.IndexOf(key, StringComparison.OrdinalIgnoreCase);
+				if (at < 0)
+					continue;
+				int start = at + key.Length;
+				int end = area.IndexOf(key[key.Length - 1], start);
+				if (end <= start)
+					continue;
+				string url = area.Substring(start, end - start);
+				if (url.StartsWith("http", StringComparison.OrdinalIgnoreCase) &&
+				    (url.Contains("steam", StringComparison.OrdinalIgnoreCase) || url.Contains("akamai", StringComparison.OrdinalIgnoreCase)))
+					return url.Replace("&amp;", "&");
+			}
+
+			return "";
+		}
+
+		private static void ApplyIcons(List<WeWorkshopItem> list)
+		{
+			foreach (WeWorkshopItem item in list) {
+				if (item.Gif != null || (item.Icon != null && !item.Icon.IsDisposed))
+					continue;
+				if (IconCache.TryGetValue(item.Id, out Texture2D cached) && cached != null && !cached.IsDisposed) {
+					item.Icon = cached;
+					continue;
+				}
+
+				byte[] data;
+				lock (Gate)
+					IconBytes.TryGetValue(item.Id, out data);
+				if (data != null) {
+					if (WeGif.LooksLike(data)) {
+						try {
+							WeClip clip = WeGif.Decode(data);
+							if (clip != null) {
+								clip.KeepDelays();
+								item.Gif = clip;
+							}
+						}
+						catch {
+						}
+					}
+
+					Texture2D tex = WeTml.TextureFrom(data);
+					if (tex != null) {
+						IconCache[item.Id] = tex;
+						item.Icon = tex;
+					}
+
+					if (item.Gif != null || item.Icon != null) {
+						lock (Gate)
+							IconBytes.Remove(item.Id);
+					}
+
+					continue;
+				}
+
+				if (string.IsNullOrEmpty(item.IconUrl) && !string.IsNullOrEmpty(item.Id))
+					item.IconUrl = "https://steamcommunity.com/sharedfiles/filedetails/?id=" + item.Id;
+				if (string.IsNullOrEmpty(item.IconUrl) || string.IsNullOrEmpty(item.Id))
+					continue;
+				bool go;
+				lock (Gate)
+					go = IconFetch.Add(item.Id);
+				if (!go)
+					continue;
+				string id = item.Id;
+				string url = item.IconUrl;
+				ThreadPool.QueueUserWorkItem(_ => DownloadIcon(id, url));
+			}
+		}
+
+		private static void DownloadIcon(string id, string url)
+		{
+			try {
+				byte[] data = FetchBytes(url);
+				if (data == null)
+					return;
+				if (LooksHtml(data)) {
+					string html = Encoding.UTF8.GetString(data);
+					string next = PreviewUrl(html);
+					if (string.IsNullOrEmpty(next) || string.Equals(next, url, StringComparison.OrdinalIgnoreCase))
+						return;
+					data = FetchBytes(next);
+					if (data == null || LooksHtml(data))
+						return;
+				}
+
+				lock (Gate)
+					IconBytes[id] = data;
+			}
+			catch {
+			}
+		}
+
+		private static byte[] FetchBytes(string url)
+		{
+			byte[] data = Http.GetByteArrayAsync(url).GetAwaiter().GetResult();
+			return data != null && data.Length > 32 ? data : null;
+		}
+
+		private static bool LooksHtml(byte[] data)
+		{
+			int n = Math.Min(data.Length, 80);
+			string head = Encoding.UTF8.GetString(data, 0, n).TrimStart();
+			return head.StartsWith('<') || head.StartsWith("<!DOCTYPE", StringComparison.OrdinalIgnoreCase);
 		}
 
 		private static string Inner(string html, string className)

@@ -42,6 +42,8 @@ namespace DieWithASmile.Engine.Core
 			return tex != null && !tex.IsDisposed ? tex : null;
 		}
 
+		internal bool Uploaded => _gpu != null && _gpu.Length > 0;
+
 		internal void Present()
 		{
 			KeepDelays();

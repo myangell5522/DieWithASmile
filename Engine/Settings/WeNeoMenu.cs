@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -63,6 +64,7 @@ namespace DieWithASmile.Engine.Settings
 		private static WeNeoCat _cat = WeNeoCat.Game;
 		private static WeNeoCat _returnCat = WeNeoCat.Game;
 		private static WeNeoPage _leaf = WeNeoPage.Hub;
+		private static WeNeoPage _resumePage = WeNeoPage.Hub;
 
 		internal static bool IsOpen => _open;
 		internal static bool Covering => _open || _fade > 0.02f;
@@ -163,6 +165,9 @@ namespace DieWithASmile.Engine.Settings
 				return;
 			}
 
+			if (IsTransientTmlUi())
+				return;
+
 			if (IsWorkshopScreen()) {
 				DismissFancy();
 				if (!_open && !_pendingReturn)
@@ -191,6 +196,41 @@ namespace DieWithASmile.Engine.Settings
 
 			Close();
 			return true;
+		}
+
+		private static bool IsTransientTmlUi()
+		{
+			try {
+				string name = Main.MenuUI?.CurrentState?.GetType().Name ?? "";
+				if (name.IndexOf("Build", StringComparison.OrdinalIgnoreCase) >= 0 ||
+				    name.IndexOf("Progress", StringComparison.OrdinalIgnoreCase) >= 0 ||
+				    name.IndexOf("Publish", StringComparison.OrdinalIgnoreCase) >= 0 ||
+				    name.IndexOf("CreateMod", StringComparison.OrdinalIgnoreCase) >= 0 ||
+				    name.IndexOf("Extract", StringComparison.OrdinalIgnoreCase) >= 0 ||
+				    name.IndexOf("ModConfig", StringComparison.OrdinalIgnoreCase) >= 0 ||
+				    name.IndexOf("Error", StringComparison.OrdinalIgnoreCase) >= 0 ||
+				    name.IndexOf("InfoMessage", StringComparison.OrdinalIgnoreCase) >= 0 ||
+				    name.IndexOf("Download", StringComparison.OrdinalIgnoreCase) >= 0)
+					return true;
+			}
+			catch {
+			}
+
+			try {
+				Type iface = typeof(ModLoader).Assembly.GetType("Terraria.ModLoader.UI.Interface");
+				if (iface == null)
+					return false;
+				const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
+				foreach (string field in new[] { "buildModID", "createModID", "extractModID", "progressID", "errorMessageID", "downloadProgressID" }) {
+					object id = iface.GetField(field, flags)?.GetValue(null);
+					if (id is int mode && Main.menuMode == mode)
+						return true;
+				}
+			}
+			catch {
+			}
+
+			return false;
 		}
 
 		private static bool IsWorkshopScreen()
@@ -257,14 +297,15 @@ namespace DieWithASmile.Engine.Settings
 		{
 			if (!_pendingReturn)
 				return;
+			if (IsTransientTmlUi())
+				return;
 
 			if (Main.gameMenu) {
-				if (Main.menuMode == 11) {
-					Main.menuMode = 0;
-					Open(_returnCat, inGame: false);
-					_pendingReturn = false;
-				}
-				else if (Main.menuMode == 0 && !Main.inFancyUI && !_open) {
+				if (IsWorkshopScreen() || Main.menuMode == 11 || (Main.menuMode == 0 && !Main.inFancyUI && !_open)) {
+					if (IsWorkshopScreen())
+						DismissFancy();
+					else if (Main.menuMode == 11)
+						Main.menuMode = 0;
 					Open(_returnCat, inGame: false);
 					_pendingReturn = false;
 				}
@@ -295,7 +336,8 @@ namespace DieWithASmile.Engine.Settings
 			_cat = cat;
 			SetScroll(0f);
 			_pageFade = 1f;
-			_leaf = WeNeoPage.Hub;
+			_leaf = _pendingReturn ? _resumePage : WeNeoPage.Hub;
+			_resumePage = WeNeoPage.Hub;
 			_drag = null;
 			WeNeoBind.ClearDirty();
 			_searchFocus = false;
@@ -332,9 +374,10 @@ namespace DieWithASmile.Engine.Settings
 			}
 		}
 
-		internal static void BeginDeepLink(WeNeoCat cat)
+		internal static void BeginDeepLink(WeNeoCat cat, WeNeoPage page = WeNeoPage.Hub)
 		{
 			_returnCat = cat;
+			_resumePage = page;
 			_pendingReturn = true;
 			_wasFancy = true;
 			_open = false;
@@ -342,6 +385,8 @@ namespace DieWithASmile.Engine.Settings
 			_drag = null;
 			Persist();
 		}
+
+		internal static bool NearListEnd() => MaxScroll() - _scroll < 160f;
 
 		internal static void Persist()
 		{
@@ -505,6 +550,8 @@ namespace DieWithASmile.Engine.Settings
 
 			if (!WeInput.LeftDown) {
 				bool fire = _drag == "neo-hold" && !_panned;
+				if (_drag == "neo-pack")
+					WeNeoShop.EndPackDrag();
 				_drag = null;
 				return fire;
 			}

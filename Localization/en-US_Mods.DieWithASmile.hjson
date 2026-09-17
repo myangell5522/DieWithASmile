@@ -403,7 +403,8 @@ UI: {
 	NeoKeysResetAll: Reset all
 	NeoHubTitle: Workshop
 	NeoHubHint: Manage mods, downloads, packs, worlds, and logs here. No extra Terraria screens.
-	NeoDevelop: Develop mods
+	NeoDevelop: Build & Publish
+	NeoDevelopSub: Build · Reload · Publish
 	NeoImportWorlds: Import worlds
 	NeoLogs: Logs
 	NeoBack: Back
@@ -448,9 +449,45 @@ UI: {
 	NeoPacksHint: Saved packs of enabled mods. Click a pack to load it on the title.
 	NeoPacksFolder: Packs folder
 	NeoLoadPack: Load
-	NeoResHint: Resource packs. Toggle, then Apply.
+	NeoResHint: Resource packs. Toggle, then Apply. Drag a row to reorder.
 	NeoApplyPacks: Apply packs
-	NeoDevelopHint: Your ModSources projects. Click a folder to open it.
+	NeoSortAz: A–Z
+	NeoSortNew: Recent
+	NeoSortHot: Hot
+	NeoSortDown: Downloads
+	NeoExtract: Extract
+	NeoDelete: Delete
+	NeoConfirm: Confirm
+	NeoLoadingMore: Loading more…
+	NeoCreateMod: Create mod
+	NeoBuildAll: Build all
+	NeoBuild: Build
+	NeoBuildReload: Build + Reload
+	NeoPublish: Publish
+	NeoPublishServer: Publish server
+	NeoOpenFolder: Folder
+	NeoOpenCsproj: .csproj
+	NeoPorter: Porter
+	NeoBuilt: Built
+	NeoBuiltJust: just now
+	NeoBuiltMins: "{0}m ago"
+	NeoBuiltHours: "{0}h ago"
+	NeoSectionTml: tModLoader
+	NeoDownloadMods: Download mods from servers
+	NeoAutoReload: Auto-reload on leave
+	NeoRemoveMinZoom: Remove min zoom
+	NeoNotifyThemes: New menu theme notice
+	NeoShowUpdatedMods: Updated mods info
+	NeoConfirmAllMods: Confirm enable/disable all
+	NeoExperimental: Experimental features
+	NeoCloudDefault: Cloud save default
+	NeoSupport4K: 4K support
+	NeoSupport8K: 8K support
+	NeoThrottle: Throttle when inactive
+	NeoWaterfall: Waterfall limit
+	NeoBossHpText: Boss bar HP text
+	NeoFlashEvents: Flash icon for events
+	NeoDevelopHint: Build, reload, and publish ModSources. Steam publish uses the tModLoader wizard.
 	NeoOpenSources: Open ModSources
 	NeoWorldsHint: Copy a .wld into your worlds folder.
 	NeoImportWorld: Import world file

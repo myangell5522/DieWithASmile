@@ -306,6 +306,20 @@ namespace DieWithASmile.Engine.Settings
 			Cycle(list, WeNeoCat.Game, g, "lang", () => T("NeoLanguage"),
 				() => CultureName(),
 				() => CycleLanguage(1), () => CycleLanguage(-1));
+			Func<string> tml = () => T("NeoSectionTml");
+			MaybeFlag(list, WeNeoCat.Game, tml, "dlmods", "NeoDownloadMods",
+				typeof(ModLoader).Assembly.GetType("Terraria.ModLoader.ModNet"),
+				"downloadModsFromServers", "DownloadModsFromServers");
+			MaybeFlag(list, WeNeoCat.Game, tml, "autoreload", "NeoAutoReload",
+				typeof(ModLoader),
+				"autoReloadRequiredModsLeavingModsScreen", "AutomaticallyReloadAndEnableModsLeavingModBrowser",
+				"autoReloadAndUnloadModsLeavingModsScreen", "AutomaticallyReloadRequiredModsLeavingModsScreen");
+			MaybeFlag(list, WeNeoCat.Game, tml, "minzoom", "NeoRemoveMinZoom", typeof(ModLoader), "removeForcedMinimumZoom");
+			MaybeFlag(list, WeNeoCat.Game, tml, "themes", "NeoNotifyThemes", typeof(ModLoader), "notifyNewMainMenuThemes");
+			MaybeFlag(list, WeNeoCat.Game, tml, "updated", "NeoShowUpdatedMods", typeof(ModLoader), "showNewUpdatedModsInfo");
+			MaybeFlag(list, WeNeoCat.Game, tml, "confirmall", "NeoConfirmAllMods", typeof(ModLoader), "showConfirmationWindowWhenEnableDisableAllMods");
+			MaybeFlag(list, WeNeoCat.Game, tml, "exp", "NeoExperimental", typeof(Main), "UseExperimentalFeatures");
+			MaybeFlag(list, WeNeoCat.Game, tml, "cloud", "NeoCloudDefault", typeof(Main), "CloudSavingDefault");
 
 			Toggle(list, WeNeoCat.Video, qlt, "full", () => T("NeoFullscreen"),
 				() => Main.graphics.IsFullScreen,
@@ -366,6 +380,10 @@ namespace DieWithASmile.Engine.Settings
 				() => Main.caveParallax,
 				() => (int)Math.Round(Main.caveParallax * 100f) + "%",
 				t => { Main.caveParallax = t; PersistSoft(); });
+			MaybeFlag(list, WeNeoCat.Video, qlt, "4k", "NeoSupport4K", typeof(Main), "Support4K");
+			MaybeFlag(list, WeNeoCat.Video, qlt, "8k", "NeoSupport8K", typeof(Main), "Support8K");
+			MaybeFlag(list, WeNeoCat.Video, qlt, "throttle", "NeoThrottle", typeof(Main), "ThrottleWhenInactive");
+			MaybeWaterfall(list, qlt);
 
 			Slider(list, WeNeoCat.Audio, audio, "music", () => T("NeoMusic"),
 				() => Main.musicVolume, () => Pct(Main.musicVolume), t => { Main.musicVolume = t; PersistSoft(); }, true);
@@ -434,6 +452,17 @@ namespace DieWithASmile.Engine.Settings
 					catch {
 					}
 				});
+			MaybeFlag(list, WeNeoCat.Interface, hud, "bosshp", "NeoBossHpText", typeof(Main), "ShowBossBarHealthText");
+			if (!WeNeoFld.TryGetBool(typeof(Main), "ShowBossBarHealthText", out bool _)) {
+				Type iface = typeof(ModLoader).Assembly.GetType("Terraria.ModLoader.UI.Interface");
+				MaybeFlag(list, WeNeoCat.Interface, hud, "bosshp", "NeoBossHpText", iface, "ShowBossBarHealthText");
+			}
+
+			MaybeFlag(list, WeNeoCat.Interface, hud, "flash", "NeoFlashEvents", typeof(Main), "FlashIconForEvents");
+			if (!WeNeoFld.TryGetBool(typeof(Main), "FlashIconForEvents", out bool _)) {
+				Type iface = typeof(ModLoader).Assembly.GetType("Terraria.ModLoader.UI.Interface");
+				MaybeFlag(list, WeNeoCat.Interface, hud, "flash", "NeoFlashEvents", iface, "FlashIconForEvents");
+			}
 
 			Preview(list, WeNeoCat.Cursor, color, "cprev", WeNeoCursor.Height, WeNeoCursor.Draw, WeNeoCursor.Click);
 			Slider(list, WeNeoCat.Cursor, color, "cr", () => WeText.UI("Red"),
@@ -459,6 +488,46 @@ namespace DieWithASmile.Engine.Settings
 				() => !WeNeoFld.GetBool(typeof(Main), "DisableLeftShiftTrashCan"),
 				v => WeNeoFld.SetBool(typeof(Main), "DisableLeftShiftTrashCan", !v));
 			return list;
+		}
+
+		private static void MaybeFlag(List<WeNeoOpt> list, WeNeoCat cat, Func<string> section, string id, string key, Type type, params string[] names)
+		{
+			if (type == null)
+				return;
+			foreach (string name in names) {
+				if (!WeNeoFld.TryGetBool(type, name, out bool _))
+					continue;
+				string captured = name;
+				Toggle(list, cat, section, id, () => T(key),
+					() => WeNeoFld.GetBool(type, captured),
+					v => WeNeoFld.SetBool(type, captured, v));
+				return;
+			}
+		}
+
+		private static void MaybeWaterfall(List<WeNeoOpt> list, Func<string> section)
+		{
+			string[] names = { "waterfallLimit", "WaterfallLimit", "maxWaterfallCount", "maxWaterfalls" };
+			foreach (string name in names) {
+				if (WeNeoFld.Get(typeof(Main), name) is not int)
+					continue;
+				string captured = name;
+				Slider(list, WeNeoCat.Video, section, "waterfall", () => T("NeoWaterfall"),
+					() => {
+						object v = WeNeoFld.Get(typeof(Main), captured);
+						int n = v is int i ? i : 0;
+						return MathHelper.Clamp(n / 1000f, 0f, 1f);
+					},
+					() => {
+						object v = WeNeoFld.Get(typeof(Main), captured);
+						return (v is int i ? i : 0).ToString();
+					},
+					t => {
+						WeNeoFld.Set(typeof(Main), captured, (int)MathF.Round(t * 1000f));
+						PersistSoft();
+					});
+				return;
+			}
 		}
 
 		private static void MaybeUnfocused(List<WeNeoOpt> list, Func<string> section)

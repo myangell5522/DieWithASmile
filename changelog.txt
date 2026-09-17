@@ -1,3 +1,13 @@
+Version 3.0.16
+
+Title
+- Overlay: workshop browser no longer crashes while loading more. Gear opens the mod config UI, not the ModConfigs folder. Resource packs drag with a ghost card. Cards get shadows, icon frames, and shimmer placeholders.
+
+Version 3.0.15
+
+Title
+- Overlay Develop now builds and publishes like vanilla (Build, Build+Reload, Publish, Create, Build all). Animated GIF logos and row covers, workshop preview icons with infinite scroll, missing tModLoader toggles, Extract/Delete/Config on mods.
+
 Version 3.0.14
 
 Title
