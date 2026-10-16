@@ -9,7 +9,6 @@ using DieWithASmile.Engine.Content;
 using DieWithASmile.Engine.Core;
 using DieWithASmile.Engine.Layout;
 using DieWithASmile.Engine.UI;
-using DieWithASmile.Engine.Settings;
 
 namespace DieWithASmile.Engine.Chrome
 {
@@ -36,18 +35,24 @@ namespace DieWithASmile.Engine.Chrome
 			public float Size;
 		}
 
-		internal static bool Expanded => !WrenchHub.UseDock && (_expanded || _open > 0.04f);
-		internal static bool Busy => WrenchHub.UseDock
-			? WrenchDock.Busy
-			: Expanded || HoverAny() || (_open > 0.12f && InOrbit());
+		private static bool Radial => !WrenchHub.UseDock && !WrenchHub.UseSidebar;
+
+		internal static bool Expanded => Radial && (_expanded || _open > 0.04f);
+		internal static bool Busy => WrenchHub.UseSidebar
+			? WrenchSidebar.Busy
+			: WrenchHub.UseDock
+				? WrenchDock.Busy
+				: Expanded || HoverAny() || (_open > 0.12f && InOrbit());
 
 		internal static Vector2 Anchor => SceneGraph.Pixel(SceneGraph.Wrench);
 
 		internal static float Scale => SceneGraph.ScaleOf(SceneGraph.Wrench);
 
-		internal static Rectangle HitRect() => WrenchHub.UseDock
-			? WrenchDock.HitRect()
-			: RoundButton.Hit(Anchor, Radius * Scale + 4f);
+		internal static Rectangle HitRect() => WrenchHub.UseSidebar
+			? WrenchSidebar.HitRect()
+			: WrenchHub.UseDock
+				? WrenchDock.HitRect()
+				: RoundButton.Hit(Anchor, Radius * Scale + 4f);
 
 		internal static void OnThemeSelected()
 		{
@@ -66,17 +71,13 @@ namespace DieWithASmile.Engine.Chrome
 				return;
 			}
 
-			if (WeNeoMenu.Covering) {
+			if (WrenchHub.UseDock || WrenchHub.UseSidebar) {
 				_expanded = false;
 				_open = MathHelper.Lerp(_open, 0f, 0.28f);
-				TickSparks();
-				return;
-			}
-
-			if (WrenchHub.UseDock) {
-				_expanded = false;
-				_open = MathHelper.Lerp(_open, 0f, 0.28f);
-				WrenchDock.Update();
+				if (WrenchHub.UseDock)
+					WrenchDock.Update();
+				else
+					WrenchSidebar.Update();
 				TickSparks();
 				return;
 			}
@@ -91,7 +92,7 @@ namespace DieWithASmile.Engine.Chrome
 
 		internal static void HandleInput()
 		{
-			if (_frameInput || LayoutEditor.Editing || WeSplash.Visible || WeNeoMenu.Covering)
+			if (_frameInput || LayoutEditor.Editing || WeSplash.Visible)
 				return;
 
 			_frameInput = true;
@@ -99,6 +100,12 @@ namespace DieWithASmile.Engine.Chrome
 
 			if (!WeModMenu.OnTitle)
 				return;
+
+			if (WrenchHub.UseSidebar) {
+				// The sidebar stays usable while a page is open, so it doubles as section navigation.
+				WrenchSidebar.HandleInput();
+				return;
+			}
 
 			if (WePanels.Covering) {
 				Main.blockMouse = true;
@@ -145,6 +152,7 @@ namespace DieWithASmile.Engine.Chrome
 		{
 			_frameInput = false;
 			WrenchDock.EndFrame();
+			WrenchSidebar.EndFrame();
 		}
 
 		internal static void Expand()
@@ -171,6 +179,11 @@ namespace DieWithASmile.Engine.Chrome
 			if (!WeModMenu.OnTitle || !SceneGraph.Visible(SceneGraph.Wrench))
 				return;
 
+			if (WrenchHub.UseSidebar) {
+				WrenchSidebar.Draw(spriteBatch);
+				return;
+			}
+
 			if (WrenchHub.UseDock) {
 				WrenchDock.Draw(spriteBatch);
 				return;
@@ -183,13 +196,8 @@ namespace DieWithASmile.Engine.Chrome
 				float radius = Radius * scale * pulse;
 				Texture2D circle = WeDraw.Circle();
 
-				if (_open > 0.02f) {
-					float ring = OrbitRadius * 2f / circle.Width;
-					spriteBatch.Draw(circle, origin, null, WeAccent.Mid * (0.14f * _open), 0f, circle.Size() * 0.5f, ring, SpriteEffects.None, 0f);
-					spriteBatch.Draw(circle, origin, null, WeAccent.Light * (0.22f * _open), 0f, circle.Size() * 0.5f, (OrbitRadius * 2f + 6f) / circle.Width, SpriteEffects.None, 0f);
-				}
-
-				spriteBatch.Draw(circle, origin, null, WeAccent.Mid * 0.18f, 0f, circle.Size() * 0.5f, (radius * 2f + 18f) / circle.Width, SpriteEffects.None, 0f);
+				if (_open > 0.02f)
+					spriteBatch.Draw(circle, origin, null, Color.Black * (0.28f * _open), 0f, circle.Size() * 0.5f, (OrbitRadius * 2f + 34f) / circle.Width, SpriteEffects.None, 0f);
 				Texture2D hub = WeIcons.Get(WeIcons.Setting);
 				if (hub != null)
 					RoundButton.DrawIcon(spriteBatch, origin, radius, hub, _spin, 1f, _expanded);
@@ -337,35 +345,30 @@ namespace DieWithASmile.Engine.Chrome
 
 		internal static void DrawStylePreview(SpriteBatch spriteBatch, Rectangle dest, int style, float fade, bool selected)
 		{
+			if (style == (int)WrenchStyle.Sidebar) {
+				WrenchSidebar.DrawPreview(spriteBatch, dest, fade, selected);
+				return;
+			}
+
 			if (style == (int)WrenchStyle.Dock) {
 				WrenchDock.DrawPreview(spriteBatch, dest, fade, selected);
 				return;
 			}
 
 			Vector2 origin = dest.Center.ToVector2();
-			float radius = Math.Min(dest.Width, dest.Height) * 0.14f;
-			Texture2D circle = WeDraw.Circle();
-			spriteBatch.Draw(circle, origin, null, WeAccent.Mid * (0.18f * fade), 0f, circle.Size() * 0.5f, (radius * 2.4f) / circle.Width, SpriteEffects.None, 0f);
-			RoundButton.Draw(spriteBatch, origin, radius, fade, selected);
-			Texture2D hub = WeIcons.Get(WeIcons.Setting);
-			if (hub != null) {
-				float iconScale = radius * 1.15f / Math.Max(1, Math.Max(hub.Width, hub.Height));
-				spriteBatch.Draw(hub, origin, null, WeAccent.Icon(false, selected) * fade, 0f, hub.Size() * 0.5f, iconScale, SpriteEffects.None, 0f);
-			}
-
+			float radius = Math.Max(12f, Math.Min(dest.Width, dest.Height) * 0.2f);
 			int n = WrenchHub.Actions.Length;
 			float orbit = Math.Min(dest.Width, dest.Height) * 0.38f;
 			for (int i = 0; i < n; i++) {
 				float angle = -MathHelper.PiOver2 + i * MathHelper.TwoPi / n;
 				Vector2 pos = origin + angle.ToRotationVector2() * orbit;
-				float child = radius * 0.48f;
-				RoundButton.Draw(spriteBatch, pos, child, fade * 0.95f, selected && i == 2);
-				Texture2D icon = WeIcons.Get(WrenchHub.IconName(WrenchHub.Actions[i]));
-				if (icon != null) {
-					float s = child * 1.15f / Math.Max(1, Math.Max(icon.Width, icon.Height));
-					spriteBatch.Draw(icon, pos, null, WeAccent.Icon(false, selected) * fade, 0f, icon.Size() * 0.5f, s, SpriteEffects.None, 0f);
-				}
+				var dot = new Rectangle((int)pos.X - 4, (int)pos.Y - 4, 8, 8);
+				WeDraw.Fill(spriteBatch, new Rectangle(dot.X - 1, dot.Y - 1, dot.Width + 2, dot.Height + 2), Color.Black * fade);
+				WeDraw.Fill(spriteBatch, dot, (selected && i == 1 ? WeAccent.Light : WeTerra.RowHover) * fade);
 			}
+
+			WeTerra.Panel(spriteBatch, RoundButton.Hit(origin, radius), WeTerra.LookOf(false, selected), fade);
+			WeTerra.Icon(spriteBatch, WeIcons.Setting, origin, 16f, Color.White * fade);
 		}
 	}
 }

@@ -53,11 +53,15 @@ namespace DieWithASmile.Engine.Audio
 				return false;
 
 			try {
-				if (!OpenReader(path))
+				if (!OpenReader(path)) {
+					Stop(); // a reader may already be open; don't keep the file locked
 					return false;
+				}
 
-				if (_sampleRate < 8000 || _sampleRate > 48000)
+				if (_sampleRate < 8000 || _sampleRate > 48000) {
+					Stop();
 					return false;
+				}
 
 				_path = path;
 				_paused = false;
@@ -310,7 +314,8 @@ namespace DieWithASmile.Engine.Audio
 		{
 			if (WeSave.Data.MuteWhenUnfocused && !Main.hasFocus)
 				return 0f;
-			return Math.Clamp(Main.musicVolume * WePlaylist.OutputMix, 0f, 1f);
+			// Game music volume x the theme's own "Main menu music" slider x fade.
+			return Math.Clamp(Main.musicVolume * global::DieWithASmile.Content.DieWithASmileSettings.MenuMusicVolume * WePlaylist.OutputMix, 0f, 1f);
 		}
 
 		private static bool OpenReader(string path)

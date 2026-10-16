@@ -8,7 +8,6 @@ using DieWithASmile.Engine.Content;
 using DieWithASmile.Engine.Core;
 using DieWithASmile.Engine.Layout;
 using DieWithASmile.Engine.UI;
-using DieWithASmile.Engine.Settings;
 
 namespace DieWithASmile.Engine.Chrome
 {
@@ -64,7 +63,7 @@ namespace DieWithASmile.Engine.Chrome
 			if (!WeModMenu.OnTitle)
 				return;
 
-			if (WePanels.Covering || WeNeoMenu.Covering) {
+			if (WePanels.Covering) {
 				_hover = -1;
 				Main.blockMouse = true;
 				return;
@@ -110,8 +109,8 @@ namespace DieWithASmile.Engine.Chrome
 			float barH = Math.Max(22f, bounds.Height * (BarH / (BarH + Lift + 12f)));
 			float barTop = bounds.Bottom - barH - 4f;
 			var bar = new Rectangle(bounds.X, (int)barTop, bounds.Width, (int)barH);
-			Color fill = new Color(24, 26, 32);
-			FillRound(spriteBatch, bar, bar.Height * 0.5f, fill * fade);
+			Color fill = WeTerra.WindowBack;
+			WeTerra.Panel(spriteBatch, bar, fill * fade, Color.Black * fade);
 
 			for (int i = 0; i < n; i++) {
 				float pop = lift * Smooth(1f - Math.Abs(i - focus));
@@ -121,19 +120,10 @@ namespace DieWithASmile.Engine.Chrome
 				bool hot = interactive && i == _hover;
 
 				if (pop > 0.08f)
-					FillRound(
-						spriteBatch,
-						TileRect(center, size),
-						size * 0.28f,
-						Color.Lerp(fill, WeAccent.Deep, 0.65f) * (fade * pop));
+					WeTerra.Panel(spriteBatch, TileRect(center, size), WeTerra.LookOf(hot, WrenchHub.IsOn(WrenchHub.Actions[i])), fade * pop);
 
-				Texture2D icon = WeIcons.Get(WrenchHub.IconName(WrenchHub.Actions[i]));
-				if (icon != null) {
-					float iconScale = (size * 0.7f) / Math.Max(1, Math.Max(icon.Width, icon.Height));
-					spriteBatch.Draw(
-						icon, center, null, WeAccent.Icon(hot, pop > 0.45f) * fade,
-						0f, icon.Size() * 0.5f, iconScale, SpriteEffects.None, 0f);
-				}
+				// 16px when resting, 32px when the slot lifts, always on whole pixels.
+				WeTerra.Icon(spriteBatch, WrenchHub.IconName(WrenchHub.Actions[i]), center, pop > 0.55f ? 32f : 16f, Color.White * fade);
 
 				if (interactive && pop > 0.72f && hot) {
 					string label = WeText.UI(WrenchHub.TipKey(WrenchHub.Actions[i]));
@@ -154,7 +144,7 @@ namespace DieWithASmile.Engine.Chrome
 				(int)(center.Y - size.Y * 0.5f - 4f),
 				(int)size.X + 18,
 				(int)size.Y + 8);
-			FillRound(spriteBatch, rect, rect.Height * 0.5f, new Color(18, 20, 26) * fade);
+			WeTerra.Panel(spriteBatch, rect, new Color(23, 25, 52) * (0.94f * fade), Color.Black * fade);
 			ChatManager.DrawColorCodedStringWithShadow(
 				spriteBatch, font, text,
 				new Vector2(rect.X + 9, rect.Y + 4),

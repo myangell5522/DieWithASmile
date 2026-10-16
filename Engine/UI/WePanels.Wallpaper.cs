@@ -32,30 +32,40 @@ namespace DieWithASmile.Engine.UI
 			_wallView = View(panel);
 			int start = y;
 
+			// 1. Where the sky comes from.
 			DrawSection(spriteBatch, panel, ref y, WeText.UI("SectionSky"));
 			DrawSkyChips(spriteBatch, panel, ref y);
-			DrawSection(spriteBatch, panel, ref y, WeText.UI("SectionPack"));
-			foreach (string id in WeNestedPacks.VisibleWallpaperIds())
-				DrawNestedCard(spriteBatch, panel, ref y, id);
 			if (WeSave.Data.Wallpaper is WallpaperKind.Color or WallpaperKind.Gradient) {
 				DrawRgbArmed(spriteBatch, panel, ref y, "wallA", WeSettings.WallpaperColorA);
 				if (WeSave.Data.Wallpaper == WallpaperKind.Gradient)
 					DrawRgbArmed(spriteBatch, panel, ref y, "wallB", WeSettings.WallpaperColorB);
 			}
 
-			DrawArmedSlider(spriteBatch, panel, ref y, "dim", WeSave.Data.WallpaperDim, WeText.UI("WallpaperDim"));
-			DrawArmedSlider(spriteBatch, panel, ref y, "vignette", WeSave.Data.WallpaperVignette, WeText.UI("WallpaperVignette"));
-			DrawHitCard(spriteBatch, panel, ref y, WeText.UI("WallpaperParallax"), WeSave.Data.WallpaperParallax, () => {
-				WeSave.Data.WallpaperParallax = !WeSave.Data.WallpaperParallax;
-				WeSave.Save();
-			});
+			// 2. Scenes shipped with this theme.
+			DrawSection(spriteBatch, panel, ref y, WeText.UI("SectionPack"));
+			foreach (string id in WeNestedPacks.VisibleWallpaperIds())
+				DrawNestedCard(spriteBatch, panel, ref y, id);
 
+			// 3. Backgrounds pulled in automatically from other installed mods.
+			DrawSection(spriteBatch, panel, ref y, WeText.UI("SectionFromMods"));
+			DrawBorrowSection(spriteBatch, panel, ref y, WeCatalog.Skies, WeOfferKind.Sky);
+
+			// 4. Your own pictures and GIFs.
+			DrawSection(spriteBatch, panel, ref y, WeText.UI("SectionImages"));
+			DrawHint(spriteBatch, panel, ref y, WeText.UI("AnimHint"));
+			DrawTwin(spriteBatch, panel, ref y, WeText.UI("ImportImage"), WeText.UI("OpenFolder"),
+				() => WeArt.TryImportWallpaper(),
+				() => WeFiles.OpenFolder(WeSave.WallpaperFolder), WeIcons.Upload, WeIcons.Folder);
+			WeLayerRecord selected = WeSettings.SelectedLayer();
+			foreach (WeArtRecord record in WeSave.Data.Wallpapers)
+				DrawLibRow(spriteBatch, panel, ref y, record, selected != null && selected.ArtId == record.Id);
+
+			// 5. Mixing: stack pictures and effects on top of the sky.
 			DrawSection(spriteBatch, panel, ref y, WeText.UI("SectionLayers"));
 			DrawHint(spriteBatch, panel, ref y, WeText.UI("PlaceHint"));
 			DrawTwin(spriteBatch, panel, ref y, WeText.UI("AddImageLayer"), WeText.UI("AddEffectLayer"),
 				() => WeSettings.AddImageLayer(WeSave.Data.Wallpaper == WallpaperKind.Image ? WeSave.Data.WallpaperId : ""),
-				() => WeSettings.AddEffectLayer(WeFxKind.Stars));
-
+				() => WeSettings.AddEffectLayer(WeFxKind.Stars), WeIcons.Image, WeIcons.Sparkle);
 			if (WeSave.Data.Layers.Count == 0)
 				DrawHint(spriteBatch, panel, ref y, WeText.UI("EmptyLayers"));
 			else {
@@ -63,18 +73,15 @@ namespace DieWithASmile.Engine.UI
 					DrawLayerBlock(spriteBatch, panel, ref y, layer);
 			}
 
-			DrawSection(spriteBatch, panel, ref y, WeText.UI("SectionImages"));
-			DrawHint(spriteBatch, panel, ref y, WeText.UI("AnimHint"));
-			DrawTwin(spriteBatch, panel, ref y, WeText.UI("ImportImage"), WeText.UI("OpenFolder"),
-				() => WeArt.TryImportWallpaper(),
-				() => WeFiles.OpenFolder(WeSave.WallpaperFolder));
-
-			WeLayerRecord selected = WeSettings.SelectedLayer();
-			foreach (WeArtRecord record in WeSave.Data.Wallpapers)
-				DrawLibRow(spriteBatch, panel, ref y, record, selected != null && selected.ArtId == record.Id);
-
-			DrawBorrowSection(spriteBatch, panel, ref y, WeCatalog.Skies, WeOfferKind.Sky);
-			_wallHeight = Math.Max(0, y - start);
+			// 6. Final touches.
+			DrawSection(spriteBatch, panel, ref y, WeText.UI("SectionAdjust"));
+			DrawArmedSlider(spriteBatch, panel, ref y, "dim", WeSave.Data.WallpaperDim, WeText.UI("WallpaperDim"));
+			DrawArmedSlider(spriteBatch, panel, ref y, "vignette", WeSave.Data.WallpaperVignette, WeText.UI("WallpaperVignette"));
+			DrawHitCard(spriteBatch, panel, ref y, WeText.UI("WallpaperParallax"), WeSave.Data.WallpaperParallax, () => {
+				WeSave.Data.WallpaperParallax = !WeSave.Data.WallpaperParallax;
+				WeSave.Save();
+			});
+			_wallHeight = Math.Max(0, y - start) + 12;
 		}
 
 		private static void ClickWallpaper(Rectangle panel, ref int y)
@@ -109,13 +116,6 @@ namespace DieWithASmile.Engine.UI
 			}
 		}
 
-		private static void DrawSection(SpriteBatch spriteBatch, Rectangle panel, ref int y, string text)
-		{
-			ChatManager.DrawColorCodedStringWithShadow(
-				spriteBatch, FontAssets.MouseText.Value, text,
-				new Vector2(panel.X + 18, y + 2), WeAccent.Light * _fade, 0f, Vector2.Zero, new Vector2(0.78f));
-			y += 24;
-		}
 
 		private static void DrawSkyChips(SpriteBatch spriteBatch, Rectangle panel, ref int y)
 		{
@@ -134,14 +134,9 @@ namespace DieWithASmile.Engine.UI
 		private static void DrawChip(SpriteBatch spriteBatch, Rectangle hit, string text, bool on, Action click)
 		{
 			bool hover = hit.Contains(Main.mouseX, Main.mouseY);
-			WeDraw.Fill(spriteBatch, hit, (on ? WeAccent.Deep : new Color(32, 36, 44)) * ((hover ? 0.95f : 0.8f) * _fade));
-			WeDraw.Border(spriteBatch, hit, (on || hover ? WeAccent.Light : WeAccent.Mid) * _fade);
-			var font = FontAssets.MouseText.Value;
-			Vector2 size = font.MeasureString(text) * 0.68f;
-			ChatManager.DrawColorCodedStringWithShadow(
-				spriteBatch, font, text,
-				new Vector2(hit.X + (hit.Width - size.X) * 0.5f, hit.Y + (hit.Height - size.Y) * 0.5f),
-				Color.White * _fade, 0f, Vector2.Zero, new Vector2(0.68f));
+			Card(spriteBatch, hit, hover, on);
+			string label = WeTerra.Fit(text, 0.7f, hit.Width - 10);
+			WeTerra.LabelCentered(spriteBatch, label, hit.Center.ToVector2(), (on || hover ? Color.White : new Color(230, 230, 240)) * _fade, 0.7f);
 			Arm(hit, click);
 		}
 
@@ -150,33 +145,12 @@ namespace DieWithASmile.Engine.UI
 			Rectangle hit = Row(panel, y, 56);
 			bool on = WeSave.Data.Wallpaper == WallpaperKind.Nested && WeSave.Data.WallpaperId == id;
 			bool hover = hit.Contains(Main.mouseX, Main.mouseY);
-			WeDraw.Fill(spriteBatch, hit, (on ? WeAccent.Deep : new Color(28, 30, 38)) * ((hover ? 0.95f : 0.8f) * _fade));
-			WeDraw.Border(spriteBatch, hit, (on || hover ? WeAccent.Light : WeAccent.Mid) * _fade);
-
-			var badge = new Rectangle(hit.X + 8, hit.Y + 14, 28, 28);
-			Texture2D icon = WePresetLogos.PackIcon();
-			if (icon != null) {
-				float scale = Math.Min(badge.Width / (float)icon.Width, badge.Height / (float)icon.Height);
-				spriteBatch.Draw(icon, badge.Center.ToVector2(), null, Color.White * _fade, 0f, icon.Size() * 0.5f, scale, SpriteEffects.None, 0f);
-			}
-			else {
-				WeDraw.Fill(spriteBatch, badge, WeAccent.Deep * _fade);
-				WeDraw.Border(spriteBatch, badge, WeAccent.Mid * _fade);
-			}
-
-			Texture2D preview = WeNestedPacks.WallpaperPreview(id);
-			var thumb = new Rectangle(hit.X + 44, hit.Y + 8, 72, 40);
-			WeDraw.Fill(spriteBatch, thumb, Color.Black * (0.35f * _fade));
-			if (preview != null)
-				WeDraw.DrawCover(spriteBatch, preview, thumb, Color.White * _fade);
-
-			ChatManager.DrawColorCodedStringWithShadow(
-				spriteBatch, FontAssets.MouseText.Value, WeText.UI(WeNestedPacks.SceneTitleKey(id)),
-				new Vector2(hit.X + 126, hit.Y + 8), Color.White * _fade, 0f, Vector2.Zero, new Vector2(0.75f));
-			ChatManager.DrawColorCodedStringWithShadow(
-				spriteBatch, FontAssets.MouseText.Value,
-				WeText.UI("LogoFromPack") + "  ·  " + WeText.UI("BorrowKindSky"),
-				new Vector2(hit.X + 126, hit.Y + 28), Color.White * (0.62f * _fade), 0f, Vector2.Zero, new Vector2(0.68f));
+			Card(spriteBatch, hit, hover, on);
+			DrawBadge(spriteBatch, new Rectangle(hit.X + 8, hit.Y + 14, 28, 28), WePresetLogos.PackIcon(), null);
+			Thumb(spriteBatch, new Rectangle(hit.X + 44, hit.Y + 8, 72, 40), WeNestedPacks.WallpaperPreview(id), cover: true);
+			TwoLine(spriteBatch, hit.X + 126, hit.Y + 8, hit.Width - 170,
+				WeText.UI(WeNestedPacks.SceneTitleKey(id)), WeText.UI("LogoFromPack") + "  ·  " + WeText.UI("BorrowKindSky"));
+			Affordance(spriteBatch, hit, CardKind.Radio, on);
 			string nestId = id;
 			Arm(hit, () => {
 				WeSettings.SetWallpaperNested(nestId);
@@ -185,26 +159,24 @@ namespace DieWithASmile.Engine.UI
 			y += 62;
 		}
 
-		private static void DrawTwin(SpriteBatch spriteBatch, Rectangle panel, ref int y, string a, string b, Action left, Action right)
+		private static void DrawTwin(SpriteBatch spriteBatch, Rectangle panel, ref int y, string a, string b, Action left, Action right, string iconA = null, string iconB = null)
 		{
 			Rectangle l = new(panel.X + 16, y, (panel.Width - 40) / 2, 32);
 			Rectangle r = new(l.Right + 8, y, l.Width, 32);
-			DrawMini(spriteBatch, l, a);
-			DrawMini(spriteBatch, r, b);
+			DrawMini(spriteBatch, l, a, iconA);
+			DrawMini(spriteBatch, r, b, iconB);
 			Arm(l, left);
 			Arm(r, right);
 			y += 40;
 		}
 
-		private static void DrawHitCard(SpriteBatch spriteBatch, Rectangle panel, ref int y, string text, bool on, Action click)
+		private static void DrawHitCard(SpriteBatch spriteBatch, Rectangle panel, ref int y, string text, bool on, Action click, CardKind kind = CardKind.Toggle)
 		{
 			Rectangle hit = Row(panel, y, 36);
 			bool hover = hit.Contains(Main.mouseX, Main.mouseY);
-			WeDraw.Fill(spriteBatch, hit, (on ? WeAccent.Deep : new Color(28, 30, 38)) * ((hover ? 0.95f : 0.8f) * _fade));
-			WeDraw.Border(spriteBatch, hit, (on || hover ? WeAccent.Light : WeAccent.Mid) * _fade);
-			ChatManager.DrawColorCodedStringWithShadow(
-				spriteBatch, FontAssets.MouseText.Value, text,
-				new Vector2(hit.X + 12, hit.Y + 8), Color.White * _fade, 0f, Vector2.Zero, new Vector2(0.82f));
+			Card(spriteBatch, hit, hover, kind == CardKind.Radio && on);
+			WeTerra.Label(spriteBatch, WeTerra.Fit(text, 0.82f, hit.Width - 56), new Vector2(hit.X + 12, hit.Y + 9), Color.White * _fade, 0.82f);
+			Affordance(spriteBatch, hit, kind, on);
 			Arm(hit, click);
 			y += 42;
 		}
@@ -216,26 +188,22 @@ namespace DieWithASmile.Engine.UI
 			Rectangle body = new(hit.X, hit.Y, Math.Max(8, trash.X - hit.X - 8), hit.Height);
 			bool on = layer.Id == WeSave.Data.SelectedLayerId;
 			bool hover = body.Contains(Main.mouseX, Main.mouseY);
-			WeDraw.Fill(spriteBatch, body, (on ? WeAccent.Deep : new Color(28, 30, 38)) * ((hover ? 0.95f : 0.8f) * _fade));
-			WeDraw.Border(spriteBatch, body, (on || hover ? WeAccent.Light : WeAccent.Mid) * _fade);
+			Card(spriteBatch, body, hover, on);
 
-			int textX = body.X + 12;
+			int textX = body.X + 36;
+			var dest = new Rectangle(body.X + 8, hit.Y + 4, 48, 32);
 			if (layer.Kind == WeLayerKind.Image) {
 				WeArtRecord art = WeSave.Data.Wallpapers.Find(item => item.Id == layer.ArtId);
-				Texture2D thumb = WeArt.Preview(art, false);
-				if (thumb != null) {
-					var dest = new Rectangle(body.X + 8, hit.Y + 4, 48, 32);
-					float scale = Math.Min(dest.Width / (float)Math.Max(1, thumb.Width), dest.Height / (float)Math.Max(1, thumb.Height));
-					spriteBatch.Draw(thumb, dest.Center.ToVector2(), null, Color.White * _fade, 0f, thumb.Size() * 0.5f, scale, SpriteEffects.None, 0f);
-					textX = dest.Right + 10;
-				}
+				Thumb(spriteBatch, dest, WeArt.Preview(art, false), cover: true);
+				textX = dest.Right + 10;
 			}
+			else
+				WeTerra.Icon(spriteBatch, WeIcons.Sparkle, new Vector2(body.X + 20, body.Center.Y), 16f, Color.White * _fade);
 
-			ChatManager.DrawColorCodedStringWithShadow(
-				spriteBatch, FontAssets.MouseText.Value, Ellipsize(LayerPretty(layer), 22),
-				new Vector2(textX, hit.Y + 10), Color.White * _fade, 0f, Vector2.Zero, new Vector2(0.8f));
-			RoundButton.DrawIcon(spriteBatch, trash.Center.ToVector2(), 13f, WeIcons.Get(WeIcons.Trash), 0f, _fade);
-			RoundButton.Tooltip(spriteBatch, trash.Center.ToVector2(), 13f, WeText.UI("RemoveLayer"), _fade);
+			string title = LayerPretty(layer) + (layer.Foreground ? "  ·  " + WeText.UI("LayerForeground") : "");
+			WeTerra.Label(spriteBatch, WeTerra.Fit(title, 0.8f, body.Right - textX - 30), new Vector2(textX, hit.Y + 11), Color.White * _fade, 0.8f);
+			WeTerra.Icon(spriteBatch, on ? WeIcons.ChevronLeft : WeIcons.ChevronRight, new Vector2(body.Right - 16, body.Center.Y), 16f, Color.White * (0.8f * _fade));
+			DrawTrashSlot(spriteBatch, trash, WeText.UI("RemoveLayer"));
 			Arm(body, () => WeSettings.SelectLayer(layer.Id));
 			string id = layer.Id;
 			Arm(trash, () => {
@@ -249,36 +217,28 @@ namespace DieWithASmile.Engine.UI
 
 			DrawHitCard(spriteBatch, panel, ref y, WeText.UI("LayerForeground"), layer.Foreground, WeSettings.ToggleSelectedForeground);
 			if (layer.Kind == WeLayerKind.Image) {
-				DrawHitCard(spriteBatch, panel, ref y, WeText.UI(FitKey(layer.Fit)), true, WeSettings.CycleSelectedFit);
-				DrawHitCard(spriteBatch, panel, ref y, WeText.UI("CenterImage"), false, WeSettings.CenterWallpaperPan);
+				DrawHitCard(spriteBatch, panel, ref y, WeText.UI(FitKey(layer.Fit)), true, WeSettings.CycleSelectedFit, CardKind.Cycle);
+				DrawHitCard(spriteBatch, panel, ref y, WeText.UI("CenterImage"), false, WeSettings.CenterWallpaperPan, CardKind.Action);
 			}
 			else
-				DrawHitCard(spriteBatch, panel, ref y, WeText.UI(FxKey(layer.Effect)), true, WeSettings.CycleSelectedEffect);
+				DrawHitCard(spriteBatch, panel, ref y, WeText.UI(FxKey(layer.Effect)), true, WeSettings.CycleSelectedEffect, CardKind.Cycle);
 
 			DrawArmedSlider(spriteBatch, panel, ref y, "lop", layer.Opacity, WeText.UI("LayerOpacity"));
 			DrawArmedSlider(spriteBatch, panel, ref y, "lpar", layer.Parallax, WeText.UI("LayerParallax"));
 			DrawArmedSlider(spriteBatch, panel, ref y, "lzm", (layer.Zoom - 0.6f) / 1.2f, WeText.UI("LayerZoom"));
 			DrawTwin(spriteBatch, panel, ref y, WeText.UI("LayerUp"), WeText.UI("LayerDown"),
 				() => WeSettings.MoveSelectedLayer(-1),
-				() => WeSettings.MoveSelectedLayer(1));
+				() => WeSettings.MoveSelectedLayer(1), WeIcons.Upload, WeIcons.Layers);
 		}
 
 		private static void DrawLibRow(SpriteBatch spriteBatch, Rectangle panel, ref int y, WeArtRecord record, bool on)
 		{
 			Rectangle hit = Row(panel, y, 52);
 			bool hover = hit.Contains(Main.mouseX, Main.mouseY);
-			WeDraw.Fill(spriteBatch, hit, (on ? WeAccent.Deep : new Color(28, 30, 38)) * _fade);
-			WeDraw.Border(spriteBatch, hit, (on || hover ? WeAccent.Light : WeAccent.Mid) * _fade);
-			Texture2D tex = WeArt.Preview(record, false);
-			if (tex != null) {
-				var dest = new Rectangle(hit.X + 8, hit.Y + 6, 64, 40);
-				float scale = Math.Min(dest.Width / (float)tex.Width, dest.Height / (float)tex.Height);
-				spriteBatch.Draw(tex, dest.Center.ToVector2(), null, Color.White * _fade, 0f, tex.Size() * 0.5f, scale, SpriteEffects.None, 0f);
-			}
-
-			ChatManager.DrawColorCodedStringWithShadow(
-				spriteBatch, FontAssets.MouseText.Value, PrettyFile(record.FileName),
-				new Vector2(hit.X + 82, hit.Y + 16), Color.White * _fade, 0f, Vector2.Zero, new Vector2(0.75f));
+			Card(spriteBatch, hit, hover, on);
+			Thumb(spriteBatch, new Rectangle(hit.X + 8, hit.Y + 6, 64, 40), WeArt.Preview(record, false), cover: true);
+			TwoLine(spriteBatch, hit.X + 82, hit.Y + 7, hit.Width - 130, PrettyFile(record.FileName), WeText.UI("RightClickDelete"));
+			Affordance(spriteBatch, hit, CardKind.Radio, on);
 			string artId = record.Id;
 			Arm(hit,
 				() => WeSettings.AssignSelectedImage(artId),
@@ -288,12 +248,11 @@ namespace DieWithASmile.Engine.UI
 
 		private static void DrawArmedSlider(SpriteBatch spriteBatch, Rectangle panel, ref int y, string key, float value, string label)
 		{
-			Rectangle bar = new(panel.X + 90, y + 8, panel.Width - 160, 8);
-			ChatManager.DrawColorCodedStringWithShadow(
-				spriteBatch, FontAssets.MouseText.Value, label,
-				new Vector2(panel.X + 18, y), Color.White * (0.8f * _fade), 0f, Vector2.Zero, new Vector2(0.7f));
-			WeDraw.Fill(spriteBatch, bar, Color.White * (0.15f * _fade));
-			WeDraw.Fill(spriteBatch, new Rectangle(bar.X, bar.Y, Math.Max(1, (int)(bar.Width * MathHelper.Clamp(value, 0f, 1f))), bar.Height), WeAccent.Mid * _fade);
+			Rectangle bar = new(panel.X + 90, y + 4, panel.Width - 160, 16);
+			WeTerra.Label(spriteBatch, WeTerra.Fit(label, 0.7f, 68), new Vector2(panel.X + 18, y + 2), Color.White * (0.85f * _fade), 0.7f);
+			bool hover = bar.Contains(Main.mouseX, Main.mouseY) || _dragSlider == key;
+			WeTerra.Slider(spriteBatch, bar, value, hover, _fade);
+			WeTerra.Label(spriteBatch, (int)Math.Round(MathHelper.Clamp(value, 0f, 1f) * 100f) + "%", new Vector2(bar.Right + 10, y + 2), WeTerra.Muted * _fade, 0.66f);
 			ArmSlider(new Rectangle(panel.X + 90, y + 4, panel.Width - 160, 16), key);
 			y += 22;
 		}
@@ -303,7 +262,9 @@ namespace DieWithASmile.Engine.UI
 			DrawArmedSlider(spriteBatch, panel, ref y, key + "R", color.R / 255f, WeText.UI("Red"));
 			DrawArmedSlider(spriteBatch, panel, ref y, key + "G", color.G / 255f, WeText.UI("Green"));
 			DrawArmedSlider(spriteBatch, panel, ref y, key + "B", color.B / 255f, WeText.UI("Blue"));
-			WeDraw.Fill(spriteBatch, new Rectangle(panel.Right - 52, y - 70, 28, 62), color * _fade);
+			var swatch = new Rectangle(panel.Right - 52, y - 70, 28, 62);
+			WeDraw.Fill(spriteBatch, new Rectangle(swatch.X - 2, swatch.Y - 2, swatch.Width + 4, swatch.Height + 4), Color.Black * _fade);
+			WeDraw.Fill(spriteBatch, swatch, color * _fade);
 			y += 8;
 		}
 

@@ -504,8 +504,17 @@ namespace DieWithASmile.Content
 			ApplyOwnedFade(slot);
 		}
 
+		private static long _userVolumeMs = long.MinValue / 2;
+
+		/// <summary>Call when the player moved the Music slider, so the anti-theft guard below lets 0% through.</summary>
+		internal static void NoteUserMusicVolume() => _userVolumeMs = Environment.TickCount64;
+
 		internal static void RestoreIfStolen(float previous)
 		{
+			// This guard exists for borrowed ModMenu hooks that zero Main.musicVolume. It also wraps the whole
+			// DoUpdate/DoDraw frame, so without this check the player could never turn music down to 0%.
+			if (Environment.TickCount64 - _userVolumeMs < 750 || IngameOptions.rightLock != -1)
+				return;
 			if (previous > 0.02f && Main.musicVolume <= 0.02f)
 				Main.musicVolume = previous;
 		}

@@ -22,15 +22,17 @@ namespace DieWithASmile.Engine.Widgets
 
 		internal static float Scale => SceneGraph.ScaleOf(SceneGraph.Quote);
 
-		internal static Rectangle HitRect()
+		internal static Rectangle HitRect() => Box();
+
+		/// <summary>The speech-bubble panel; drawing and the layout editor's hit box both use it.</summary>
+		private static Rectangle Box()
 		{
 			Vector2 size = Measure();
+			float s = Scale;
+			float w = size.X + 52f * s;
+			float h = size.Y + 20f * s;
 			Vector2 pos = Anchor;
-			return new Rectangle(
-				(int)(pos.X - size.X * 0.5f - 12f),
-				(int)(pos.Y - size.Y * 0.5f - 8f),
-				(int)size.X + 24,
-				(int)size.Y + 16);
+			return new Rectangle((int)(pos.X - w * 0.5f), (int)(pos.Y - h * 0.5f), (int)w, (int)Math.Max(28f, h));
 		}
 
 		internal static void EnsureFile()
@@ -85,25 +87,22 @@ namespace DieWithASmile.Engine.Widgets
 			string greeting = Greeting();
 			string quote = string.IsNullOrEmpty(_line) ? "" : "\"" + _line + "\"";
 			var titleFont = FontAssets.DeathText.Value;
-			var bodyFont = FontAssets.MouseText.Value;
-			float titleScale = 0.38f * Scale;
-			float bodyScale = 0.78f * Scale;
+			float s = Scale;
+			float titleScale = 0.38f * s;
+			float bodyScale = 0.78f * s;
 			Vector2 titleSize = titleFont.MeasureString(greeting) * titleScale;
-			Vector2 quoteSize = string.IsNullOrEmpty(quote) ? Vector2.Zero : bodyFont.MeasureString(quote) * bodyScale;
-			float width = Math.Max(titleSize.X, quoteSize.X);
-			float height = titleSize.Y + (quoteSize.Y > 0f ? quoteSize.Y + 4f : 0f);
-			Vector2 origin = Anchor - new Vector2(width, height) * 0.5f;
+			Rectangle box = Box();
 
 			WeDraw.WithLinear(spriteBatch, () => {
-				ChatManager.DrawColorCodedStringWithShadow(
-					spriteBatch, titleFont, greeting, origin,
-					WeLook.Paint(WeAccent.Light, fade), 0f, Vector2.Zero, new Vector2(titleScale));
+				// Styled like an NPC chat box: panel, a speech icon, greeting in the accent colour, quote below.
+				WeTerra.Window(spriteBatch, box, fade);
+				WeTerra.Icon(spriteBatch, WeIcons.Quote, new Vector2(box.X + 22f * s, box.Y + 20f * s), 16f * s, Color.White * fade);
+				float x = box.X + 40f * s;
+				float y = box.Y + 8f * s;
+				Utils.DrawBorderStringFourWay(spriteBatch, titleFont, greeting, x, y, WeLook.Paint(WeTerra.Title, fade), Color.Black * fade, Vector2.Zero, titleScale);
 				if (string.IsNullOrEmpty(quote))
 					return;
-				ChatManager.DrawColorCodedStringWithShadow(
-					spriteBatch, bodyFont, quote,
-					new Vector2(Anchor.X - quoteSize.X * 0.5f, origin.Y + titleSize.Y + 2f),
-					WeLook.Paint(Color.White, 0.88f * fade), 0f, Vector2.Zero, new Vector2(bodyScale));
+				WeTerra.Label(spriteBatch, quote, new Vector2(x, y + titleSize.Y + 2f), WeLook.Paint(Color.White, 0.92f * fade), bodyScale);
 			});
 		}
 
@@ -115,12 +114,12 @@ namespace DieWithASmile.Engine.Widgets
 			string greeting = Greeting();
 			var font = FontAssets.DeathText.Value;
 			Vector2 size = font.MeasureString(greeting);
-			float scale = Math.Min((box.Width - 16f) / Math.Max(1f, size.X), (box.Height - 12f) / Math.Max(1f, size.Y));
-			scale = Math.Min(scale, 0.36f);
-			Vector2 pos = box.Center.ToVector2() - size * scale * 0.5f;
-			ChatManager.DrawColorCodedStringWithShadow(
-				spriteBatch, font, greeting, pos,
-				WeAccent.Light * fade, 0f, Vector2.Zero, new Vector2(scale));
+			float scale = Math.Min((box.Width - 40f) / Math.Max(1f, size.X), (box.Height - 12f) / Math.Max(1f, size.Y));
+			scale = Math.Min(scale, 0.34f);
+			float total = size.X * scale + 22f;
+			float x = box.Center.X - total * 0.5f;
+			WeTerra.Icon(spriteBatch, WeIcons.Quote, new Vector2(x + 8f, box.Center.Y), 16f, Color.White * fade);
+			Utils.DrawBorderStringFourWay(spriteBatch, font, greeting, x + 22f, box.Center.Y - size.Y * scale * 0.5f, WeTerra.Title * fade, Color.Black * fade, Vector2.Zero, scale);
 		}
 
 		private static Vector2 Measure()

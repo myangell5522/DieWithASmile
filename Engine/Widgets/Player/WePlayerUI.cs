@@ -10,7 +10,6 @@ using DieWithASmile.Engine.Content;
 using DieWithASmile.Engine.Core;
 using DieWithASmile.Engine.Layout;
 using DieWithASmile.Engine.UI;
-using DieWithASmile.Engine.Settings;
 
 namespace DieWithASmile.Engine.Audio
 {
@@ -125,7 +124,7 @@ namespace DieWithASmile.Engine.Audio
 		private static void UpdateInput()
 		{
 			bool pressed = WeInput.Edge(ref _mouseHeld, ref _holdLock);
-			if (!Enabled || WePanels.Covering || WeNeoMenu.Covering || WeSplash.Visible || LayoutEditor.Editing) {
+			if (!Enabled || WePanels.Covering || WeSplash.Visible || LayoutEditor.Editing) {
 				_expand = MathHelper.Lerp(_expand, 0f, 0.22f);
 				_draggingSeek = false;
 				return;
@@ -241,9 +240,7 @@ namespace DieWithASmile.Engine.Audio
 
 		private static void DrawCard(SpriteBatch spriteBatch, Rectangle card, float alpha, float ease)
 		{
-			WeDraw.Fill(spriteBatch, new Rectangle(card.X - 3, card.Y - 3, card.Width + 6, card.Height + 6), WeAccent.Mid * (0.16f * alpha));
-			WeDraw.Fill(spriteBatch, card, PanelColor * alpha);
-			WeDraw.Border(spriteBatch, card, WeAccent.Mid * alpha);
+			WeTerra.Window(spriteBatch, card, alpha);
 			if (ease < 0.38f)
 				return;
 
@@ -258,9 +255,7 @@ namespace DieWithASmile.Engine.Audio
 			float time = MathHelper.Clamp(WePlaylist.GetDisplayTime(), 0f, duration);
 			float progress = time / duration;
 			var bar = new Rectangle(seekHit.X + 4, seekHit.Y + 8, Math.Max(1, seekHit.Width - 8), 4);
-			WeDraw.Fill(spriteBatch, bar, Color.White * (0.18f * textAlpha));
-			WeDraw.Fill(spriteBatch, new Rectangle(bar.X, bar.Y, Math.Max(1, (int)(bar.Width * progress)), bar.Height), WeAccent.Mid * textAlpha);
-			spriteBatch.Draw(WeDraw.Circle(), new Vector2(bar.X + bar.Width * progress, bar.Y + 2f), null, TextMain * textAlpha, 0f, WeDraw.Circle().Size() * 0.5f, 8f / WeDraw.Circle().Width, SpriteEffects.None, 0f);
+			WeTerra.Slider(spriteBatch, new Rectangle(bar.X, bar.Y - 6, bar.Width, 16), progress, seekHit.Contains(Main.mouseX, Main.mouseY) || _draggingSeek, textAlpha);
 			ChatManager.DrawColorCodedStringWithShadow(spriteBatch, font, WePlaylist.FormatTime(time), new Vector2(bar.X, bar.Y + 8f), TextSub * textAlpha, 0f, Vector2.Zero, new Vector2(0.7f));
 			string end = WePlaylist.FormatTime(duration);
 			Vector2 endSize = font.MeasureString(end) * 0.7f;
@@ -306,8 +301,8 @@ namespace DieWithASmile.Engine.Audio
 		{
 			Texture2D icon = WeIcons.Get(paused ? WeIcons.Play : WeIcons.Pause);
 			if (icon != null) {
-				float scale = size * 2.15f / Math.Max(1, icon.Width);
-				spriteBatch.Draw(icon, center, null, color, 0f, icon.Size() * 0.5f, scale, SpriteEffects.None, 0f);
+				// Pixel icon keeps its own colours; only the alpha of the requested colour is used.
+				WeTerra.Icon(spriteBatch, icon, center, size * 2.2f, Color.White * (color.A / 255f));
 				return;
 			}
 

@@ -10,7 +10,6 @@ using DieWithASmile.Engine.UI;
 using DieWithASmile.Engine.Widgets;
 using DieWithASmile.Engine.Audio;
 using DieWithASmile.Engine.Grab;
-using DieWithASmile.Engine.Settings;
 using DieWithASmile.Content;
 
 namespace DieWithASmile.Engine.Content
@@ -48,7 +47,6 @@ namespace DieWithASmile.Engine.Content
 			DiscordFeed.Unload();
 			WePlaylist.Unload();
 			WePresetLogos.Unload();
-			WeNeoHud.Unload();
 			WeDraw.Unload();
 			ClientChrome.Unload();
 			WeType.Unload();
@@ -61,7 +59,6 @@ namespace DieWithASmile.Engine.Content
 			WrenchToolbar.Update();
 			WePanels.Update();
 			WeSplash.Update();
-			WeNeoMenu.Tick();
 			WidgetHost.Update();
 			WeFx.Update();
 			WeCatalog.Pulse();
@@ -91,7 +88,6 @@ namespace DieWithASmile.Engine.Content
 			WePlayerUI.EndFrame();
 			WrenchToolbar.EndFrame();
 			WePanels.EndFrame();
-			WeNeoMenu.EndFrame();
 		}
 
 		private static void DrawTitleChrome()
@@ -104,10 +100,12 @@ namespace DieWithASmile.Engine.Content
 			try {
 				WeDraw.BeginUi(spriteBatch);
 				LayoutEditor.Draw(spriteBatch, 1f);
-				if (!WeNeoMenu.Covering)
+				// The sidebar doubles as navigation while a page is open, so it is drawn above the page's dim.
+				if (!WrenchHub.UseSidebar)
 					WrenchToolbar.Draw(spriteBatch);
 				WePanels.Draw(spriteBatch);
-				WeNeoMenu.Draw(spriteBatch);
+				if (WrenchHub.UseSidebar)
+					WrenchToolbar.Draw(spriteBatch);
 				WeSplash.Draw(spriteBatch);
 				WeToast.Draw(spriteBatch);
 			}
@@ -167,9 +165,6 @@ namespace DieWithASmile.Engine.Content
 		private static bool OwnsTitleCursor =>
 			WeModMenu.IsActive && WeModMenu.OnTitle && CoolerMenuCompat.MenuBackdropActive;
 
-		private static bool OwnsInGameCursor =>
-			WeNeoMenu.Covering && WeNeoMenu.InGame;
-
 		private static void DrawCursorHook(On_Main.orig_DrawCursor orig, Vector2 bonus, bool smart)
 		{
 			if (_overlayCursor) {
@@ -177,7 +172,7 @@ namespace DieWithASmile.Engine.Content
 				return;
 			}
 
-			if (_skipCursor || OwnsInGameCursor)
+			if (_skipCursor)
 				return;
 			orig(bonus, smart);
 		}
@@ -186,7 +181,7 @@ namespace DieWithASmile.Engine.Content
 		{
 			if (_overlayCursor)
 				return orig(smart);
-			if (_skipCursor || OwnsInGameCursor)
+			if (_skipCursor)
 				return Vector2.Zero;
 			return orig(smart);
 		}
@@ -202,14 +197,11 @@ namespace DieWithASmile.Engine.Content
 			bool remapY = false;
 			bool savedMouseLeft = Main.mouseLeft;
 
-			WeNeoMenu.CatchTitleHub();
-			WeNeoMenu.CatchReturn();
-
 			if (WeModMenu.OnTitle) {
 				WeAnim.Pulse();
 				HandleInput();
 				releaseAfterInput = Main.mouseLeftRelease;
-				steal = WeSplash.Visible || WePanels.Covering || WePanels.AteInput || WeNeoMenu.Covering || WeNeoMenu.AteInput || WrenchToolbar.Busy || LayoutEditor.Editing || WidgetHost.Busy;
+				steal = WeSplash.Visible || WePanels.Covering || WePanels.AteInput || WrenchToolbar.Busy || LayoutEditor.Editing || WidgetHost.Busy;
 				if (steal) {
 					Main.blockMouse = true;
 					Main.mouseLeftRelease = false;
@@ -218,7 +210,7 @@ namespace DieWithASmile.Engine.Content
 
 				MenuButtonHooks.BeginFrame();
 				int dy = MenuButtonHooks.MouseRemapY;
-				if (dy != 0 && !WePanels.Covering && !WeNeoMenu.Covering && !WeSplash.Visible && SceneGraph.Visible(SceneGraph.MenuButtons)) {
+				if (dy != 0 && !WePanels.Covering && !WeSplash.Visible && SceneGraph.Visible(SceneGraph.MenuButtons)) {
 					Main.mouseY -= dy;
 					remapY = true;
 				}
@@ -253,8 +245,6 @@ namespace DieWithASmile.Engine.Content
 			if (esc && !_esc) {
 				if (WeSplash.Visible)
 					WeSplash.Dismiss(savePreference: false);
-				else if (WeNeoMenu.IsOpen)
-					WeNeoMenu.OnEsc();
 				else if (WePanels.IsOpen)
 					WePanels.Close();
 				else if (LayoutEditor.Editing)
@@ -266,10 +256,6 @@ namespace DieWithASmile.Engine.Content
 			_esc = esc;
 			WeSplash.HandleInput();
 			if (WeSplash.Visible)
-				return;
-
-			WeNeoMenu.HandleInput();
-			if (WeNeoMenu.Covering)
 				return;
 
 			WePanels.HandleInput();

@@ -26,7 +26,8 @@ namespace DieWithASmile.Engine.Widgets
 
 			Vector2 center = Anchor;
 			float radius = 26f * Scale;
-			WeDraw.WithLinear(spriteBatch, () => RoundButton.Draw(spriteBatch, center, radius, fade));
+			// An inventory-style slot holding the vanilla moon sprite.
+			WeDraw.WithLinear(spriteBatch, () => WeTerra.Panel(spriteBatch, RoundButton.Hit(center, radius), WeTerra.WindowBack * fade, Color.Black * fade));
 
 			Texture2D moon = MoonTexture();
 			if (moon != null) {

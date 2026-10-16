@@ -207,8 +207,7 @@ namespace DieWithASmile.Engine.Widgets
 			Color border = _editing
 				? Color.Lerp(WeAccent.Mid, WeAccent.Light, pulse) * fade
 				: (hover ? WeAccent.Light : WeAccent.Mid) * fade;
-			WeDraw.Fill(spriteBatch, hit, fill);
-			WeDraw.Border(spriteBatch, hit, border);
+			WeTerra.Panel(spriteBatch, hit, fill, _editing || hover ? border : Color.Black * fade);
 
 			string shownId = _editing ? (_buffer ?? "") : (WeSave.Data.DiscordGuildId ?? "");
 			string shown;
@@ -323,12 +322,10 @@ namespace DieWithASmile.Engine.Widgets
 
 		private static void DrawChrome(SpriteBatch spriteBatch, Rectangle card, float s, float fade)
 		{
-			float radius = MathF.Min(18f * s, Math.Min(card.Width, card.Height) * 0.18f);
-			FillRound(spriteBatch, card, CardFill * (0.96f * fade), radius);
-			int inset = Math.Max(2, (int)(radius * 0.85f));
-			WeDraw.Fill(spriteBatch, new Rectangle(card.X, card.Y + inset, Math.Max(2, (int)(3f * s)), Math.Max(4, card.Height - inset * 2)), WeAccent.Mid * fade);
-			WeDraw.Fill(spriteBatch, new Rectangle(card.X + inset, card.Y + 1, Math.Max(1, card.Width - inset * 2), 1), Color.White * (0.14f * fade));
-			WeDraw.Fill(spriteBatch, new Rectangle(card.X + inset, card.Bottom - 2, Math.Max(1, card.Width - inset * 2), 1), Color.Black * (0.35f * fade));
+			// Same rounded Terraria panel as the rest of the theme, with the accent strip on the left.
+			WeTerra.Window(spriteBatch, card, fade);
+			int inset = Math.Max(4, (int)(12f * s));
+			WeDraw.Fill(spriteBatch, new Rectangle(card.X + 3, card.Y + inset, Math.Max(2, (int)(3f * s)), Math.Max(4, card.Height - inset * 2)), WeAccent.Light * (0.8f * fade));
 		}
 
 		private static void DrawCompact(SpriteBatch spriteBatch, Rectangle card, float s, float fade)

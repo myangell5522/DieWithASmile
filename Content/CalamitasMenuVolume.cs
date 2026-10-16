@@ -4,241 +4,108 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.ModLoader;
+using DieWithASmile.Engine.Content;
 
 namespace DieWithASmile.Content
 {
+	/// <summary>
+	/// Adds a "Main Menu Music" slider under Ambient on the vanilla title-screen Volume page (menuMode 26).
+	///
+	/// Layout (vanilla, fixed pixels): Music/Sound/Ambient bars at y = 332/362/392, Back button from y = 470.
+	/// Our row goes at 422, one vanilla step (30px) below Ambient. Swap My Audio! draws its Audio Device line
+	/// below the last volume row; it asks us through Mod.Call("TitleVolumeRows") how many rows we added, so the
+	/// two never overlap whichever order the hooks run in.
+	///
+	/// The in-game (Esc) Volume page is left alone: menu music isn't playing in a world, and its only free row
+	/// is the spacer under Ambient, which Swap My Audio! uses for the device picker.
+	/// </summary>
 	public class CalamitasMenuVolume : ModSystem
 	{
-		private const int TitleLockId = 5;
 		private const int TitleVolumeMenuMode = 26;
-		private const int DummyLockId = 19;
+		private const int RowStep = 30;
+		private const int LockId = 5; // vanilla title bars use 2, 3 and 4
 
-		private static bool _optionsVolumePage;
-		private static bool _wasTitleVolumePage;
-		private static bool _wasOptionsVolumePage;
-		private static bool _titleArmed;
-		private static bool _optionsArmed;
-		private static bool _dirty;
-		private static bool _injecting;
-		private static int _saveDelay;
+		private static int _depth;
 		private static int _bars;
-		private static int _lastPercentIndex = -1;
-		private static bool _haveMusicSnapshot;
-		private static float _savedMusic = 1f;
-		private static float _savedSound = 1f;
-		private static float _savedAmbient = 1f;
-		private static Vector2 _anchor;
-		private static Vector2 _offset;
+		private static bool _dirty;
+
+		/// <summary>Extra rows this mod draws under the vanilla title volume bars this frame (0 or 1).</summary>
+		internal static int TitleRows => ShowTitleRow ? 1 : 0;
+
+		private static bool ShowTitleRow =>
+			Main.gameMenu && Main.menuMode == TitleVolumeMenuMode && WeModMenu.IsActive;
 
 		public override void Load()
 		{
+			if (Main.dedServ)
+				return;
+
+			On_Main.DrawMenu += DrawMenuHook;
+			On_IngameOptions.DrawValueBar += DrawValueBarHook;
 		}
 
 		public override void Unload()
 		{
-			ForceSave();
+			SaveIfDirty();
 		}
 
 		private static void DrawMenuHook(On_Main.orig_DrawMenu orig, Main self, GameTime time)
 		{
 			_bars = 0;
-			bool volumePage = Main.gameMenu && Main.menuMode == TitleVolumeMenuMode;
-			if (volumePage) {
-				if (!_wasTitleVolumePage) {
-					_titleArmed = false;
-					CaptureVanillaVolumes();
-				}
-
-				if (!Main.mouseLeft)
-					_titleArmed = true;
-
-				if (!_titleArmed)
-					IngameOptions.rightLock = DummyLockId;
-			}
-
+			_depth = 0;
 			orig(self, time);
-
-			if (volumePage) {
-				if (!_titleArmed)
-					RestoreVanillaVolumes();
-			}
-			else if (_wasTitleVolumePage) {
-				ForceSave();
-			}
-
-			_wasTitleVolumePage = volumePage;
-			FlushSave();
-		}
-
-		private static void DrawOptionsHook(On_IngameOptions.orig_Draw orig, Main main, SpriteBatch sb)
-		{
-			_optionsVolumePage = false;
-			_lastPercentIndex = -1;
-			_bars = 0;
-			bool likelyVolume = IngameOptions.category == 0;
-			if (likelyVolume) {
-				if (!_wasOptionsVolumePage) {
-					_optionsArmed = false;
-					CaptureVanillaVolumes();
-				}
-
-				if (!Main.mouseLeft)
-					_optionsArmed = true;
-
-				if (!_optionsArmed)
-					IngameOptions.rightLock = DummyLockId;
-			}
-
-			orig(main, sb);
-
-			if (_optionsVolumePage) {
-				if (!_optionsArmed)
-					RestoreVanillaVolumes();
-			}
-			else if (_wasOptionsVolumePage) {
-				ForceSave();
-			}
-
-			_wasOptionsVolumePage = _optionsVolumePage;
-			FlushSave();
-		}
-
-		private static bool DrawRightSideHook(
-			On_IngameOptions.orig_DrawRightSide orig,
-			SpriteBatch sb,
-			string txt,
-			int i,
-			Vector2 anchor,
-			Vector2 offset,
-			float scale,
-			float colorScale,
-			Color over)
-		{
-			bool result = orig(sb, txt, i, anchor, offset, scale, colorScale, over);
-			if (string.IsNullOrEmpty(txt) || !txt.Contains('%'))
-				return result;
-
-			if (txt.StartsWith(Lang.menu[99].Value, StringComparison.Ordinal) ||
-			    txt.StartsWith(Lang.menu[98].Value, StringComparison.Ordinal) ||
-			    txt.StartsWith(Lang.menu[119].Value, StringComparison.Ordinal))
-				_optionsVolumePage = true;
-
-			if (_optionsVolumePage) {
-				_anchor = anchor;
-				_offset = offset;
-				_lastPercentIndex = i;
-			}
-
-			return result;
+			if (!Main.mouseLeft)
+				SaveIfDirty();
 		}
 
 		private static float DrawValueBarHook(On_IngameOptions.orig_DrawValueBar orig, SpriteBatch sb, float scale, float perc, int lockState, Utils.ColorLerpMethod colorMethod)
 		{
-			Vector2 row = IngameOptions.valuePosition;
-			float result = orig(sb, scale, perc, lockState, colorMethod);
-			if (_injecting)
-				return result;
-
-			bool titleVolume = Main.gameMenu && Main.menuMode == TitleVolumeMenuMode;
-			if (!titleVolume && !_optionsVolumePage)
-				return result;
-
-			_bars++;
-			if (_bars != 3)
-				return result;
-
-			_injecting = true;
+			_depth++;
 			try {
-				DrawMenuMusicBar(sb, scale, row);
+				Vector2 row = IngameOptions.valuePosition;
+				float result = orig(sb, scale, perc, lockState, colorMethod);
+
+				// Only count vanilla's own three bars, not bars other mods draw from inside their hooks.
+				if (_depth != 1 || !ShowTitleRow)
+					return result;
+
+				_bars++;
+				if (_bars == 3)
+					DrawMenuMusicRow(sb, row);
+
+				return result;
 			}
 			finally {
-				_injecting = false;
+				_depth--;
 			}
-
-			return result;
 		}
 
-		private static void DrawMenuMusicBar(SpriteBatch sb, float scale, Vector2 row)
+		private static void DrawMenuMusicRow(SpriteBatch sb, Vector2 ambientRow)
 		{
+			// Vanilla reads IngameOptions.inBar right after this call to decide whether Ambient is hovered.
+			// Our bar overwrites it, so keep Ambient's value and put it back afterwards.
+			bool ambientInBar = IngameOptions.inBar;
 			float volume = DieWithASmileSettings.MenuMusicVolume;
-			string label = CalamitasMenuText.UI("MainMenuMusic") + " " + Math.Round(volume * 100.0) + "%";
-			float dy = _offset.Y > 1f ? _offset.Y : 40f;
-			bool armed = Main.gameMenu ? _titleArmed : _optionsArmed;
+			var barPos = new Vector2(ambientRow.X, ambientRow.Y + RowStep);
 
-			if (_optionsVolumePage) {
-				int i = _lastPercentIndex + 1;
-				if (i >= 0 && i < IngameOptions.rightScale.Length) {
-					float colorScale = (IngameOptions.rightScale[i] - 1f) / 0.001f;
-					int previousHover = IngameOptions.rightHover;
-					IngameOptions.noSound = true;
-					if (IngameOptions.DrawRightSide(sb, label, i, _anchor, _offset, IngameOptions.rightScale[i], colorScale)) {
-						if (IngameOptions.rightLock == -1)
-							IngameOptions.notBar = true;
-						IngameOptions.noSound = true;
-					}
-
-					Vector2 size = new(IngameOptions.width, IngameOptions.height);
-					Vector2 panel = new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f - size * 0.5f;
-					IngameOptions.valuePosition.X = panel.X + size.X - 30f;
-					IngameOptions.valuePosition.Y -= 3f;
-					float value = IngameOptions.DrawValueBar(sb, scale, volume);
-					if (armed && IngameOptions.inBar && Main.mouseLeft && (IngameOptions.rightLock == -1 || IngameOptions.rightLock == i) && !IngameOptions.notBar) {
-						IngameOptions.rightLock = i;
-						IngameOptions.noSound = true;
-						SetVolume(value);
-					}
-
-					IngameOptions.rightHover = previousHover;
-					IngameOptions.noSound = true;
-				}
-
-				return;
-			}
-
+			// Label in the same column/style as vanilla's "Music"/"Sound"/"Ambient" labels (x = center + 7, 12px above the bar).
+			string label = CalamitasMenuText.UI("MainMenuMusic") + " " + Math.Round(volume * 100f) + "%";
 			Color text = Color.White;
-			text.R = (byte)((255 + text.R) / 2);
-			text.G = (byte)((255 + text.R) / 2);
-			text.B = (byte)((255 + text.R) / 2);
-			float labelX = row.X + 18f;
-			Utils.DrawBorderStringFourWay(sb, FontAssets.DeathText.Value, label, labelX, row.Y + dy - 10f, text, Color.Black, Vector2.Zero, 0.5f);
+			Utils.DrawBorderStringFourWay(sb, FontAssets.DeathText.Value, label,
+				Main.screenWidth / 2 + 7, barPos.Y - 12f, text, Color.Black, Vector2.Zero, 0.5f);
 
-			int prevHover = IngameOptions.rightHover;
-			IngameOptions.noSound = true;
-			IngameOptions.valuePosition = new Vector2(row.X, row.Y + dy);
-			float dragged = IngameOptions.DrawValueBar(sb, scale, volume);
-			bool hovering = IngameOptions.inBar;
-			bool dragging = armed &&
-			                hovering &&
-			                Main.mouseLeft &&
-			                (IngameOptions.rightLock == -1 || IngameOptions.rightLock == TitleLockId);
-			if (dragging) {
-				IngameOptions.rightLock = TitleLockId;
-				SetVolume(dragged);
+			IngameOptions.valuePosition = barPos;
+			float dragged = IngameOptions.DrawValueBar(sb, 1f, volume);
+			bool hovered = IngameOptions.inBar;
+			IngameOptions.inBar = ambientInBar;
+
+			// Same pattern vanilla uses for its bars: hovering claims rightHover, vanilla then copies it into
+			// rightLock at the end of the block, and a held mouse keeps dragging while the lock is ours.
+			if (hovered || IngameOptions.rightLock == LockId) {
+				IngameOptions.rightHover = LockId;
+				if (Main.mouseLeft && IngameOptions.rightLock == LockId)
+					SetVolume(dragged);
 			}
-
-			IngameOptions.rightHover = hovering ? -1 : prevHover;
-			IngameOptions.noSound = true;
-		}
-
-		private static void CaptureVanillaVolumes()
-		{
-			if (Main.musicVolume > 0.02f) {
-				_savedMusic = Main.musicVolume;
-				_haveMusicSnapshot = true;
-			}
-			else if (!_haveMusicSnapshot) {
-				_savedMusic = Main.musicVolume;
-			}
-
-			_savedSound = Main.soundVolume;
-			_savedAmbient = Main.ambientVolume;
-		}
-
-		private static void RestoreVanillaVolumes()
-		{
-			Main.musicVolume = _savedMusic;
-			Main.soundVolume = _savedSound;
-			Main.ambientVolume = _savedAmbient;
 		}
 
 		private static void SetVolume(float value)
@@ -248,31 +115,15 @@ namespace DieWithASmile.Content
 				return;
 
 			DieWithASmileSave.Data.MenuMusicVolume = value;
-			_dirty = true;
-			_saveDelay = 20;
+			_dirty = true; // written once on release, not every frame of the drag
 		}
 
-		private static void FlushSave()
-		{
-			if (!_dirty)
-				return;
-
-			if (_saveDelay > 0)
-				_saveDelay--;
-
-			if (Main.mouseLeft && _saveDelay > 0)
-				return;
-
-			ForceSave();
-		}
-
-		private static void ForceSave()
+		private static void SaveIfDirty()
 		{
 			if (!_dirty)
 				return;
 
 			_dirty = false;
-			_saveDelay = 0;
 			DieWithASmileSave.Save();
 		}
 	}

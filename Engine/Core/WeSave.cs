@@ -105,6 +105,7 @@ namespace DieWithASmile.Engine.Core
 	{
 		public bool SplashDismissed { get; set; }
 		public bool WrenchOpened { get; set; }
+		public bool SidebarCollapsed { get; set; }
 		public bool KeepMenuSelected { get; set; }
 		public int AccentIndex { get; set; }
 		public WallpaperKind Wallpaper { get; set; } = WallpaperKind.Nested;
@@ -231,7 +232,14 @@ namespace DieWithASmile.Engine.Core
 		{
 			try {
 				if (File.Exists(SettingsPath)) {
-					WeSaveData parsed = JsonSerializer.Deserialize<WeSaveData>(File.ReadAllText(SettingsPath), JsonOptions);
+					WeSaveData parsed;
+					try {
+						parsed = JsonSerializer.Deserialize<WeSaveData>(File.ReadAllText(SettingsPath), JsonOptions);
+					}
+					catch (JsonException) {
+						KeepBrokenCopy(SettingsPath);
+						throw;
+					}
 					if (parsed != null)
 						_data = parsed;
 				}
@@ -279,7 +287,7 @@ namespace DieWithASmile.Engine.Core
 			WeNestedPacks.EnsureWallpaper();
 			if (_data.AccentIndex < 0 || _data.AccentIndex >= WeAccent.Palettes.Length)
 				_data.AccentIndex = 0;
-			if (_data.WrenchStyle < 0 || _data.WrenchStyle > 1)
+			if (_data.WrenchStyle < 0 || _data.WrenchStyle > 2)
 				_data.WrenchStyle = 0;
 			if (_data.ButtonStyle < 0 || _data.ButtonStyle > 3)
 				_data.ButtonStyle = 0;
@@ -339,7 +347,21 @@ namespace DieWithASmile.Engine.Core
 		{
 			try {
 				EnsureFolders();
-				File.WriteAllText(SettingsPath, JsonSerializer.Serialize(_data, JsonOptions));
+				// Write next to the file and swap it in, so a crash mid-write can't leave a truncated
+				// settings.json behind (Load() would then silently fall back to defaults).
+				string temp = SettingsPath + ".tmp";
+				File.WriteAllText(temp, JsonSerializer.Serialize(_data, JsonOptions));
+				File.Move(temp, SettingsPath, overwrite: true);
+			}
+			catch {
+			}
+		}
+
+		// The next Save() overwrites an unreadable settings file with defaults; keep the original for recovery.
+		private static void KeepBrokenCopy(string path)
+		{
+			try {
+				File.Copy(path, path + ".broken", overwrite: true);
 			}
 			catch {
 			}

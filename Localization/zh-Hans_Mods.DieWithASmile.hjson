@@ -92,7 +92,7 @@ UI: {
 	BtnClean: 隐藏版本信息
 	SplashTitle: 这是你的菜单
 	Splash1: 一开始就是普通的 tModLoader。你改的每一项都是可选的。
-	Splash2: 菜单按钮和「切换菜单主题」之间的圆钮可以打开壁纸、音乐、标志、小组件和布局。
+	Splash2: 菜单旁的自定义按钮可打开壁纸、标志、音乐、小部件、布局和设置。在设置中可以把它切换为圆环、横栏或带文字的侧边栏。
 	Splash3: 可添加音乐播放器、时钟、问候、月相或 Discord 服务器。点一下即可隐藏版本信息。任意元素都能拖动、缩放或隐藏。
 	Splash4: 不再屏蔽 Calamity Entropy。两个模组可以同时保持启用。
 	GotIt: 知道了
@@ -296,205 +296,30 @@ UI: {
 	ResetFactoryHint: 恢复 Entropy of Freedom、模组标志、左侧菜单、底部工具栏和内置播放列表。将删除你的图片、上传的音乐、字体和外观预设。
 	ResetFactorySure: 再点一次以确认
 	ToastFactoryReset: 模组已重置为初始设置
-	NeoSearch: 搜索...
-	NeoApply: 应用
-	NeoCatGame: 游戏
-	NeoCatVideo: 视频
-	NeoCatAudio: 音频
-	NeoCatInterface: 界面
-	NeoCatCursor: 光标
-	NeoCatControls: 操作
-	NeoCatMods: 模组
-	NeoCatClient: 客户端
-	NeoSectionGeneral: 常规
-	NeoSectionQuality: 画质
-	NeoOpenKeybinds: 按键绑定
-	NeoOpenMods: 管理模组
-	NeoOpenPacks: 资源包
-	NeoOpenTml: tModLoader 设置
-	NeoOpenCursorColor: 光标颜色
-	NeoOpenCursorBorder: 光标描边
-	NeoOpenBrowser: 模组浏览器
-	NeoOpenModPacks: 模组包
-	NeoAutosave: 自动保存
-	NeoAutopause: 自动暂停
-	NeoMap: 地图
-	NeoHidePasswords: 隐藏密码
-	NeoPauseUnfocused: 失焦时暂停
-	NeoSetBonus: 套装效果
-	NeoAutofire: 自动开火
-	NeoSmartDoors: 智能门
-	NeoHover: 悬停
-	NeoZoom: 缩放
-	NeoUIScale: 界面缩放
-	NeoLanguage: 语言
-	NeoFullscreen: 全屏
-	NeoBorderless: 无边框
-	NeoResolution: 分辨率
-	NeoFrameSkip: 跳帧
-	NeoLighting: 光照
-	NeoQuality: 画质
-	NeoBackgrounds: 背景
-	NeoGore: 血液与碎块
-	NeoWobble: 矿工晃动
-	NeoHeat: 热浪扭曲
-	NeoStorm: 风暴效果
-	NeoWaves: 波浪
-	NeoWind: 刮风环境
-	NeoIntense: 强烈效果
-	NeoParallax: 视差
-	NeoMusic: 音乐
-	NeoSound: 音效
-	NeoAmbient: 环境音
-	NeoPickup: 拾取文字
-	NeoEventBar: 事件进度
-	NeoPlacement: 放置预览
-	NeoHighlightNew: 高亮新物品
-	NeoTileGrid: 物块网格
-	NeoGamepadHints: 手柄提示
-	NeoTooltipBoxes: 提示框
-	NeoMinimap: 小地图边框
-	NeoMapScale: 地图缩放
-	NeoHealthStyle: 生命与魔力
-	NeoBossBar: 首领血条
-	NeoBossFull: 满血
-	NeoBossLive: 动态
-	NeoBossFight: 战斗
-	NeoSmartCursor: 智能光标
-	NeoSmartBlocks: 智能放置
-	NeoSmartAxe: 镐后用斧
-	NeoLockOn: 锁定
-	NeoQuickTrash: 快速丢弃
-	NeoShiftTrash: Shift 丢弃
-	NeoOn: 开
-	NeoOff: 关
-	NeoHold: 按住
-	NeoClick: 点击
-	NeoToggle: 切换
-	NeoUp: 上
-	NeoDown: 下
-	NeoGamepad: 手柄
-	NeoSubtle: 轻微
-	NeoLightColor: 彩色
-	NeoLightWhite: 白光
-	NeoLightRetro: 复古
-	NeoLightTrippy: 迷幻
-	NeoLightHint: 彩色为默认光照。白光为平面。复古为经典。迷幻为彩虹。
-	NeoLow: 低
-	NeoMedium: 中
-	NeoHigh: 高
-	NeoAuto: 自动
-	NeoTimed: 计时
-	NeoFill: 填充
-	NeoBorder: 描边
-	NeoSectionHud: HUD
-	NeoSectionColor: 颜色
-	NeoSectionSmart: 瞄准
-	NeoHslHint: HSL
-	NeoCursorNormal: 普通
-	NeoCursorThick: 加粗
-	NeoCursorSmart: 智能
-	NeoCursorHint: 填充是箭头，描边是轮廓。改完立刻生效。
-	NeoKeysHint: 先点动作再按键。也可点键盘图。
-	NeoKeysWaiting: 按下按键或点键盘。右键取消。
-	NeoKeysAll: 全部
-	NeoKeysMove: 移动
-	NeoKeysInv: 物品
-	NeoKeysMisc: 其他
-	NeoKeysMods: 模组
-	NeoKeysReset: 重置此项
-	NeoKeysResetAll: 全部重置
-	NeoKeysNoMods: 当前没有模组额外按键。
-	NeoHubTitle: 工坊
-	NeoHubHint: 模组、下载、资源包、世界和日志都在这里，不再跳出 Terraria 界面。
-	NeoDevelop: 构建与发布
-	NeoDevelopSub: 构建 · 重载 · 发布
-	NeoImportWorlds: 导入世界
-	NeoLogs: 日志
-	NeoBack: 返回
-	NeoModsHint: 点名称或 ? 看简介。点开关启用。Reload 应用列表。
-	NeoModsInGame: 只能在标题画面启用模组并 Reload。
-	NeoEnableAll: 全部启用
-	NeoDisableAll: 全部禁用
-	NeoReload: 强制重载
-	NeoModsFolder: 模组文件夹
-	NeoSavePack: 保存模组包
-	NeoConfigFolder: 配置文件夹
-	NeoReloadNeed: 启用列表已更改 — 点强制重载以应用。
-	NeoFilterAll: 全部
-	NeoFilterOn: 已启用
-	NeoFilterOff: 已禁用
-	NeoFilterClient: 客户端
-	NeoEnabledCount: "{0} 已启用 / {1}"
-	NeoEmptyMods: Mods 文件夹里没有模组。
-	NeoEmptyBrowser: 工坊没有结果。Steam 可能离线 — 打开工坊页面。
-	NeoEmptyPacks: 没有已保存的模组包。在管理模组里保存，或打开文件夹。
-	NeoEmptyRes: 没有资源包。把资源包放到该文件夹后点应用。
-	NeoEmptyDev: ModSources 里还没有工程。
-	NeoResFolder: 资源包文件夹
-	NeoActive: 启用中
-	NeoInstalled: 已安装
-	NeoSubscribe: 订阅
-	NeoSubscribed: 已订阅
-	NeoSearching: 正在搜索 Steam 工坊…
-	NeoWorkshopPending: 已下载，未在列表中
-	NeoOpenPage: Steam 页面
-	NeoHasCsproj: .csproj
-	NeoDeletePack: 删除
-	NeoPackMods: "{0} 个模组"
-	NeoSideClient: 客户端
-	NeoSideServer: 服务端
-	NeoSideBoth: 双方
-	NeoConfigMark: 配置
-	NeoMoveUp: 上移
-	NeoMoveDown: 下移
-	NeoBrowserHint: 在此搜索 Steam 工坊。订阅会通过 Steam 下载，和 tModLoader 浏览器一样。
-	NeoOpenSteam: 打开 Steam 工坊
-	NeoPacksHint: 已启用模组的打包。点击可在标题画面加载。
-	NeoPacksFolder: 模组包文件夹
-	NeoLoadPack: 加载
-	NeoResHint: 资源包。切换后点应用。拖动一行可排序。
-	NeoApplyPacks: 应用资源包
-	NeoSortAz: A–Z
-	NeoSortNew: 最近
-	NeoSortHot: 热门
-	NeoSortDown: 下载
-	NeoExtract: 导出
-	NeoDelete: 删除
-	NeoConfirm: 确认
-	NeoLoadingMore: 加载更多…
-	NeoCreateMod: 创建模组
-	NeoBuildAll: 全部构建
-	NeoBuild: 构建
-	NeoBuildReload: 构建并重载
-	NeoPublish: 发布
-	NeoPublishServer: 发布服务器
-	NeoOpenFolder: 文件夹
-	NeoOpenCsproj: .csproj
-	NeoPorter: Porter
-	NeoBuilt: 已构建
-	NeoBuiltJust: 刚刚
-	NeoBuiltMins: "{0} 分钟前"
-	NeoBuiltHours: "{0} 小时前"
-	NeoSectionTml: tModLoader
-	NeoDownloadMods: 从服务器下载模组
-	NeoAutoReload: 离开时自动重载
-	NeoRemoveMinZoom: 取消最小缩放
-	NeoNotifyThemes: 新菜单主题提示
-	NeoShowUpdatedMods: 模组更新信息
-	NeoConfirmAllMods: 确认全部启用/禁用
-	NeoExperimental: 实验性功能
-	NeoCloudDefault: 默认云存档
-	NeoSupport4K: 4K 支持
-	NeoSupport8K: 8K 支持
-	NeoThrottle: 非活动时降速
-	NeoWaterfall: 瀑布上限
-	NeoBossHpText: Boss 血条数字
-	NeoFlashEvents: 事件图标闪烁
-	NeoDevelopHint: 构建、重载并发布 ModSources。Steam 发布走 tModLoader 向导。
-	NeoOpenSources: 打开 ModSources
-	NeoWorldsHint: 把 .wld 复制到世界文件夹。
-	NeoImportWorld: 导入世界
-	NeoWorldsFolder: 世界文件夹
-	NeoOpenLogs: 打开日志文件夹
+	TabWallpaper: 壁纸
+	TabLogo: 标志
+	TabMusic: 音乐
+	TabWidgets: 小部件
+	TabLayout: 布局
+	TabSettings: 设置
+	SubWallpaper: 选择天空、从其他模组借用，或混合你自己的图层。
+	SubLogo: 使用本包的标志、你自己的图片或其他模组的标志。
+	SubMusic: 选择标题画面播放的音乐。点击曲目即可播放。
+	SubWidgets: 标题画面的额外元素。将鼠标悬停在已启用的小部件上查看选项。
+	SubSettings: 菜单样式、窗口颜色、菜单字体、强调色和已保存的外观。
+	RightClickDelete: 右键删除
+	SectionFromMods: 来自其他模组
+	SectionAdjust: 调整
+	SectionLogoBasic: 标志
+	SectionSource: 播放内容
+	SectionPlaylist: 播放列表
+	ThemeMusic: 主题播放列表
+	SectionWidgets: 小部件
+	SectionScreen: 画面
+	WidgetOn: 在标题画面显示
+	WidgetOff: 点击添加
+	HubStyleSidebar: 侧边栏
+	BorrowBothHint: 右键：同时使用它的标志
+	ToastBorrowBoth: 已从同一主题借用天空和标志
+	FromModsHint: 已在你启用的模组中自动找到。点击即可使用。
 }

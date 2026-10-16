@@ -32,7 +32,12 @@ namespace DieWithASmile.Engine.Grab
 		private static int _menuSnapAt = int.MinValue;
 		private static int _modCount = -1;
 		private static int _pulse;
+		private static int _pendingRescans;
 		private static bool _scanned;
+
+		// Some themes load their art lazily and a few never finish (missing files, broken mods).
+		// Re-scan while something is pending, but give up after ~10 seconds instead of rebuilding forever.
+		private const int MaxPendingRescans = 30;
 
 		internal static IReadOnlyList<WeOffer> Logos => LogoList;
 		internal static IReadOnlyList<WeOffer> Skies => SkyList;
@@ -73,7 +78,12 @@ namespace DieWithASmile.Engine.Grab
 					pending = true;
 			}
 
-			if (!_scanned || mods != _modCount || (pending && _pulse % 20 == 0))
+			if (mods != _modCount)
+				_pendingRescans = 0;
+			bool retry = pending && _pulse % 20 == 0 && _pendingRescans < MaxPendingRescans;
+			if (retry)
+				_pendingRescans++;
+			if (!_scanned || mods != _modCount || retry)
 				Refresh();
 
 			if (_scanned && _pulse % 30 == 0)
@@ -96,6 +106,7 @@ namespace DieWithASmile.Engine.Grab
 			_menuSnap = null;
 			_menuSnapAt = int.MinValue;
 			_modCount = -1;
+			_pendingRescans = 0;
 			_scanned = false;
 		}
 

@@ -92,7 +92,7 @@ UI: {
 	BtnClean: Hide version clutter
 	SplashTitle: This is your menu
 	Splash1: It starts as regular tModLoader. Everything you change is optional.
-	Splash2: The circle between the menu buttons and Switch Menu Theme opens wallpapers, music, logo, widgets, and layout.
+	Splash2: The customize button next to the menu opens Wallpaper, Logo, Music, Widgets, Layout and Settings. In Settings you can switch it between a circle, a bar and a labelled sidebar.
 	Splash3: Add a music player, clock, greeting, moon phase, or Discord server. One tap hides version clutter. Drag, resize, or hide any element.
 	Splash4: Calamity Entropy is no longer blocked. You can keep both mods enabled together.
 	GotIt: Got it
@@ -296,205 +296,30 @@ UI: {
 	ResetFactoryHint: Restores Entropy of Freedom, the pack logo, left menu, dock bar, and packed playlist. Deletes your pictures, uploaded music, fonts, and looks.
 	ResetFactorySure: Click again to confirm
 	ToastFactoryReset: Mod reset to starter settings
-	NeoSearch: Search...
-	NeoApply: Apply
-	NeoCatGame: Game
-	NeoCatVideo: Video
-	NeoCatAudio: Audio
-	NeoCatInterface: Interface
-	NeoCatCursor: Cursor
-	NeoCatControls: Controls
-	NeoCatMods: Mods
-	NeoCatClient: Client
-	NeoSectionGeneral: General
-	NeoSectionQuality: Quality
-	NeoOpenKeybinds: Keybindings
-	NeoOpenMods: Manage mods
-	NeoOpenPacks: Resource packs
-	NeoOpenTml: tModLoader settings
-	NeoOpenCursorColor: Cursor color
-	NeoOpenCursorBorder: Cursor border
-	NeoOpenBrowser: Mod Browser
-	NeoOpenModPacks: Mod packs
-	NeoAutosave: Autosave
-	NeoAutopause: Autopause
-	NeoMap: Map
-	NeoHidePasswords: Hide passwords
-	NeoPauseUnfocused: Pause when unfocused
-	NeoSetBonus: Set bonus
-	NeoAutofire: Autofire
-	NeoSmartDoors: Smart doors
-	NeoHover: Hover
-	NeoZoom: Zoom
-	NeoUIScale: UI scale
-	NeoLanguage: Language
-	NeoFullscreen: Fullscreen
-	NeoBorderless: Borderless
-	NeoResolution: Resolution
-	NeoFrameSkip: Frame skip
-	NeoLighting: Lighting
-	NeoQuality: Quality
-	NeoBackgrounds: Backgrounds
-	NeoGore: Blood and gore
-	NeoWobble: Miner's wobble
-	NeoHeat: Heat distortion
-	NeoStorm: Storm effects
-	NeoWaves: Waves
-	NeoWind: Windy environment
-	NeoIntense: Intense effects
-	NeoParallax: Parallax
-	NeoMusic: Music
-	NeoSound: Sound
-	NeoAmbient: Ambient
-	NeoPickup: Pickup text
-	NeoEventBar: Event progress
-	NeoPlacement: Placement preview
-	NeoHighlightNew: Highlight new items
-	NeoTileGrid: Tile grid
-	NeoGamepadHints: Gamepad hints
-	NeoTooltipBoxes: Hover text boxes
-	NeoMinimap: Minimap border
-	NeoMapScale: Map scale
-	NeoHealthStyle: Health and mana
-	NeoBossBar: Boss bar
-	NeoBossFull: Full
-	NeoBossLive: Live
-	NeoBossFight: Fight
-	NeoSmartCursor: Smart cursor
-	NeoSmartBlocks: Smart placement
-	NeoSmartAxe: Axe after pickaxe
-	NeoLockOn: Lock-on
-	NeoQuickTrash: Quick trash
-	NeoShiftTrash: Shift trash
-	NeoOn: On
-	NeoOff: Off
-	NeoHold: Hold
-	NeoClick: Click
-	NeoToggle: Toggle
-	NeoUp: Up
-	NeoDown: Down
-	NeoGamepad: Gamepad
-	NeoSubtle: Subtle
-	NeoLightColor: Color
-	NeoLightWhite: White
-	NeoLightRetro: Retro
-	NeoLightTrippy: Trippy
-	NeoLightHint: Color is default. White is flat. Retro is classic. Trippy is rainbow.
-	NeoLow: Low
-	NeoMedium: Medium
-	NeoHigh: High
-	NeoAuto: Auto
-	NeoTimed: Timed
-	NeoFill: Fill
-	NeoBorder: Border
-	NeoSectionHud: HUD
-	NeoSectionColor: Color
-	NeoSectionSmart: Aim
-	NeoHslHint: HSL
-	NeoCursorNormal: Normal
-	NeoCursorThick: Thick
-	NeoCursorSmart: Smart
-	NeoCursorHint: Fill is the arrow. Border is the outline. Changes apply immediately.
-	NeoKeysHint: Click an action, then press a key. Click the keyboard to pick a bind.
-	NeoKeysWaiting: Press a key, or click a key on the keyboard. Right-click cancels.
-	NeoKeysAll: All
-	NeoKeysMove: Move
-	NeoKeysInv: Inv
-	NeoKeysMisc: Misc
-	NeoKeysMods: Mods
-	NeoKeysReset: Reset bind
-	NeoKeysResetAll: Reset all
-	NeoKeysNoMods: No extra mod keybinds are loaded.
-	NeoHubTitle: Workshop
-	NeoHubHint: Manage mods, downloads, packs, worlds, and logs here. No extra Terraria screens.
-	NeoDevelop: Build & Publish
-	NeoDevelopSub: Build · Reload · Publish
-	NeoImportWorlds: Import worlds
-	NeoLogs: Logs
-	NeoBack: Back
-	NeoModsHint: Click a name or ? for info. On/Off enables. Force reload applies the list.
-	NeoModsInGame: Enable and reload only work on the title screen.
-	NeoEnableAll: Enable all
-	NeoDisableAll: Disable all
-	NeoReload: Force reload
-	NeoModsFolder: Mods folder
-	NeoSavePack: Save mod pack
-	NeoConfigFolder: Config folder
-	NeoReloadNeed: Enable list changed — Force reload to apply.
-	NeoFilterAll: All
-	NeoFilterOn: Enabled
-	NeoFilterOff: Disabled
-	NeoFilterClient: Client
-	NeoEnabledCount: "{0} enabled / {1}"
-	NeoEmptyMods: No mods found in the Mods folder.
-	NeoEmptyBrowser: Nothing from Workshop yet. Steam may be offline — open the Workshop page.
-	NeoEmptyPacks: No saved mod packs. Save one from Manage mods, or open the packs folder.
-	NeoEmptyRes: No resource packs found. Put packs in this folder, then Apply.
-	NeoEmptyDev: No projects in ModSources yet.
-	NeoResFolder: Packs folder
-	NeoActive: Active
-	NeoInstalled: Installed
-	NeoSubscribe: Subscribe
-	NeoSubscribed: Subscribed
-	NeoSearching: Searching Steam Workshop…
-	NeoWorkshopPending: Downloaded, not in list
-	NeoOpenPage: Steam page
-	NeoHasCsproj: .csproj
-	NeoDeletePack: Delete
-	NeoPackMods: "{0} mods"
-	NeoSideClient: Client
-	NeoSideServer: Server
-	NeoSideBoth: Both
-	NeoConfigMark: Config
-	NeoMoveUp: Up
-	NeoMoveDown: Down
-	NeoBrowserHint: Search Steam Workshop here. Subscribe downloads through Steam, same as the tModLoader browser.
-	NeoOpenSteam: Open Steam Workshop
-	NeoPacksHint: Saved packs of enabled mods. Click a pack to load it on the title.
-	NeoPacksFolder: Packs folder
-	NeoLoadPack: Load
-	NeoResHint: Resource packs. Toggle, then Apply. Drag a row to reorder.
-	NeoApplyPacks: Apply packs
-	NeoSortAz: A–Z
-	NeoSortNew: Recent
-	NeoSortHot: Hot
-	NeoSortDown: Downloads
-	NeoExtract: Extract
-	NeoDelete: Delete
-	NeoConfirm: Confirm
-	NeoLoadingMore: Loading more…
-	NeoCreateMod: Create mod
-	NeoBuildAll: Build all
-	NeoBuild: Build
-	NeoBuildReload: Build + Reload
-	NeoPublish: Publish
-	NeoPublishServer: Publish server
-	NeoOpenFolder: Folder
-	NeoOpenCsproj: .csproj
-	NeoPorter: Porter
-	NeoBuilt: Built
-	NeoBuiltJust: just now
-	NeoBuiltMins: "{0}m ago"
-	NeoBuiltHours: "{0}h ago"
-	NeoSectionTml: tModLoader
-	NeoDownloadMods: Download mods from servers
-	NeoAutoReload: Auto-reload on leave
-	NeoRemoveMinZoom: Remove min zoom
-	NeoNotifyThemes: New menu theme notice
-	NeoShowUpdatedMods: Updated mods info
-	NeoConfirmAllMods: Confirm enable/disable all
-	NeoExperimental: Experimental features
-	NeoCloudDefault: Cloud save default
-	NeoSupport4K: 4K support
-	NeoSupport8K: 8K support
-	NeoThrottle: Throttle when inactive
-	NeoWaterfall: Waterfall limit
-	NeoBossHpText: Boss bar HP text
-	NeoFlashEvents: Flash icon for events
-	NeoDevelopHint: Build, reload, and publish ModSources. Steam publish uses the tModLoader wizard.
-	NeoOpenSources: Open ModSources
-	NeoWorldsHint: Copy a .wld into your worlds folder.
-	NeoImportWorld: Import world file
-	NeoWorldsFolder: Worlds folder
-	NeoOpenLogs: Open logs folder
+	TabWallpaper: Wallpaper
+	TabLogo: Logo
+	TabMusic: Music
+	TabWidgets: Widgets
+	TabLayout: Layout
+	TabSettings: Settings
+	SubWallpaper: Pick a sky, borrow one from another mod, or mix your own layers.
+	SubLogo: Use this pack's logos, your own images, or a logo from another mod.
+	SubMusic: Choose what plays on the title screen. Click a track to play it.
+	SubWidgets: Extras for the title screen. Hover an enabled widget for its options.
+	SubSettings: Hub style, window colours, menu font, accent colour and saved looks.
+	RightClickDelete: Right-click to delete
+	SectionFromMods: From other mods
+	SectionAdjust: Adjust
+	SectionLogoBasic: Logo
+	SectionSource: What plays
+	SectionPlaylist: Playlist
+	ThemeMusic: Theme playlist
+	SectionWidgets: Widgets
+	SectionScreen: Screen
+	WidgetOn: Shown on the title screen
+	WidgetOff: Click to add it
+	HubStyleSidebar: Sidebar
+	BorrowBothHint: Right-click: use its logo too
+	ToastBorrowBoth: Sky and logo borrowed from the same theme
+	FromModsHint: Found automatically in your enabled mods. Click one to use it.
 }

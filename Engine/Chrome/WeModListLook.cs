@@ -16,8 +16,6 @@ namespace DieWithASmile.Engine.Chrome
 	internal static class WeModListLook
 	{
 		private const string GifFile = "Assets/Textures/UI/ModList/mod-icon.gif";
-		private static readonly Color Accent = new(0, 153, 255);
-		private static readonly Color Rest = new(58, 42, 50);
 		private static readonly List<Asset<Texture2D>> Frames = new();
 		private static Asset<Texture2D> _logoBg;
 		private static Asset<Texture2D> _logoWing;
@@ -44,7 +42,7 @@ namespace DieWithASmile.Engine.Chrome
 
 			_logoBg = Request(mod, "LogoBg");
 			_logoWing = Request(mod, "LogoWing");
-			for (int i = 0; i < 8; i++) {
+			for (int i = 0; i < 0; i++) { // legacy row frames (Frame00-07) are no longer shipped
 				string file = "Assets/Textures/UI/ModList/Frame" + i.ToString("D2") + ".png";
 				if (mod == null || !mod.FileExists(file))
 					break;
@@ -90,12 +88,15 @@ namespace DieWithASmile.Engine.Chrome
 				return;
 			}
 
-			self.BorderColor = self.IsMouseHovering ? Accent : Accent * 0.78f;
+			// The card frame itself is drawn by DieWithASmileModListStyle in the avatar's palette.
+			Color savedBorder = self.BorderColor;
 			Color saved = self.BackgroundColor;
 			self.BackgroundColor = Color.Transparent;
+			self.BorderColor = Color.Transparent;
 			DrawBackdrop(spriteBatch, self);
 			orig(self, spriteBatch);
 			self.BackgroundColor = saved;
+			self.BorderColor = savedBorder;
 		}
 
 		private static void DrawImage(Action<UIImage, SpriteBatch> orig, UIImage self, SpriteBatch spriteBatch)
@@ -148,26 +149,28 @@ namespace DieWithASmile.Engine.Chrome
 			if (dest.Width < 2 || dest.Height < 2)
 				return;
 
-			int side = dest.Height;
-			var logo = new Rectangle(dest.X, dest.Y, Math.Min(side, dest.Width), side);
-			if (!DrawLogo(spriteBatch, logo, 0.96f)) {
-				Texture2D tex = CurrentFrame();
-				if (tex == null)
-					return;
-				float scale = Math.Max(dest.Width / (float)Math.Max(1, tex.Width), dest.Height / (float)Math.Max(1, tex.Height));
-				int srcW = Math.Min(tex.Width, Math.Max(1, (int)(dest.Width / scale)));
-				int srcH = Math.Min(tex.Height, Math.Max(1, (int)(dest.Height / scale)));
-				int srcX = Math.Max(0, (tex.Width - srcW) / 2);
-				int srcY = Math.Max(0, (tex.Height - srcH) / 2);
-				spriteBatch.Draw(tex, dest, new Rectangle(srcX, srcY, srcW, srcH), Color.White * 0.92f);
-				return;
+			Texture2D pixel = TextureAssets.MagicPixel.Value;
+			bool hover = panel.IsMouseHovering;
+			Color top = global::DieWithASmile.Content.DieWithASmileModListStyle.CardTop;
+			Color bottom = global::DieWithASmile.Content.DieWithASmileModListStyle.CardBottom;
+			if (hover) {
+				top = Color.Lerp(top, new Color(120, 74, 96), 0.35f);
+				bottom = Color.Lerp(bottom, new Color(80, 48, 64), 0.35f);
 			}
 
-			if (dest.Width <= logo.Width)
-				return;
+			// Plum gradient in 2px bands (stays crisp, matches the pixel frame).
+			int bands = Math.Max(1, dest.Height / 2);
+			for (int i = 0; i < bands; i++) {
+				float t = i / (float)Math.Max(1, bands - 1);
+				int y = dest.Y + i * 2;
+				spriteBatch.Draw(pixel, new Rectangle(dest.X, y, dest.Width, Math.Min(2, dest.Bottom - y)), Color.Lerp(top, bottom, t) * 0.96f);
+			}
 
-			Texture2D pixel = TextureAssets.MagicPixel.Value;
-			spriteBatch.Draw(pixel, new Rectangle(logo.Right, dest.Y, dest.Width - logo.Width, dest.Height), Rest * 0.92f);
+			// Faint pixel sparkles along the top, echoing the light frame pixels on the avatar.
+			for (int x = dest.X + 40; x < dest.Right - 12; x += 37) {
+				int y = dest.Y + 6 + (x * 7 % 5) * 2;
+				spriteBatch.Draw(pixel, new Rectangle(x, y, 2, 2), Color.White * 0.08f);
+			}
 		}
 
 		private static bool DrawLogo(SpriteBatch spriteBatch, Rectangle dest, float alpha)

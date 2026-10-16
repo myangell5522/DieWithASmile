@@ -126,7 +126,14 @@ namespace DieWithASmile.Content
 				if (!File.Exists(SettingsPath))
 					return;
 
-				DieWithASmileSaveData parsed = JsonSerializer.Deserialize<DieWithASmileSaveData>(File.ReadAllText(SettingsPath), JsonOptions);
+				DieWithASmileSaveData parsed;
+				try {
+					parsed = JsonSerializer.Deserialize<DieWithASmileSaveData>(File.ReadAllText(SettingsPath), JsonOptions);
+				}
+				catch (JsonException) {
+					KeepBrokenCopy(SettingsPath);
+					throw;
+				}
 				if (parsed != null)
 					_data = parsed;
 
@@ -167,7 +174,10 @@ namespace DieWithASmile.Content
 					_data.AccentIndex = 0;
 				if (_data.VanillaBgStyle >= 0 && !CalamitasMenuVanilla.IsKnown(_data.VanillaBgStyle))
 					_data.VanillaBgStyle = -1;
-				_data.MenuMusicVolume = 1f;
+				// Used to be forced to 1f here, which threw away the player's menu music volume on every launch.
+				if (float.IsNaN(_data.MenuMusicVolume) || float.IsInfinity(_data.MenuMusicVolume))
+					_data.MenuMusicVolume = 1f;
+				_data.MenuMusicVolume = Math.Clamp(_data.MenuMusicVolume, 0f, 1f);
 				if (_data.ShuffleSceneSeconds < 0f || _data.ShuffleSceneSeconds > 15f)
 					_data.ShuffleSceneSeconds = 10f;
 				if ((int)_data.MenuLogo < 0 || (int)_data.MenuLogo > 4)
@@ -225,7 +235,21 @@ namespace DieWithASmile.Content
 		{
 			try {
 				EnsureFolders();
-				File.WriteAllText(SettingsPath, JsonSerializer.Serialize(_data, JsonOptions));
+				// Write next to the file and swap it in, so a crash mid-write can't leave a truncated
+				// settings.json behind (Load() would then silently fall back to defaults).
+				string temp = SettingsPath + ".tmp";
+				File.WriteAllText(temp, JsonSerializer.Serialize(_data, JsonOptions));
+				File.Move(temp, SettingsPath, overwrite: true);
+			}
+			catch {
+			}
+		}
+
+		// The next Save() overwrites an unreadable settings file with defaults; keep the original for recovery.
+		private static void KeepBrokenCopy(string path)
+		{
+			try {
+				File.Copy(path, path + ".broken", overwrite: true);
 			}
 			catch {
 			}

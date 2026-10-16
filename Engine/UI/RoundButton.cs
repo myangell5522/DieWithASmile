@@ -18,15 +18,12 @@ namespace DieWithASmile.Engine.UI
 		internal static bool Hover(Vector2 center, float radius) =>
 			Hit(center, radius).Contains(Main.mouseX, Main.mouseY);
 
+		/// <summary>Inventory-slot style button (vanilla rounded panel), the same hit box as before.</summary>
 		internal static void Draw(SpriteBatch spriteBatch, Vector2 center, float radius, float alpha, bool active = false)
 		{
-			Texture2D circle = WeDraw.Circle();
 			bool hover = Hover(center, radius);
-			Color accent = WeAccent.Glyph(hover, active);
-			Color fill = hover || active ? accent * (0.35f * alpha) : Color.White * (0.08f * alpha);
-			spriteBatch.Draw(circle, center, null, fill, 0f, circle.Size() * 0.5f, radius * 2f / circle.Width, SpriteEffects.None, 0f);
-			spriteBatch.Draw(circle, center, null, accent * ((hover || active ? 0.95f : 0.45f) * alpha), 0f, circle.Size() * 0.5f, (radius * 2f + 3f) / circle.Width, SpriteEffects.None, 0f);
-			spriteBatch.Draw(circle, center, null, Panel * (0.2f * alpha), 0f, circle.Size() * 0.5f, (radius * 2f - 3f) / circle.Width, SpriteEffects.None, 0f);
+			Rectangle box = Hit(center, radius);
+			WeTerra.Panel(spriteBatch, box, WeTerra.LookOf(hover, active), alpha);
 		}
 
 		internal static void DrawLetter(SpriteBatch spriteBatch, Vector2 center, float radius, string letter, float alpha, bool active = false)
@@ -53,19 +50,9 @@ namespace DieWithASmile.Engine.UI
 				return;
 
 			bool hover = Hover(center, radius);
-			float pop = hover ? 1.14f : active ? 1.06f : 1f;
-			float size = radius * 1.22f * pop;
-			Vector2 origin = icon.Size() * 0.5f;
-			float scale = size / Math.Max(1, Math.Max(icon.Width, icon.Height));
-			if (hover) {
-				spriteBatch.Draw(
-					icon, center, null, WeAccent.Light * (0.32f * alpha),
-					rotation, origin, scale * 1.2f, SpriteEffects.None, 0f);
-			}
-
-			spriteBatch.Draw(
-				icon, center, null, WeAccent.Icon(hover, active) * alpha,
-				rotation, origin, scale, SpriteEffects.None, 0f);
+			// Pixel icons keep their own colours; hover just lifts the sprite one pixel like vanilla buttons.
+			Vector2 at = hover ? center - new Vector2(0f, 1f) : center;
+			WeTerra.Icon(spriteBatch, icon, at, radius * 1.25f, Color.White * alpha, rotation);
 		}
 
 		internal static void DrawWrench(SpriteBatch spriteBatch, Vector2 center, float radius, float rotation, float alpha, bool active)
@@ -146,8 +133,7 @@ namespace DieWithASmile.Engine.UI
 
 			rect.X = (int)MathHelper.Clamp(rect.X, 8, Main.screenWidth - rect.Width - 8);
 			rect.Y = (int)MathHelper.Clamp(rect.Y, 8, Main.screenHeight - rect.Height - 8);
-			WeDraw.Fill(spriteBatch, rect, new Color(22, 24, 30) * (0.92f * alpha));
-			WeDraw.Border(spriteBatch, rect, WeAccent.Mid * alpha);
+			WeTerra.Panel(spriteBatch, rect, new Color(23, 25, 52) * (0.94f * alpha), Color.Black * alpha);
 			ChatManager.DrawColorCodedStringWithShadow(
 				spriteBatch,
 				font,

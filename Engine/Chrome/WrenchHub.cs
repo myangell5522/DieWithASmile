@@ -4,7 +4,6 @@ using DieWithASmile.Engine.Content;
 using DieWithASmile.Engine.Core;
 using DieWithASmile.Engine.Layout;
 using DieWithASmile.Engine.UI;
-using DieWithASmile.Engine.Settings;
 
 namespace DieWithASmile.Engine.Chrome
 {
@@ -23,19 +22,34 @@ namespace DieWithASmile.Engine.Chrome
 	internal enum WrenchStyle
 	{
 		Radial = 0,
-		Dock = 1
+		Dock = 1,
+		Sidebar = 2
 	}
 
 	internal static class WrenchHub
 	{
+		// Six clear destinations. "Move logo only" now lives in the Logo page and "Hide version clutter"
+		// in the Widgets page (and the sidebar's quick toggles), so the hub no longer has eight look-alike icons.
 		internal static readonly WrenchAction[] Actions =
 		{
-			WrenchAction.LogoPos, WrenchAction.Wallpaper, WrenchAction.Music,
-			WrenchAction.Widgets, WrenchAction.Logo, WrenchAction.Layout,
-			WrenchAction.Client, WrenchAction.Clean
+			WrenchAction.Wallpaper, WrenchAction.Logo, WrenchAction.Music,
+			WrenchAction.Widgets, WrenchAction.Layout, WrenchAction.Client
 		};
 
 		internal static bool UseDock => WeSave.Data.WrenchStyle == (int)WrenchStyle.Dock;
+
+		internal static bool UseSidebar => WeSave.Data.WrenchStyle == (int)WrenchStyle.Sidebar;
+
+		internal static string LabelKey(WrenchAction action) => action switch {
+			WrenchAction.Wallpaper => "TabWallpaper",
+			WrenchAction.Music => "TabMusic",
+			WrenchAction.Widgets => "TabWidgets",
+			WrenchAction.Logo => "TabLogo",
+			WrenchAction.Layout => "TabLayout",
+			WrenchAction.Client => "TabSettings",
+			WrenchAction.LogoPos => "BtnLogoPos",
+			_ => "BtnClean"
+		};
 
 		internal static void Activate(WrenchAction action)
 		{
@@ -62,8 +76,7 @@ namespace DieWithASmile.Engine.Chrome
 					WrenchToolbar.Collapse();
 					break;
 				case WrenchAction.Client:
-					WeNeoMenu.Open(WeNeoCat.Client);
-					WrenchToolbar.Collapse();
+					WePanels.Open(WePanelId.Client);
 					break;
 				case WrenchAction.Clean:
 					WeSettings.ToggleCleanChrome();
@@ -74,7 +87,6 @@ namespace DieWithASmile.Engine.Chrome
 
 		internal static bool IsOn(WrenchAction action) => action switch {
 			WrenchAction.Clean => WeSave.Data.CleanChrome,
-			WrenchAction.Client => WeNeoMenu.IsOpen && WeNeoMenu.Category == WeNeoCat.Client,
 			_ => WePanels.Is(PanelOf(action))
 		};
 

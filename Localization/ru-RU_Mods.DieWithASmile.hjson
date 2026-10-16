@@ -92,7 +92,7 @@ UI: {
 	BtnClean: Скрыть системный текст
 	SplashTitle: Это твоё меню
 	Splash1: Сначала всё как в обычном tModLoader. Любое изменение — по желанию.
-	Splash2: Круг между кнопками меню и сменой темы открывает обои, музыку, лого, виджеты и расстановку.
+	Splash2: Кнопка настройки рядом с меню открывает Обои, Логотип, Музыку, Виджеты, Макет и Настройки. В Настройках её можно сделать кругом, полоской или боковой панелью с подписями.
 	Splash3: Плеер, часы, приветствие, фаза луны или сервер Discord — как виджеты. Одним нажатием прячутся версии и соцсети. Любой элемент можно двигать, масштабировать или скрыть.
 	Splash4: Блокировка Calamity Entropy больше не действует — оба мода можно держать включёнными.
 	GotIt: Понятно
@@ -296,205 +296,30 @@ UI: {
 	ResetFactoryHint: Вернёт Entropy of Freedom, логотип пака, левое меню, нижнюю панель и встроенный плейлист. Удалит ваши картинки, загруженную музыку, шрифты и пресеты.
 	ResetFactorySure: Нажми ещё раз для подтверждения
 	ToastFactoryReset: Мод сброшен к начальным настройкам
-	NeoSearch: Поиск...
-	NeoApply: Применить
-	NeoCatGame: Игра
-	NeoCatVideo: Видео
-	NeoCatAudio: Звук
-	NeoCatInterface: Интерфейс
-	NeoCatCursor: Курсор
-	NeoCatControls: Управление
-	NeoCatMods: Моды
-	NeoCatClient: Клиент
-	NeoSectionGeneral: Основное
-	NeoSectionQuality: Качество
-	NeoOpenKeybinds: Клавиши
-	NeoOpenMods: Список модов
-	NeoOpenPacks: Пакеты ресурсов
-	NeoOpenTml: Настройки tModLoader
-	NeoOpenCursorColor: Цвет курсора
-	NeoOpenCursorBorder: Обводка курсора
-	NeoOpenBrowser: Браузер модов
-	NeoOpenModPacks: Наборы модов
-	NeoAutosave: Автосохранение
-	NeoAutopause: Автопауза
-	NeoMap: Карта
-	NeoHidePasswords: Скрыть пароли
-	NeoPauseUnfocused: Пауза без фокуса
-	NeoSetBonus: Бонус сета
-	NeoAutofire: Автоогонь
-	NeoSmartDoors: Умные двери
-	NeoHover: Парение
-	NeoZoom: Масштаб
-	NeoUIScale: Масштаб UI
-	NeoLanguage: Язык
-	NeoFullscreen: Полный экран
-	NeoBorderless: Без рамки
-	NeoResolution: Разрешение
-	NeoFrameSkip: Пропуск кадров
-	NeoLighting: Освещение
-	NeoQuality: Качество
-	NeoBackgrounds: Фоны
-	NeoGore: Кровь и гибель
-	NeoWobble: Дрожание шахтёра
-	NeoHeat: Искажение жары
-	NeoStorm: Эффекты бури
-	NeoWaves: Волны
-	NeoWind: Ветер
-	NeoIntense: Яркие эффекты
-	NeoParallax: Параллакс
-	NeoMusic: Музыка
-	NeoSound: Звуки
-	NeoAmbient: Окружение
-	NeoPickup: Текст подбора
-	NeoEventBar: Прогресс события
-	NeoPlacement: Превью размещения
-	NeoHighlightNew: Подсветка новых
-	NeoTileGrid: Сетка блоков
-	NeoGamepadHints: Подсказки геймпада
-	NeoTooltipBoxes: Рамки подсказок
-	NeoMinimap: Рамка миникарты
-	NeoMapScale: Масштаб карты
-	NeoHealthStyle: Здоровье и мана
-	NeoBossBar: Полоса босса
-	NeoBossFull: Полная
-	NeoBossLive: Живая
-	NeoBossFight: Бой
-	NeoSmartCursor: Умный курсор
-	NeoSmartBlocks: Умная установка
-	NeoSmartAxe: Топор после кирки
-	NeoLockOn: Захват цели
-	NeoQuickTrash: Быстрый мусор
-	NeoShiftTrash: Shift-мусор
-	NeoOn: Вкл
-	NeoOff: Выкл
-	NeoHold: Удерж.
-	NeoClick: Клик
-	NeoToggle: Перекл.
-	NeoUp: Вверх
-	NeoDown: Вниз
-	NeoGamepad: Геймпад
-	NeoSubtle: Мягко
-	NeoLightColor: Цвет
-	NeoLightWhite: Белый
-	NeoLightRetro: Ретро
-	NeoLightTrippy: Триппи
-	NeoLightHint: Цвет — обычный свет. Белый — плоский. Ретро — классика. Триппи — радуга.
-	NeoLow: Низк.
-	NeoMedium: Средн.
-	NeoHigh: Высок.
-	NeoAuto: Авто
-	NeoTimed: По времени
-	NeoFill: Заливка
-	NeoBorder: Рамка
-	NeoSectionHud: HUD
-	NeoSectionColor: Цвет
-	NeoSectionSmart: Прицел
-	NeoHslHint: HSL
-	NeoCursorNormal: Обычный
-	NeoCursorThick: Толстый
-	NeoCursorSmart: Умный
-	NeoCursorHint: Заливка — стрелка. Рамка — контур. Меняется сразу.
-	NeoKeysHint: Кликни действие, потом клавишу. Можно нажать на схему.
-	NeoKeysWaiting: Нажми клавишу или клетку. ПКМ — отмена.
-	NeoKeysAll: Все
-	NeoKeysMove: Ход
-	NeoKeysInv: Инв
-	NeoKeysMisc: Проч
-	NeoKeysMods: Моды
-	NeoKeysReset: Сбросить
-	NeoKeysResetAll: Сбросить всё
-	NeoKeysNoMods: Нет доп. клавиш от включённых модов.
-	NeoHubTitle: Мастерская
-	NeoHubHint: Моды, загрузки, паки, миры и логи здесь. Без лишних экранов Terraria.
-	NeoDevelop: Сборка и публикация
-	NeoDevelopSub: Сборка · Reload · Публикация
-	NeoImportWorlds: Импорт миров
-	NeoLogs: Логи
-	NeoBack: Назад
-	NeoModsHint: Имя или ? — описание. Вкл/Выкл — включить. Reload применяет список.
-	NeoModsInGame: Включать моды и Reload можно только в меню.
-	NeoEnableAll: Включить все
-	NeoDisableAll: Выключить все
-	NeoReload: Перезагрузка
-	NeoModsFolder: Папка модов
-	NeoSavePack: Сохранить пак
-	NeoConfigFolder: Папка конфигов
-	NeoReloadNeed: Список изменился — нажми Reload, чтобы применить.
-	NeoFilterAll: Все
-	NeoFilterOn: Вкл
-	NeoFilterOff: Выкл
-	NeoFilterClient: Клиент
-	NeoEnabledCount: "{0} вкл / {1}"
-	NeoEmptyMods: В папке Mods модов нет.
-	NeoEmptyBrowser: Мастерская ничего не вернула. Steam может быть офлайн — открой Workshop.
-	NeoEmptyPacks: Сохранённых паков нет. Сохрани набор в списке модов или открой папку.
-	NeoEmptyRes: Пакетов ресурсов нет. Положи паки в папку, затем Применить.
-	NeoEmptyDev: В ModSources пока нет проектов.
-	NeoResFolder: Папка паков
-	NeoActive: Активен
-	NeoInstalled: Установлен
-	NeoSubscribe: Подписаться
-	NeoSubscribed: Подписка
-	NeoSearching: Ищем в Steam Workshop…
-	NeoWorkshopPending: Скачан, не в списке
-	NeoOpenPage: Страница Steam
-	NeoHasCsproj: .csproj
-	NeoDeletePack: Удалить
-	NeoPackMods: "{0} модов"
-	NeoSideClient: Клиент
-	NeoSideServer: Сервер
-	NeoSideBoth: Оба
-	NeoConfigMark: Конфиг
-	NeoMoveUp: Вверх
-	NeoMoveDown: Вниз
-	NeoBrowserHint: Ищи моды в Steam Workshop. Подписка качает через Steam, как в браузере tModLoader.
-	NeoOpenSteam: Открыть Steam Workshop
-	NeoPacksHint: Наборы включённых модов. Клик загружает пак в меню.
-	NeoPacksFolder: Папка паков
-	NeoLoadPack: Загрузить
-	NeoResHint: Пакеты ресурсов. Переключи и нажми Применить. Перетащи ряд, чтобы поменять порядок.
-	NeoApplyPacks: Применить паки
-	NeoSortAz: А–Я
-	NeoSortNew: Недавние
-	NeoSortHot: Популярные
-	NeoSortDown: Загрузки
-	NeoExtract: Извлечь
-	NeoDelete: Удалить
-	NeoConfirm: Да
-	NeoLoadingMore: Ещё…
-	NeoCreateMod: Создать мод
-	NeoBuildAll: Собрать всё
-	NeoBuild: Собрать
-	NeoBuildReload: Собрать + Reload
-	NeoPublish: Опубликовать
-	NeoPublishServer: Сервер
-	NeoOpenFolder: Папка
-	NeoOpenCsproj: .csproj
-	NeoPorter: Porter
-	NeoBuilt: Сборка
-	NeoBuiltJust: только что
-	NeoBuiltMins: "{0} мин назад"
-	NeoBuiltHours: "{0} ч назад"
-	NeoSectionTml: tModLoader
-	NeoDownloadMods: Скачивать моды с серверов
-	NeoAutoReload: Автоперезагрузка при выходе
-	NeoRemoveMinZoom: Убрать мин. зум
-	NeoNotifyThemes: Уведомление о темах меню
-	NeoShowUpdatedMods: Инфо об обновлениях модов
-	NeoConfirmAllMods: Подтверждать вкл/выкл всех
-	NeoExperimental: Экспериментальные функции
-	NeoCloudDefault: Облако по умолчанию
-	NeoSupport4K: Поддержка 4K
-	NeoSupport8K: Поддержка 8K
-	NeoThrottle: Троттлинг в фоне
-	NeoWaterfall: Лимит водопадов
-	NeoBossHpText: HP на полоске босса
-	NeoFlashEvents: Иконка событий
-	NeoDevelopHint: Сборка, reload и публикация ModSources. Публикация идёт через мастер tModLoader.
-	NeoOpenSources: Открыть ModSources
-	NeoWorldsHint: Скопировать .wld в папку миров.
-	NeoImportWorld: Импорт мира
-	NeoWorldsFolder: Папка миров
-	NeoOpenLogs: Папка логов
+	TabWallpaper: Обои
+	TabLogo: Логотип
+	TabMusic: Музыка
+	TabWidgets: Виджеты
+	TabLayout: Макет
+	TabSettings: Настройки
+	SubWallpaper: Выбери небо, возьми его из другого мода или смешай свои слои.
+	SubLogo: Логотипы этого пакета, свои картинки или логотип из другого мода.
+	SubMusic: Что играет в главном меню. Нажми на трек, чтобы включить его.
+	SubWidgets: Дополнения для главного меню. Наведи на включённый виджет для настроек.
+	SubSettings: Стиль меню, цвета окна, шрифт меню, акцент и сохранённые образы.
+	RightClickDelete: ПКМ — удалить
+	SectionFromMods: Из других модов
+	SectionAdjust: Настройка
+	SectionLogoBasic: Логотип
+	SectionSource: Что играет
+	SectionPlaylist: Плейлист
+	ThemeMusic: Плейлист темы
+	SectionWidgets: Виджеты
+	SectionScreen: Экран
+	WidgetOn: Показан в главном меню
+	WidgetOff: Нажми, чтобы добавить
+	HubStyleSidebar: Боковая панель
+	BorrowBothHint: ПКМ — взять и его логотип
+	ToastBorrowBoth: Небо и логотип взяты из одной темы
+	FromModsHint: Найдено в твоих включённых модах. Нажми, чтобы применить.
 }

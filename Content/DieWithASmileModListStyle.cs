@@ -13,10 +13,16 @@ namespace DieWithASmile.Content
 {
 	public class DieWithASmileModListStyle : ModSystem
 	{
-		private static readonly Color PanelColor = new Color(29, 27, 28) * 0.72f;
-		private static readonly Color PanelHoverColor = new Color(38, 34, 35) * 0.82f;
-		private static Color Neon => CalamitasMenuAccent.Mid;
-		private static readonly Color TextFill = new Color(255, 236, 236);
+		// Palette lifted from the mod's avatar frame (icon.png) so the card reads as one piece with the logo.
+		internal static readonly Color FrameOutline = new(99, 65, 77);    // #63414d
+		internal static readonly Color FrameLight = new(234, 226, 238);   // #eae2ee
+		internal static readonly Color FramePink = new(208, 169, 189);    // #d0a9bd
+		internal static readonly Color FrameShade = new(191, 136, 143);   // #bf888f
+		internal static readonly Color FrameTan = new(143, 113, 93);      // #8f715d
+		internal static readonly Color CardTop = new(66, 42, 55);
+		internal static readonly Color CardBottom = new(38, 24, 33);
+		private static readonly Color TextFill = new(255, 242, 246);
+		private static readonly Color TextShadow = new(70, 38, 52);
 
 		private static Type _uiModItemType;
 		private static PropertyInfo _modNameProperty;
@@ -66,7 +72,7 @@ namespace DieWithASmile.Content
 					name.SetText(text);
 
 				name.TextColor = TextFill;
-				name.ShadowColor = Neon;
+				name.ShadowColor = TextShadow;
 			}
 		}
 
@@ -148,42 +154,76 @@ namespace DieWithASmile.Content
 			return _modNameProperty?.GetValue(item) as string == nameof(DieWithASmile);
 		}
 
+		private static bool _hovered;
+
 		private static void ApplyPanelColors(UIPanel panel, bool hovered)
 		{
-			panel.BackgroundColor = hovered ? PanelHoverColor : PanelColor;
-			panel.BorderColor = hovered ? Color.Lerp(Neon, Color.White, 0.28f) : Neon;
+			// The backdrop is painted by WeModListLook; the vanilla fill/border would sit on top of it.
+			_hovered = hovered;
+			panel.BackgroundColor = Color.Transparent;
+			panel.BorderColor = Color.Transparent;
 		}
 
 		private static void DrawNeonFrame(SpriteBatch spriteBatch, CalculatedStyle dims, bool outer)
 		{
+			var rect = new Rectangle((int)dims.X, (int)dims.Y, (int)dims.Width, (int)dims.Height);
+			if (rect.Width < 12 || rect.Height < 12)
+				return;
+
 			Texture2D pixel = TextureAssets.MagicPixel.Value;
-			int start = outer ? 4 : 1;
-			int end = outer ? 1 : 0;
-
-			for (int i = start; i >= end; i--) {
-				float alpha = outer ? 0.12f * (5 - i) : 0.85f;
-				var rect = new Rectangle(
-					(int)dims.X - i,
-					(int)dims.Y - i,
-					(int)dims.Width + i * 2,
-					(int)dims.Height + i * 2);
-
-				DrawBorder(spriteBatch, pixel, rect, Neon * alpha, outer ? 1 : 2);
+			if (outer) {
+				// Soft drop shadow under the card, like vanilla UI panels.
+				spriteBatch.Draw(pixel, new Rectangle(rect.X + 3, rect.Bottom, rect.Width - 3, 3), Color.Black * 0.35f);
+				spriteBatch.Draw(pixel, new Rectangle(rect.Right, rect.Y + 3, 3, rect.Height), Color.Black * 0.35f);
+				return;
 			}
+
+			DrawPixelFrame(spriteBatch, rect, _hovered);
 		}
 
-		private static void DrawBorder(SpriteBatch spriteBatch, Texture2D pixel, Rectangle rect, Color color, int thickness)
+		/// <summary>
+		/// The avatar's frame, scaled to a card: dark plum outline, light pink top/left bevel, rose bottom/right
+		/// bevel, a tan inner line, and notched corners instead of hard square ones.
+		/// </summary>
+		internal static void DrawPixelFrame(SpriteBatch spriteBatch, Rectangle r, bool hovered)
 		{
-			spriteBatch.Draw(pixel, new Rectangle(rect.X, rect.Y, rect.Width, thickness), color);
-			spriteBatch.Draw(pixel, new Rectangle(rect.X, rect.Bottom - thickness, rect.Width, thickness), color);
-			spriteBatch.Draw(pixel, new Rectangle(rect.X, rect.Y, thickness, rect.Height), color);
-			spriteBatch.Draw(pixel, new Rectangle(rect.Right - thickness, rect.Y, thickness, rect.Height), color);
+			Texture2D px = TextureAssets.MagicPixel.Value;
+			const int u = 2; // one art pixel
+			Color outline = FrameOutline;
+			Color light = hovered ? Color.White : FrameLight;
+			Color pink = hovered ? Color.Lerp(FramePink, Color.White, 0.35f) : FramePink;
+			Color shade = hovered ? Color.Lerp(FrameShade, Color.White, 0.2f) : FrameShade;
+
+			void Fill(int x, int y, int w, int h, Color c)
+			{
+				if (w > 0 && h > 0)
+					spriteBatch.Draw(px, new Rectangle(x, y, w, h), c);
+			}
+
+			// outline (corners notched by one art pixel)
+			Fill(r.X + u, r.Y, r.Width - u * 2, u, outline);
+			Fill(r.X + u, r.Bottom - u, r.Width - u * 2, u, outline);
+			Fill(r.X, r.Y + u, u, r.Height - u * 2, outline);
+			Fill(r.Right - u, r.Y + u, u, r.Height - u * 2, outline);
+			// bevel: light top/left, rose bottom/right
+			Fill(r.X + u, r.Y + u, r.Width - u * 2, u, light);
+			Fill(r.X + u, r.Y + u * 2, u, r.Height - u * 4, pink);
+			Fill(r.X + u, r.Bottom - u * 2, r.Width - u * 2, u, shade);
+			Fill(r.Right - u * 2, r.Y + u * 2, u, r.Height - u * 4, shade);
+			// tan inner line
+			Fill(r.X + u * 2, r.Y + u * 2, r.Width - u * 4, 1, FrameTan);
+			Fill(r.X + u * 2, r.Bottom - u * 2 - 1, r.Width - u * 4, 1, FrameTan);
+			Fill(r.X + u * 2, r.Y + u * 2, 1, r.Height - u * 4, FrameTan);
+			Fill(r.Right - u * 2 - 1, r.Y + u * 2, 1, r.Height - u * 4, FrameTan);
+			// corner sparkle pixels, as on the avatar
+			Fill(r.X + u, r.Y + u, u, u, Color.White);
+			Fill(r.Right - u * 2, r.Bottom - u * 2, u, u, outline);
 		}
 
 		private static void DrawNeonModName(UIText name, SpriteBatch spriteBatch, string text)
 		{
 			Vector2 pos = name.GetInnerDimensions().Position();
-			Utils.DrawBorderString(spriteBatch, text, pos, TextFill);
+			Utils.DrawBorderStringFourWay(spriteBatch, FontAssets.MouseText.Value, text, pos.X, pos.Y, TextFill, TextShadow, Vector2.Zero, 1f);
 		}
 	}
 }

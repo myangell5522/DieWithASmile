@@ -149,12 +149,12 @@ namespace DieWithASmile.Engine.Core
 			WeArt.Scan();
 			WeCatalog.DropMissing();
 			CalamitasMenuBackgroundStyle.SnapLockedScenes();
-			int hub = Math.Clamp(WeSave.Data.WrenchStyle, 0, 1);
+			int hub = Math.Clamp(WeSave.Data.WrenchStyle, 0, 2);
+			WeSave.Data.WrenchStyle = hub;
 			if (hub != prevHub) {
-				if (hub == 0)
-					WrenchToolbar.Collapse();
-				else
-					WrenchDock.Reset();
+				WrenchToolbar.Collapse();
+				WrenchDock.Reset();
+				WrenchSidebar.Reset();
 			}
 
 			if (WeSave.Data.ChromeCustom)

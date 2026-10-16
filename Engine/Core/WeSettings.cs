@@ -373,16 +373,15 @@ namespace DieWithASmile.Engine.Core
 
 		internal static void SetWrenchStyle(int style)
 		{
-			style = Math.Clamp(style, 0, 1);
+			style = Math.Clamp(style, 0, 2);
 			if (Current.WrenchStyle == style)
 				return;
 
 			Current.WrenchStyle = style;
 			WeSave.Save();
-			if (style == 0)
-				WrenchToolbar.Collapse();
-			else
-				WrenchDock.Reset();
+			WrenchToolbar.Collapse();
+			WrenchDock.Reset();
+			WrenchSidebar.Reset();
 			WeToast.Show("ToastHubStyle");
 		}
 

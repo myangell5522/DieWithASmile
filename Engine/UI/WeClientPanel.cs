@@ -13,17 +13,17 @@ namespace DieWithASmile.Engine.UI
 	{
 		private static bool _factoryArmed;
 
-		private static int LooksGroupH(int n) => 32 + 40 + 28 + n * 42 + 14;
+		private static int LooksGroupH(int n) => 32 + 40 + HintH + n * 42 + 14;
 
 		private static int MenuGroupH(int fonts, bool customRgb)
 		{
-			int h = 32 + 58 + 8 + 70 + 8 + 42 + 42 + 40 + 28 + fonts * 50 + 22 + 22 + 14;
+			int h = 32 + 58 + 8 + 70 + 8 + 42 + 42 + 40 + HintH + fonts * 50 + 22 + 22 + 14;
 			if (customRgb)
 				h += 74;
 			return h;
 		}
 
-		private static int FactoryGroupH() => 32 + 42 + 28 + 14;
+		private static int FactoryGroupH() => 32 + 42 + HintH + 14;
 
 		internal static float ClientContentHeight()
 		{
@@ -37,11 +37,8 @@ namespace DieWithASmile.Engine.UI
 			if (spriteBatch == null)
 				return;
 			var card = new Rectangle(panel.X + 10, y, panel.Width - 20, h);
-			WeDraw.Fill(spriteBatch, card, new Color(16, 18, 24) * (0.94f * _fade));
-			WeDraw.Border(spriteBatch, card, WeAccent.Mid * (0.5f * _fade));
-			ChatManager.DrawColorCodedStringWithShadow(
-				spriteBatch, FontAssets.MouseText.Value, title,
-				new Vector2(card.X + 12, y + 8), WeAccent.Light * _fade, 0f, Vector2.Zero, new Vector2(0.8f));
+			WeTerra.WellBox(spriteBatch, card, _fade);
+			WeTerra.Label(spriteBatch, title, new Vector2(card.X + 12, y + 8), WeTerra.Title * _fade, 0.8f);
 		}
 
 		private static void ClientLooks(SpriteBatch spriteBatch, Rectangle panel, ref int y, bool click)
@@ -74,10 +71,10 @@ namespace DieWithASmile.Engine.UI
 				return;
 			}
 
-			DrawButtonRow(spriteBatch, panel, ref y, WeText.UI("SaveLook"), WeText.UI("OpenFolder"));
+			DrawButtonRow(spriteBatch, panel, ref y, WeText.UI("SaveLook"), WeText.UI("OpenFolder"), WeIcons.Star, WeIcons.Folder);
 			DrawHint(spriteBatch, panel, ref y, WeText.UI("LookHint"));
 			foreach (WeLookFile look in WePresets.All)
-				DrawCard(spriteBatch, panel, ref y, look.Name, false);
+				DrawCard(spriteBatch, panel, ref y, look.Name, false, CardKind.Action);
 			y = top + h + 10;
 		}
 
@@ -87,20 +84,18 @@ namespace DieWithASmile.Engine.UI
 			int top = y;
 			DrawGroupShell(spriteBatch, panel, top, h, WeText.UI("HubStyle"));
 			int inner = top + 32;
-			int cellW = (panel.Width - 48) / 2;
-			var left = new Rectangle(panel.X + 20, inner, cellW, 96);
-			var right = new Rectangle(left.Right + 8, inner, cellW, 96);
-			if (click) {
-				if (left.Contains(Main.mouseX, Main.mouseY))
-					WeSettings.SetWrenchStyle(0);
-				if (right.Contains(Main.mouseX, Main.mouseY))
-					WeSettings.SetWrenchStyle(1);
-				y = top + h + 10;
-				return;
+			const int styles = 3;
+			int cellW = (panel.Width - 40 - 8 * (styles - 1)) / styles;
+			for (int i = 0; i < styles; i++) {
+				var cell = new Rectangle(panel.X + 20 + i * (cellW + 8), inner, cellW, 96);
+				if (click) {
+					if (cell.Contains(Main.mouseX, Main.mouseY))
+						WeSettings.SetWrenchStyle(i);
+				}
+				else
+					DrawHubCell(spriteBatch, cell, i);
 			}
 
-			DrawHubCell(spriteBatch, left, 0);
-			DrawHubCell(spriteBatch, right, 1);
 			y = top + h + 10;
 		}
 
@@ -108,20 +103,19 @@ namespace DieWithASmile.Engine.UI
 		{
 			bool on = WeSave.Data.WrenchStyle == style;
 			bool hover = hit.Contains(Main.mouseX, Main.mouseY);
-			WeDraw.Fill(spriteBatch, hit, (on ? WeAccent.Deep : new Color(22, 24, 30)) * ((hover ? 0.95f : 0.82f) * _fade));
-			WeDraw.Border(spriteBatch, hit, (on || hover ? WeAccent.Light : WeAccent.Mid) * _fade);
+			Card(spriteBatch, hit, hover, on);
 			var preview = new Rectangle(hit.X + 8, hit.Y + 8, hit.Width - 16, hit.Height - 30);
-			WeDraw.Fill(spriteBatch, preview, new Color(12, 14, 18) * _fade);
-			WrenchToolbar.DrawStylePreview(spriteBatch, preview, style, _fade, on);
-			string title = WeText.UI(style == 1 ? "HubStyleDock" : "HubStyleRadial");
-			ChatManager.DrawColorCodedStringWithShadow(
-				spriteBatch, FontAssets.MouseText.Value, title,
-				new Vector2(hit.X + 12, hit.Bottom - 20), Color.White * _fade, 0f, Vector2.Zero, new Vector2(0.72f));
+			Thumb(spriteBatch, preview, null);
+			WeDraw.WithClip(spriteBatch, preview, () => WrenchToolbar.DrawStylePreview(spriteBatch, preview, style, _fade, on));
+			string title = WeText.UI(style == 2 ? "HubStyleSidebar" : style == 1 ? "HubStyleDock" : "HubStyleRadial");
+			WeTerra.Label(spriteBatch, WeTerra.Fit(title, 0.7f, hit.Width - 34), new Vector2(hit.X + 10, hit.Bottom - 20), Color.White * _fade, 0.7f);
+			if (on)
+				WeTerra.Icon(spriteBatch, WeIcons.Check, new Vector2(hit.Right - 14, hit.Bottom - 13), 16f, Color.White * _fade);
 		}
 
 		private static void ClientWindow(SpriteBatch spriteBatch, Rectangle panel, ref int y, bool click)
 		{
-			const int h = 356;
+			const int h = 358;
 			int top = y;
 			DrawGroupShell(spriteBatch, panel, top, h, WeText.UI("GroupWindow"));
 			int inner = top + 32;
@@ -179,8 +173,8 @@ namespace DieWithASmile.Engine.UI
 			Color drawColor = _clientChip == 1 ? WeSettings.BorderColor : _clientChip == 2 ? WeSettings.TitleTextColor : WeSettings.CaptionColor;
 			DrawRgb(spriteBatch, panel, ref y, drawKey, drawColor);
 			DrawCard(spriteBatch, panel, ref y, WeText.UI("DarkTitleBar"), WeSave.Data.DarkTitleBar);
-			DrawButtonRow(spriteBatch, panel, ref y, WeText.UI("PickIcon"), WeText.UI("ResetChrome"));
-			DrawCard(spriteBatch, panel, ref y, WeText.UI("ShowHelp"), false);
+			DrawButtonRow(spriteBatch, panel, ref y, WeText.UI("PickIcon"), WeText.UI("ResetChrome"), WeIcons.Image, WeIcons.Reset);
+			DrawCard(spriteBatch, panel, ref y, WeText.UI("ShowHelp"), false, CardKind.Action);
 			DrawHint(spriteBatch, panel, ref y, WeText.UI(WeOs.IsWindows ? "BorderlessHint" : "ChromeOsHint"));
 			y = top + h + 10;
 		}
@@ -189,8 +183,7 @@ namespace DieWithASmile.Engine.UI
 		{
 			bool on = _clientChip == index;
 			bool hover = hit.Contains(Main.mouseX, Main.mouseY);
-			WeDraw.Fill(spriteBatch, hit, (on ? WeAccent.Deep : new Color(22, 24, 30)) * _fade);
-			WeDraw.Border(spriteBatch, hit, (on || hover ? WeAccent.Light : WeAccent.Mid) * _fade);
+			Card(spriteBatch, hit, hover, on);
 			WeDraw.Fill(spriteBatch, new Rectangle(hit.X + 6, hit.Y + 7, 16, 16), color * _fade);
 			ChatManager.DrawColorCodedStringWithShadow(
 				spriteBatch, FontAssets.MouseText.Value, label,
@@ -270,8 +263,7 @@ namespace DieWithASmile.Engine.UI
 				var cell = new Rectangle(panel.X + 20 + i * (styleW + 8), styleY, styleW, 66);
 				bool on = WeSave.Data.ButtonStyle == i;
 				bool hover = cell.Contains(Main.mouseX, Main.mouseY);
-				WeDraw.Fill(spriteBatch, cell, (on ? WeAccent.Deep : new Color(22, 24, 30)) * _fade);
-				WeDraw.Border(spriteBatch, cell, (on || hover ? WeAccent.Light : WeAccent.Mid) * _fade);
+				Card(spriteBatch, cell, hover, on);
 				WeDraw.WithClip(spriteBatch, cell, () => WeLook.DrawPreview(
 					spriteBatch, sample, new Vector2(cell.Center.X, cell.Y + 24),
 					WeLook.MenuIdle, _fade, 0.28f, i));
@@ -285,8 +277,8 @@ namespace DieWithASmile.Engine.UI
 			DrawCard(spriteBatch, panel, ref y, WeText.UI("MenuTextCustom"), WeSave.Data.MenuTextCustom);
 			if (customRgb)
 				DrawRgb(spriteBatch, panel, ref y, "menu", WeSettings.MenuTextColor);
-			DrawCard(spriteBatch, panel, ref y, WeText.UI("FontVanilla"), string.IsNullOrEmpty(WeSave.Data.FontFile));
-			DrawButtonRow(spriteBatch, panel, ref y, WeText.UI("ImportFont"), WeText.UI("OpenFolder"));
+			DrawCard(spriteBatch, panel, ref y, WeText.UI("FontVanilla"), string.IsNullOrEmpty(WeSave.Data.FontFile), CardKind.Radio);
+			DrawButtonRow(spriteBatch, panel, ref y, WeText.UI("ImportFont"), WeText.UI("OpenFolder"), WeIcons.Font, WeIcons.Folder);
 			DrawHint(spriteBatch, panel, ref y, WeText.UI(WeOs.IsWindows ? "FontHint" : "FontOsHint"));
 			foreach (WeFontOffer offer in WeType.All)
 				DrawFontRow(spriteBatch, panel, ref y, offer);
@@ -318,8 +310,7 @@ namespace DieWithASmile.Engine.UI
 			Rectangle hit = Row(panel, y, 44);
 			bool on = string.Equals(WeSave.Data.FontFile, offer.FileName, StringComparison.OrdinalIgnoreCase);
 			bool hover = hit.Contains(Main.mouseX, Main.mouseY);
-			WeDraw.Fill(spriteBatch, hit, (on ? WeAccent.Deep : new Color(22, 24, 30)) * _fade);
-			WeDraw.Border(spriteBatch, hit, (on || hover ? WeAccent.Light : WeAccent.Mid) * _fade);
+			Card(spriteBatch, hit, hover, on);
 			var aa = new Rectangle(hit.X + 8, hit.Y + 6, 52, 32);
 			WeDraw.Fill(spriteBatch, aa, new Color(10, 12, 16) * _fade);
 			Texture2D prev = WeType.PreviewOf(offer.FileName);
@@ -386,9 +377,8 @@ namespace DieWithASmile.Engine.UI
 				var hit = new Rectangle(panel.X + 20 + col * (cellW + gap), inner + row * (cellH + gap), cellW, cellH);
 				AccentSwatch swatch = WeAccent.Palettes[i];
 				bool on = i == WeAccent.Index;
-				WeDraw.Fill(spriteBatch, hit, swatch.Mid * _fade);
-				if (on)
-					WeDraw.Border(spriteBatch, hit, Color.White * _fade);
+				bool hoverSwatch = hit.Contains(Main.mouseX, Main.mouseY);
+				WeTerra.Panel(spriteBatch, hit, swatch.Mid * _fade, (on ? Color.White : hoverSwatch ? swatch.Light : Color.Black) * _fade);
 				WeLook.DrawPreview(
 					spriteBatch, "Aa", hit.Center.ToVector2(), Color.White, _fade * 0.9f, 0.22f, 0);
 			}
@@ -420,7 +410,7 @@ namespace DieWithASmile.Engine.UI
 				return;
 			}
 
-			DrawCard(spriteBatch, panel, ref y, WeText.UI(_factoryArmed ? "ResetFactorySure" : "ResetFactory"), _factoryArmed);
+			DrawCard(spriteBatch, panel, ref y, WeText.UI(_factoryArmed ? "ResetFactorySure" : "ResetFactory"), _factoryArmed, CardKind.Action);
 			DrawHint(spriteBatch, panel, ref y, WeText.UI("ResetFactoryHint"));
 			y = top + h + 16;
 		}

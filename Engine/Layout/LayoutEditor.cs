@@ -13,7 +13,6 @@ using DieWithASmile.Engine.Content;
 using DieWithASmile.Engine.Core;
 using DieWithASmile.Engine.UI;
 using DieWithASmile.Engine.Audio;
-using DieWithASmile.Engine.Settings;
 
 namespace DieWithASmile.Engine.Layout
 {
@@ -205,7 +204,7 @@ namespace DieWithASmile.Engine.Layout
 				return;
 			}
 
-			if (WePanels.Covering || WeNeoMenu.Covering || WeSplash.Visible)
+			if (WePanels.Covering || WeSplash.Visible)
 				return;
 
 			if (pressed) {
@@ -310,7 +309,13 @@ namespace DieWithASmile.Engine.Layout
 			else if (reset.Contains(Main.mouseX, Main.mouseY)) {
 				if (_logoOnly)
 					ResetLogoWork();
+				else if (!_resetArmed) {
+					// Resetting the whole theme from the layout toolbar is destructive: ask for a second click.
+					_resetArmed = true;
+					WeToast.Show("ResetFactorySure");
+				}
 				else {
+					_resetArmed = false;
 					WeSettings.ResetVanillaTheme();
 					WePlaylist.OnThemeSelected();
 					WeToast.Show("ToastReset");
@@ -318,6 +323,8 @@ namespace DieWithASmile.Engine.Layout
 				}
 			}
 
+			if (!reset.Contains(Main.mouseX, Main.mouseY))
+				_resetArmed = false;
 			WeInput.LockHold(ref _holdLock);
 		}
 
@@ -326,24 +333,24 @@ namespace DieWithASmile.Engine.Layout
 			CancelHit().Contains(Main.mouseX, Main.mouseY) ||
 			ResetHit().Contains(Main.mouseX, Main.mouseY);
 
+		private static bool _resetArmed;
+
 		private static void DrawToolbar(SpriteBatch spriteBatch, float fade)
 		{
-			DrawChip(spriteBatch, SaveHit(), WeText.UI("SaveLayout"), fade);
-			DrawChip(spriteBatch, CancelHit(), WeText.UI("CancelLayout"), fade);
-			DrawChip(spriteBatch, ResetHit(), WeText.UI(_logoOnly ? "ResetLogo" : "ResetVanilla"), fade);
+			DrawChip(spriteBatch, SaveHit(), WeText.UI("SaveLayout"), WeIcons.Check, false, fade);
+			DrawChip(spriteBatch, CancelHit(), WeText.UI("CancelLayout"), WeIcons.Close, false, fade);
+			string reset = _logoOnly ? "ResetLogo" : _resetArmed ? "ResetFactorySure" : "ResetVanilla";
+			DrawChip(spriteBatch, ResetHit(), WeText.UI(reset), WeIcons.Reset, _resetArmed, fade);
 		}
 
-		private static void DrawChip(SpriteBatch spriteBatch, Rectangle hit, string text, float fade)
+		private static void DrawChip(SpriteBatch spriteBatch, Rectangle hit, string text, string icon, bool armed, float fade)
 		{
 			bool hover = hit.Contains(Main.mouseX, Main.mouseY);
-			WeDraw.Fill(spriteBatch, hit, new Color(24, 26, 32) * ((hover ? 0.94f : 0.8f) * fade));
-			WeDraw.Border(spriteBatch, hit, (hover ? WeAccent.Hover : WeAccent.Mid) * fade);
-			var font = FontAssets.MouseText.Value;
-			Vector2 size = font.MeasureString(text) * 0.78f;
-			ChatManager.DrawColorCodedStringWithShadow(
-				spriteBatch, font, text,
-				new Vector2(hit.X + (hit.Width - size.X) * 0.5f, hit.Y + (hit.Height - size.Y) * 0.5f),
-				Color.White * fade, 0f, Vector2.Zero, new Vector2(0.78f));
+			WeTerra.Panel(spriteBatch, hit, WeTerra.LookOf(hover, armed), fade);
+			WeTerra.Icon(spriteBatch, icon, new Vector2(hit.X + 18, hit.Center.Y), 16f, Color.White * fade);
+			string label = WeTerra.Fit(text, 0.76f, hit.Width - 40);
+			Vector2 size = WeTerra.Measure(label, 0.76f);
+			WeTerra.Label(spriteBatch, label, new Vector2(hit.X + 32 + (hit.Width - 40 - size.X) * 0.5f, hit.Y + (hit.Height - size.Y) * 0.5f + 2f), Color.White * fade, 0.76f);
 		}
 
 		private static Rectangle SaveHit() => Chip(0);
@@ -352,7 +359,7 @@ namespace DieWithASmile.Engine.Layout
 
 		private static Rectangle Chip(int index)
 		{
-			int width = 148;
+			int width = 184;
 			int y = Main.screenHeight - 58;
 			int x = (Main.screenWidth - (width * 3 + 16)) / 2 + index * (width + 8);
 			return new Rectangle(x, y, width, 34);

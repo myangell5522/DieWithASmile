@@ -49,11 +49,15 @@ namespace DieWithASmile.Content
 				return false;
 
 			try {
-				if (!OpenReader(path))
+				if (!OpenReader(path)) {
+					Stop();
 					return false;
+				}
 
-				if (_sampleRate < 8000 || _sampleRate > 48000)
+				if (_sampleRate < 8000 || _sampleRate > 48000) {
+					Stop();
 					return false;
+				}
 
 				_path = path;
 				_paused = false;

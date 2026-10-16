@@ -98,15 +98,16 @@ namespace DieWithASmile.Engine.UI
 			WeDraw.WithLinear(spriteBatch, () => {
 				WeDraw.Fill(spriteBatch, WeDraw.CoverRect, Color.Black * (0.62f * _fade));
 				Rectangle card = Card();
-				WeDraw.Fill(spriteBatch, card, new Color(22, 24, 30) * (0.96f * _fade));
-				WeDraw.Border(spriteBatch, card, WeAccent.Mid * _fade);
+				WeTerra.Window(spriteBatch, card, _fade);
 
 				var font = FontAssets.MouseText.Value;
-				DrawText(spriteBatch, font, WeText.UI("SplashTitle"), new Vector2(card.X + 28, card.Y + 22), 1.05f, WeAccent.Light * _fade);
-				DrawWrapped(spriteBatch, font, WeText.UI("Splash1"), card.X + 28, card.Y + 64, card.Width - 56, _fade);
-				DrawWrapped(spriteBatch, font, WeText.UI("Splash2"), card.X + 28, card.Y + 124, card.Width - 56, _fade);
-				DrawWrapped(spriteBatch, font, WeText.UI("Splash3"), card.X + 28, card.Y + 184, card.Width - 56, _fade);
-				DrawWrapped(spriteBatch, font, WeText.UI("Splash4"), card.X + 28, card.Y + 250, card.Width - 56, _fade);
+				WeTerra.Headline(spriteBatch, WeText.UI("SplashTitle"), new Vector2(card.X + 28, card.Y + 16), WeTerra.Title * _fade, 0.62f);
+				string[] icons = { WeIcons.Star, WeIcons.Setting, WeIcons.Widget, WeIcons.Puzzle };
+				int[] rows = { 70, 130, 190, 256 };
+				for (int i = 0; i < 4; i++) {
+					WeTerra.Icon(spriteBatch, icons[i], new Vector2(card.X + 38, card.Y + rows[i] + 10), 16f, Color.White * _fade);
+					DrawWrapped(spriteBatch, font, WeText.UI("Splash" + (i + 1)), card.X + 60, card.Y + rows[i], card.Width - 88, _fade);
+				}
 
 				DrawCheck(spriteBatch, CheckHit(card), _dontShow, WeText.UI("DontShow"), _fade);
 				DrawButton(spriteBatch, OkHit(card), WeText.UI("GotIt"), _fade);
@@ -127,26 +128,14 @@ namespace DieWithASmile.Engine.UI
 		private static void DrawButton(SpriteBatch spriteBatch, Rectangle hit, string text, float fade)
 		{
 			bool hover = hit.Contains(Main.mouseX, Main.mouseY);
-			WeDraw.Fill(spriteBatch, hit, (hover ? WeAccent.Mid : new Color(32, 36, 44)) * fade);
-			WeDraw.Border(spriteBatch, hit, WeAccent.Light * fade);
-			var font = FontAssets.MouseText.Value;
-			Vector2 size = font.MeasureString(text) * 0.85f;
-			ChatManager.DrawColorCodedStringWithShadow(
-				spriteBatch, font, text,
-				new Vector2(hit.X + (hit.Width - size.X) * 0.5f, hit.Y + (hit.Height - size.Y) * 0.5f),
-				Color.White * fade, 0f, Vector2.Zero, new Vector2(0.85f));
+			WeTerra.Panel(spriteBatch, hit, WeTerra.LookOf(hover, true), fade);
+			WeTerra.LabelCentered(spriteBatch, text, hit.Center.ToVector2(), Color.White * fade, 0.85f);
 		}
 
 		private static void DrawCheck(SpriteBatch spriteBatch, Rectangle hit, bool on, string label, float fade)
 		{
-			WeDraw.Fill(spriteBatch, hit, new Color(18, 20, 26) * fade);
-			WeDraw.Border(spriteBatch, hit, WeAccent.Mid * fade);
-			if (on)
-				WeDraw.Fill(spriteBatch, new Rectangle(hit.X + 4, hit.Y + 4, hit.Width - 8, hit.Height - 8), WeAccent.Light * fade);
-			ChatManager.DrawColorCodedStringWithShadow(
-				spriteBatch, FontAssets.MouseText.Value, label,
-				new Vector2(hit.Right + 10, hit.Y + 2),
-				Color.White * fade, 0f, Vector2.Zero, new Vector2(0.8f));
+			WeTerra.Icon(spriteBatch, on ? WeIcons.ToggleOn : WeIcons.ToggleOff, hit.Center.ToVector2(), 16f, Color.White * fade);
+			WeTerra.Label(spriteBatch, label, new Vector2(hit.Right + 10, hit.Y + 2), Color.White * fade, 0.8f);
 		}
 
 		private static void DrawText(SpriteBatch spriteBatch, ReLogic.Graphics.DynamicSpriteFont font, string text, Vector2 pos, float scale, Color color)

@@ -1,3 +1,26 @@
+Version 3.0.25
+
+Title
+- New look: every page, button, widget and the hub use Terraria's own rounded panels, crisp 16px pixel-art icons (46 new ones) and the vanilla fonts.
+- One window for everything: Wallpaper, Logo, Music, Widgets, Layout and Settings are tabs at the top, each with a one-line explanation, a close button and a real scrollbar.
+- Pages are split into clear sections (e.g. Wallpaper: Sky, From this pack, From other mods, Your images, Layers, Adjust). Switches show a checkbox, choices show a tick, actions show an arrow.
+- Hub trimmed from 8 look-alike icons to 6 named sections. "Move logo only" is now in the Logo page and "Hide version clutter" in Widgets.
+- New third hub style, Sidebar: a labelled panel on the nearest screen edge with quick toggles (version clutter, music player, mute in background). Folds into an icon rail. Pick it in Settings → Hub style.
+- Borrowing from other mods: right-click a borrowed sky to take that theme's logo as well. Lazy-loading themes are re-scanned for ~10 seconds instead of forever.
+- Widgets restyled: clock and greeting sit on panels with sun/moon and speech icons, the moon phase sits in a slot, the music player and Discord card use the same panels.
+- Mod list: the logo now blinks, her hair moves in the wind and the C-wing bobs. The card uses the avatar's own frame colours.
+- Layout editor: "Reset to vanilla" asks for a second click before wiping the theme.
+- Korean: fixed two lines that broke the whole Korean translation file.
+
+Version 3.0.24
+
+Title
+- Removed the custom settings / mods / workshop overlay. Settings, Mods and Workshop open the normal tModLoader menus again (title screen and Esc menu). The wrench Client button opens the old Client panel.
+- Settings → Volume (title screen): new Main Menu Music slider under Ambient. It changes how loud the theme's menu music is and is remembered after restarting.
+- The game's Music slider can be turned all the way down to 0% again.
+- Works with Swap My Audio!: its Audio Device line sits below Main Menu Music instead of overlapping it.
+- Settings files are written safely, so a crash while saving can't wipe them. An unreadable file is kept as settings.json.broken.
+
 Version 3.0.23
 
 Title
