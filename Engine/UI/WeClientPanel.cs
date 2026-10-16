@@ -15,22 +15,7 @@ namespace DieWithASmile.Engine.UI
 
 		private static int LooksGroupH(int n) => 32 + 40 + HintH + n * 42 + 14;
 
-		private static int MenuGroupH(int fonts, bool customRgb)
-		{
-			int h = 32 + 58 + 8 + 70 + 8 + 42 + 42 + 40 + HintH + fonts * 50 + 22 + 22 + 14;
-			if (customRgb)
-				h += 74;
-			return h;
-		}
-
 		private static int FactoryGroupH() => 32 + 42 + HintH + 14;
-
-		internal static float ClientContentHeight()
-		{
-			return LooksGroupH(WePresets.All.Count) + 10 + 140 + 10 + 356 + 10 +
-			       MenuGroupH(WeType.All.Count, WeSave.Data.MenuTextCustom) + 10 + 118 + 10 +
-			       FactoryGroupH() + 16;
-		}
 
 		private static void DrawGroupShell(SpriteBatch spriteBatch, Rectangle panel, int y, int h, string title)
 		{
@@ -113,70 +98,219 @@ namespace DieWithASmile.Engine.UI
 				WeTerra.Icon(spriteBatch, WeIcons.Check, new Vector2(hit.Right - 14, hit.Bottom - 13), 16f, Color.White * _fade);
 		}
 
+		// ---- Window group ---------------------------------------------------------------------------
+		// One layout function runs in three modes so drawing, clicking and measuring can never disagree.
+		private const int ModeDraw = 0;
+		private const int ModeClick = 1;
+		private const int ModeMeasure = 2;
+
+		private static Texture2D _iconPreview;
+		private static string _iconPreviewFile = "";
+
+		private static bool UCard(SpriteBatch sb, Rectangle panel, ref int y, int mode, string text, bool on, CardKind kind = CardKind.Toggle)
+		{
+			if (mode == ModeClick)
+				return ClickCard(panel, ref y);
+			if (mode == ModeDraw)
+				DrawCard(sb, panel, ref y, text, on, kind);
+			else
+				y += 42;
+			return false;
+		}
+
+		private static int URow(SpriteBatch sb, Rectangle panel, ref int y, int mode, string a, string b, string ia, string ib)
+		{
+			if (mode == ModeClick)
+				return ClickRow(panel, ref y, out int which) ? which : -1;
+			if (mode == ModeDraw)
+				DrawButtonRow(sb, panel, ref y, a, b, ia, ib);
+			else
+				y += 40;
+			return -1;
+		}
+
+		private static void UHint(SpriteBatch sb, Rectangle panel, ref int y, int mode, string text)
+		{
+			if (mode == ModeDraw)
+				DrawHint(sb, panel, ref y, text);
+			else
+				SkipHint(ref y);
+		}
+
+		private static void ChromePreset(int i, out Color cap, out Color bor, out Color txt)
+		{
+			switch (i) {
+				case 0:
+					cap = Color.Lerp(WeAccent.Deep, Color.Black, 0.35f);
+					bor = WeAccent.Mid;
+					txt = Color.White;
+					break;
+				case 1:
+					cap = new Color(58, 12, 20);
+					bor = new Color(196, 48, 60);
+					txt = new Color(255, 224, 224);
+					break;
+				case 2:
+					cap = new Color(16, 16, 24);
+					bor = new Color(44, 44, 60);
+					txt = new Color(230, 230, 240);
+					break;
+				default:
+					cap = new Color(240, 240, 240);
+					bor = new Color(200, 200, 200);
+					txt = new Color(30, 30, 30);
+					break;
+			}
+		}
+
+		private static readonly string[] ChromePresetKeys = { "ChromeTheme", "ChromeCalamity", "ChromeNight", "ChromeLight" };
+
+		private static string TitleLabel(int mode) => mode switch {
+			ClientChrome.TitlePlain => "Terraria",
+			ClientChrome.TitleTheme => WeText.UI("TitleTheme"),
+			_ => WeText.UI("TitleVanilla")
+		};
+
+		private static int WindowGroupH(Rectangle panel)
+		{
+			int y = 0;
+			WindowBody(null, panel, ref y, ModeMeasure);
+			return y + 14;
+		}
+
 		private static void ClientWindow(SpriteBatch spriteBatch, Rectangle panel, ref int y, bool click)
 		{
-			const int h = 358;
 			int top = y;
-			DrawGroupShell(spriteBatch, panel, top, h, WeText.UI("GroupWindow"));
-			int inner = top + 32;
-			var preview = new Rectangle(panel.X + 20, inner, panel.Width - 40, 38);
+			int h = WindowGroupH(panel);
 			if (!click)
-				DrawWindowPreview(spriteBatch, preview);
+				DrawGroupShell(spriteBatch, panel, top, h, WeText.UI("GroupWindow"));
+			int inner = top;
+			WindowBody(spriteBatch, panel, ref inner, click ? ModeClick : ModeDraw);
+			y = top + h + 10;
+		}
 
-			int chipY = inner + 46;
-			int chipW = (panel.Width - 56) / 3;
-			Rectangle[] chips = {
-				new(panel.X + 20, chipY, chipW, 30),
-				new(panel.X + 28 + chipW, chipY, chipW, 30),
-				new(panel.X + 36 + chipW * 2, chipY, chipW, 30)
-			};
-			if (click) {
-				for (int i = 0; i < 3; i++) {
-					if (chips[i].Contains(Main.mouseX, Main.mouseY))
-						_clientChip = i;
-				}
+		/// <summary>Lays out the Window group from <paramref name="y"/> (the top of the shell).</summary>
+		private static void WindowBody(SpriteBatch sb, Rectangle panel, ref int y, int mode)
+		{
+			y += 32;
+			var preview = new Rectangle(panel.X + 20, y, panel.Width - 40, 86);
+			if (mode == ModeDraw)
+				DrawWindowPreview(sb, preview);
+			y += 94;
 
-				y = chipY + 38;
-				string key = _clientChip == 1 ? "border" : _clientChip == 2 ? "title" : "caption";
-				ClickRgb(panel, ref y, key);
-				if (ClickCard(panel, ref y)) {
-					WeSave.Data.DarkTitleBar = !WeSave.Data.DarkTitleBar;
-					WeSave.Data.ChromeCustom = true;
-					WeSave.Save();
-					ClientChrome.Apply();
-					WeToast.Show(WeOs.IsWindows ? "ToastChrome" : "ToastChromeOs");
-				}
-
-				if (ClickRow(panel, ref y, out int which)) {
-					if (which == 0) {
-						if (WeFiles.TryPickIcon(out string path))
-							ClientChrome.SetIcon(path);
-					}
+			bool colors = ClientChrome.ColorsSupported;
+			bool dark = ClientChrome.DarkSupported;
+			WeSaveData data = WeSave.Data;
+			if (colors) {
+				if (UCard(sb, panel, ref y, mode, WeText.UI("ChromeCustom"), data.ChromeCustom)) {
+					if (data.ChromeCustom)
+						ClientChrome.ResetColors();
 					else {
-						ClientChrome.Reset();
-						WeToast.Show("ToastReset");
+						data.ChromeCustom = true;
+						WeSave.Save();
+						ClientChrome.Apply();
 					}
+
+					WeToast.Show("ToastChrome");
+					return;
 				}
 
-				if (ClickCard(panel, ref y))
-					WeSplash.Show();
-				SkipHint(ref y);
-				y = top + h + 10;
+				if (data.ChromeCustom) {
+					int chipW = (panel.Width - 56) / 3;
+					for (int i = 0; i < 3; i++) {
+						var chip = new Rectangle(panel.X + 20 + i * (chipW + 8), y, chipW, 30);
+						if (mode == ModeClick && chip.Contains(Main.mouseX, Main.mouseY)) {
+							_clientChip = i;
+							return;
+						}
+
+						if (mode == ModeDraw) {
+							Color c = i == 1 ? WeSettings.BorderColor : i == 2 ? WeSettings.TitleTextColor : WeSettings.CaptionColor;
+							DrawWindowChip(sb, chip, i, c, WeText.UI(i == 1 ? "ChipBorder" : i == 2 ? "ChipTitle" : "ChipCaption"));
+						}
+					}
+
+					y += 38;
+					string key = _clientChip == 1 ? "border" : _clientChip == 2 ? "title" : "caption";
+					if (mode == ModeClick)
+						ClickRgb(panel, ref y, key);
+					else if (mode == ModeDraw) {
+						Color c = _clientChip == 1 ? WeSettings.BorderColor : _clientChip == 2 ? WeSettings.TitleTextColor : WeSettings.CaptionColor;
+						DrawRgb(sb, panel, ref y, key, c);
+					}
+					else
+						y += 74;
+
+					// quick looks
+					int cellW = (panel.Width - 40 - 6 * 3) / 4;
+					for (int i = 0; i < 4; i++) {
+						var cell = new Rectangle(panel.X + 20 + i * (cellW + 6), y, cellW, 30);
+						ChromePreset(i, out Color cap, out Color bor, out Color txt);
+						if (mode == ModeClick && cell.Contains(Main.mouseX, Main.mouseY)) {
+							WeSettings.SetChromeRgb("caption", cap.R, cap.G, cap.B);
+							WeSettings.SetChromeRgb("border", bor.R, bor.G, bor.B);
+							WeSettings.SetChromeRgb("title", txt.R, txt.G, txt.B);
+							WeToast.Show("ToastChrome");
+							return;
+						}
+
+						if (mode == ModeDraw) {
+							bool hover = cell.Contains(Main.mouseX, Main.mouseY);
+							WeTerra.PixelRound(sb, cell, 6, cap * _fade, (hover ? Color.White : bor) * _fade, 2);
+							string label = WeTerra.Fit(WeText.UI(ChromePresetKeys[i]), 0.62f, cell.Width - 8);
+							WeTerra.LabelCentered(sb, label, cell.Center.ToVector2(), txt * _fade, 0.62f);
+						}
+					}
+
+					y += 38;
+				}
+			}
+
+			if (dark && UCard(sb, panel, ref y, mode, WeText.UI("DarkTitleBar"), data.DarkTitleBar)) {
+				data.DarkTitleBar = !data.DarkTitleBar;
+				data.ChromeCustom = true;
+				WeSave.Save();
+				ClientChrome.Apply();
+				WeToast.Show("ToastChrome");
 				return;
 			}
 
-			DrawWindowChip(spriteBatch, chips[0], 0, WeSettings.CaptionColor, WeText.UI("ChipCaption"));
-			DrawWindowChip(spriteBatch, chips[1], 1, WeSettings.BorderColor, WeText.UI("ChipBorder"));
-			DrawWindowChip(spriteBatch, chips[2], 2, WeSettings.TitleTextColor, WeText.UI("ChipTitle"));
-			y = chipY + 38;
-			string drawKey = _clientChip == 1 ? "border" : _clientChip == 2 ? "title" : "caption";
-			Color drawColor = _clientChip == 1 ? WeSettings.BorderColor : _clientChip == 2 ? WeSettings.TitleTextColor : WeSettings.CaptionColor;
-			DrawRgb(spriteBatch, panel, ref y, drawKey, drawColor);
-			DrawCard(spriteBatch, panel, ref y, WeText.UI("DarkTitleBar"), WeSave.Data.DarkTitleBar);
-			DrawButtonRow(spriteBatch, panel, ref y, WeText.UI("PickIcon"), WeText.UI("ResetChrome"), WeIcons.Image, WeIcons.Reset);
-			DrawCard(spriteBatch, panel, ref y, WeText.UI("ShowHelp"), false, CardKind.Action);
-			DrawHint(spriteBatch, panel, ref y, WeText.UI(WeOs.IsWindows ? "BorderlessHint" : "ChromeOsHint"));
-			y = top + h + 10;
+			if (WeOs.IsWindows && !colors)
+				UHint(sb, panel, ref y, mode, WeText.UI("TitleColorsWin11"));
+			else if (!WeOs.IsWindows)
+				UHint(sb, panel, ref y, mode, WeText.UI("ChromeOsHint"));
+
+			int row = URow(sb, panel, ref y, mode, WeText.UI("PickIcon"), WeText.UI("UseModIcon"), WeIcons.Image, WeIcons.Star);
+			if (row == 0) {
+				if (WeFiles.TryPickIcon(out string path))
+					ClientChrome.SetIcon(path);
+				return;
+			}
+
+			if (row == 1) {
+				ClientChrome.UseModIcon();
+				return;
+			}
+
+			int titleMode = data.WindowTitleMode;
+			if (UCard(sb, panel, ref y, mode, WeText.UI("WindowTitle") + ":  " + TitleLabel(titleMode), false, CardKind.Cycle)) {
+				ClientChrome.SetTitleMode((titleMode + 1) % 3);
+				return;
+			}
+
+			if (UCard(sb, panel, ref y, mode, WeText.UI("ResetChrome"), false, CardKind.Action)) {
+				ClientChrome.Reset();
+				WeToast.Show("ToastReset");
+				return;
+			}
+
+			if (UCard(sb, panel, ref y, mode, WeText.UI("ShowHelp"), false, CardKind.Action)) {
+				WeSplash.Show();
+				return;
+			}
+
+			if (colors)
+				UHint(sb, panel, ref y, mode, WeText.UI("BorderlessHint"));
 		}
 
 		private static void DrawWindowChip(SpriteBatch spriteBatch, Rectangle hit, int index, Color color, string label)
@@ -184,124 +318,276 @@ namespace DieWithASmile.Engine.UI
 			bool on = _clientChip == index;
 			bool hover = hit.Contains(Main.mouseX, Main.mouseY);
 			Card(spriteBatch, hit, hover, on);
-			WeDraw.Fill(spriteBatch, new Rectangle(hit.X + 6, hit.Y + 7, 16, 16), color * _fade);
-			ChatManager.DrawColorCodedStringWithShadow(
-				spriteBatch, FontAssets.MouseText.Value, label,
-				new Vector2(hit.X + 28, hit.Y + 7), Color.White * _fade, 0f, Vector2.Zero, new Vector2(0.62f));
+			var sw = new Rectangle(hit.X + 8, hit.Y + 7, 16, 16);
+			WeDraw.Fill(spriteBatch, new Rectangle(sw.X - 2, sw.Y - 2, sw.Width + 4, sw.Height + 4), Color.Black * _fade);
+			WeDraw.Fill(spriteBatch, sw, color * _fade);
+			WeTerra.Label(spriteBatch, WeTerra.Fit(label, 0.68f, hit.Width - 38), new Vector2(hit.X + 30, hit.Y + 7), Color.White * _fade, 0.68f);
 		}
 
-		private static void DrawWindowPreview(SpriteBatch spriteBatch, Rectangle bar)
+		/// <summary>A small mock of the game window: title bar with the real title, icon and colours.</summary>
+		private static void DrawWindowPreview(SpriteBatch spriteBatch, Rectangle box)
 		{
-			Color cap = WeSettings.CaptionColor;
-			if (!WeSave.Data.ChromeCustom)
-				cap = WeSave.Data.DarkTitleBar ? new Color(32, 32, 32) : new Color(240, 240, 240);
+			WeSaveData data = WeSave.Data;
+			bool custom = data.ChromeCustom && ClientChrome.ColorsSupported;
+			bool darkBar = !WeOs.IsWindows || !data.ChromeCustom || data.DarkTitleBar;
+			Color cap = custom ? WeSettings.CaptionColor : darkBar ? new Color(32, 32, 32) : new Color(240, 240, 240);
+			Color bor = custom ? WeSettings.BorderColor : darkBar ? new Color(52, 52, 52) : new Color(200, 200, 200);
+			Color txt = custom ? WeSettings.TitleTextColor : darkBar ? Color.White : new Color(32, 32, 32);
+
+			WeDraw.Fill(spriteBatch, new Rectangle(box.X + 3, box.Y + 5, box.Width, box.Height), Color.Black * (0.35f * _fade));
+			WeDraw.Fill(spriteBatch, box, bor * _fade);
+			var bar = new Rectangle(box.X + 2, box.Y + 2, box.Width - 4, 28);
 			WeDraw.Fill(spriteBatch, bar, cap * _fade);
-			WeDraw.Border(spriteBatch, bar, WeSettings.BorderColor * _fade);
-			Color text = WeSave.Data.ChromeCustom ? WeSettings.TitleTextColor : (WeSave.Data.DarkTitleBar ? Color.White : new Color(32, 32, 32));
-			ChatManager.DrawColorCodedStringWithShadow(
-				spriteBatch, FontAssets.MouseText.Value, "Terraria",
-				new Vector2(bar.X + 36, bar.Y + 10), text * _fade, 0f, Vector2.Zero, new Vector2(0.78f));
-			WeDraw.Fill(spriteBatch, new Rectangle(bar.X + 10, bar.Y + 10, 16, 16), WeAccent.Mid * _fade);
-			for (int i = 0; i < 3; i++)
-				WeDraw.Fill(spriteBatch, new Rectangle(bar.Right - 54 + i * 16, bar.Y + 14, 10, 10), Color.White * (0.35f * _fade));
+			var body = new Rectangle(box.X + 2, bar.Bottom, box.Width - 4, box.Bottom - 2 - bar.Bottom);
+			WeDraw.Fill(spriteBatch, body, new Color(14, 12, 22) * _fade);
+			// a hint of the menu inside the window
+			for (int i = 0; i < 3; i++) {
+				int w = 70 - i * 14;
+				WeDraw.Fill(spriteBatch, new Rectangle(body.Center.X - w / 2, body.Y + 12 + i * 12, w, 5), (i == 1 ? WeAccent.Mid : WeTerra.RowBack) * _fade);
+			}
+
+			var icon = new Rectangle(bar.X + 8, bar.Y + 6, 16, 16);
+			Texture2D tex = IconPreview();
+			if (tex != null)
+				spriteBatch.Draw(tex, icon, Color.White * _fade);
+			else
+				WeTerra.Icon(spriteBatch, WeIcons.Client, icon.Center.ToVector2(), 16f, Color.White * _fade);
+
+			string title = data.WindowTitleMode == ClientChrome.TitleVanilla ? CurrentTitle() : ClientChrome.TitleText(data.WindowTitleMode);
+			WeTerra.Label(spriteBatch, WeTerra.Fit(title, 0.66f, bar.Width - 110), new Vector2(icon.Right + 8, bar.Y + 7), txt * _fade, 0.66f);
+
+			// minimise / maximise / close glyphs
+			int gx = bar.Right - 72;
+			int cy = bar.Center.Y;
+			WeDraw.Fill(spriteBatch, new Rectangle(gx, cy, 10, 1), txt * _fade);
+			WeDraw.Border(spriteBatch, new Rectangle(gx + 24, cy - 5, 10, 10), txt * (0.9f * _fade));
+			for (int i = 0; i < 9; i++) {
+				WeDraw.Fill(spriteBatch, new Rectangle(gx + 48 + i, cy - 4 + i, 1, 1), txt * _fade);
+				WeDraw.Fill(spriteBatch, new Rectangle(gx + 56 - i, cy - 4 + i, 1, 1), txt * _fade);
+			}
+
+			if (!WeOs.IsWindows) {
+				string os = WeOs.IsMac ? "macOS" : "Linux";
+				Vector2 size = WeTerra.Measure(os, 0.58f);
+				var tag = new Rectangle(body.Right - (int)size.X - 16, body.Bottom - 22, (int)size.X + 10, 18);
+				WeTerra.PixelRound(spriteBatch, tag, 5, WeTerra.RowBack * _fade, Color.Black * _fade, 1);
+				WeTerra.Label(spriteBatch, os, new Vector2(tag.X + 5, tag.Y + 2), WeTerra.Muted * _fade, 0.58f);
+			}
+		}
+
+		private static string CurrentTitle()
+		{
+			try {
+				string t = Main.instance?.Window?.Title;
+				return string.IsNullOrWhiteSpace(t) ? "Terraria" : t;
+			}
+			catch {
+				return "Terraria";
+			}
+		}
+
+		private static Texture2D IconPreview()
+		{
+			string file = WeSave.Data.WindowIconFile ?? "";
+			if (file == _iconPreviewFile)
+				return _iconPreview != null && !_iconPreview.IsDisposed ? _iconPreview : null;
+
+			_iconPreviewFile = file;
+			_iconPreview?.Dispose();
+			_iconPreview = null;
+			if (file.Length == 0)
+				return null;
+			try {
+				string path = System.IO.Path.Combine(WeSave.IconFolder, file);
+				if (!System.IO.File.Exists(path) || path.EndsWith(".ico", StringComparison.OrdinalIgnoreCase))
+					return null;
+				using var stream = System.IO.File.OpenRead(path);
+				_iconPreview = Texture2D.FromStream(Main.instance.GraphicsDevice, stream);
+			}
+			catch {
+				_iconPreview = null;
+			}
+
+			return _iconPreview;
+		}
+
+		// ---- Menu text group: preview, button style, animation, colour, font --------------------------
+		private static int MenuGroupH(Rectangle panel)
+		{
+			int y = 0;
+			MenuBody(null, panel, ref y, ModeMeasure);
+			return y + 14;
 		}
 
 		private static void ClientMenu(SpriteBatch spriteBatch, Rectangle panel, ref int y, bool click)
 		{
-			int fonts = WeType.All.Count;
-			bool customRgb = WeSave.Data.MenuTextCustom;
-			WeFontOffer[] offers = click ? SnapshotFonts() : null;
 			int top = y;
-			int h = MenuGroupH(fonts, customRgb);
-			DrawGroupShell(spriteBatch, panel, top, h, WeText.UI("GroupMenu"));
-			int inner = top + 32;
-			var preview = new Rectangle(panel.X + 20, inner, panel.Width - 40, 54);
+			int h = MenuGroupH(panel);
 			if (!click)
-				DrawMenuLive(spriteBatch, preview);
+				DrawGroupShell(spriteBatch, panel, top, h, WeText.UI("GroupMenu"));
+			int inner = top;
+			MenuBody(spriteBatch, panel, ref inner, click ? ModeClick : ModeDraw);
+			y = top + h + 10;
+		}
 
-			int styleY = inner + 62;
-			int styleW = (panel.Width - 68) / 4;
-			if (click) {
-				for (int i = 0; i < 4; i++) {
-					var cell = new Rectangle(panel.X + 20 + i * (styleW + 8), styleY, styleW, 66);
-					if (cell.Contains(Main.mouseX, Main.mouseY))
-						WeSettings.SetButtonStyle(i);
+		private static void SubLabel(SpriteBatch sb, Rectangle panel, ref int y, int mode, string text)
+		{
+			if (mode == ModeDraw)
+				WeTerra.Label(sb, text, new Vector2(panel.X + 20, y + 2), WeTerra.Muted * _fade, 0.66f);
+			y += 22;
+		}
+
+		private static void MenuBody(SpriteBatch sb, Rectangle panel, ref int y, int mode)
+		{
+			y += 32;
+			var preview = new Rectangle(panel.X + 20, y, panel.Width - 40, 58);
+			if (mode == ModeDraw)
+				DrawMenuLive(sb, preview);
+			y += 66;
+
+			// button style
+			SubLabel(sb, panel, ref y, mode, WeText.UI("ButtonStyle"));
+			string sample = WeText.UI("MenuPreview");
+			int styleW = (panel.Width - 40 - 8 * 3) / 4;
+			for (int i = 0; i < 4; i++) {
+				var cell = new Rectangle(panel.X + 20 + i * (styleW + 8), y, styleW, 60);
+				if (mode == ModeClick && cell.Contains(Main.mouseX, Main.mouseY)) {
+					WeSettings.SetButtonStyle(i);
+					return;
 				}
 
-				y = styleY + 74;
-				if (ClickCard(panel, ref y))
-					WeSettings.ToggleMenuTextCustom();
-				if (customRgb)
-					ClickRgb(panel, ref y, "menu");
-				if (ClickCard(panel, ref y))
-					WeType.Clear();
-				if (ClickRow(panel, ref y, out int which)) {
-					if (which == 0)
-						WeType.TryImport();
-					else
-						WeFiles.OpenFolder(WeSave.FontFolder);
+				if (mode != ModeDraw)
+					continue;
+				bool on = WeSave.Data.ButtonStyle == i;
+				Card(sb, cell, cell.Contains(Main.mouseX, Main.mouseY), on);
+				int style = i;
+				WeDraw.WithClip(sb, cell, () => WeLook.DrawPreview(sb, sample, new Vector2(cell.Center.X, cell.Y + 22), WeLook.MenuIdle, _fade, 0.26f, style, WeLook.FxNone));
+				WeTerra.LabelCentered(sb, WeTerra.Fit(WeText.UI(i switch { 1 => "BtnOutline", 2 => "BtnAccent", 3 => "BtnPlate", _ => "BtnVanilla" }), 0.58f, cell.Width - 6),
+					new Vector2(cell.Center.X, cell.Bottom - 12), Color.White * _fade, 0.58f);
+			}
+
+			y += 68;
+
+			// animation
+			SubLabel(sb, panel, ref y, mode, WeText.UI("TextFxTitle"));
+			const int cols = 3;
+			int fxW = (panel.Width - 40 - 8 * (cols - 1)) / cols;
+			for (int i = 0; i < WeLook.FxCount; i++) {
+				var cell = new Rectangle(panel.X + 20 + i % cols * (fxW + 8), y + i / cols * 54, fxW, 48);
+				if (mode == ModeClick && cell.Contains(Main.mouseX, Main.mouseY)) {
+					WeSave.Data.TextFx = i;
+					WeSave.Save();
+					return;
 				}
 
-				SkipHint(ref y);
-				foreach (WeFontOffer offer in offers) {
-					if (!ClickFont(panel, ref y, out bool trash))
-						continue;
-					if (trash)
-						WeType.Delete(offer);
-					else
-						WeType.Select(offer.FileName);
-				}
+				if (mode != ModeDraw)
+					continue;
+				bool on = WeLook.TextFx == i;
+				bool hover = cell.Contains(Main.mouseX, Main.mouseY);
+				Card(sb, cell, hover, on);
+				int fx = i;
+				WeDraw.WithClip(sb, cell, () => WeLook.DrawPreview(sb, sample, new Vector2(cell.Center.X, cell.Y + 19),
+					hover ? WeAccent.Hover : WeLook.MenuIdle, _fade, 0.25f, null, fx, hover));
+				WeTerra.LabelCentered(sb, WeTerra.Fit(WeText.UI(WeLook.FxKey(i)), 0.58f, cell.Width - 6),
+					new Vector2(cell.Center.X, cell.Bottom - 11), Color.White * _fade, 0.58f);
+			}
 
-				ClickSlider(panel, ref y, "fw");
-				ClickSlider(panel, ref y, "fh");
-				y = top + h + 10;
+			y += (WeLook.FxCount + cols - 1) / cols * 54 + 4;
+
+			if (UCard(sb, panel, ref y, mode, WeText.UI("ThemeLineFx"), !WeSave.Data.PlainThemeLine)) {
+				WeSave.Data.PlainThemeLine = !WeSave.Data.PlainThemeLine;
+				WeSave.Save();
 				return;
 			}
 
-			string sample = WeText.UI("MenuPreview");
-			for (int i = 0; i < 4; i++) {
-				var cell = new Rectangle(panel.X + 20 + i * (styleW + 8), styleY, styleW, 66);
-				bool on = WeSave.Data.ButtonStyle == i;
-				bool hover = cell.Contains(Main.mouseX, Main.mouseY);
-				Card(spriteBatch, cell, hover, on);
-				WeDraw.WithClip(spriteBatch, cell, () => WeLook.DrawPreview(
-					spriteBatch, sample, new Vector2(cell.Center.X, cell.Y + 24),
-					WeLook.MenuIdle, _fade, 0.28f, i));
-				string key = i switch { 1 => "BtnOutline", 2 => "BtnAccent", 3 => "BtnPlate", _ => "BtnVanilla" };
-				ChatManager.DrawColorCodedStringWithShadow(
-					spriteBatch, FontAssets.MouseText.Value, WeText.UI(key),
-					new Vector2(cell.X + 6, cell.Bottom - 18), Color.White * _fade, 0f, Vector2.Zero, new Vector2(0.58f));
+			// colour
+			if (UCard(sb, panel, ref y, mode, WeText.UI("MenuTextCustom"), WeSave.Data.MenuTextCustom)) {
+				WeSettings.ToggleMenuTextCustom();
+				return;
 			}
 
-			y = styleY + 74;
-			DrawCard(spriteBatch, panel, ref y, WeText.UI("MenuTextCustom"), WeSave.Data.MenuTextCustom);
-			if (customRgb)
-				DrawRgb(spriteBatch, panel, ref y, "menu", WeSettings.MenuTextColor);
-			DrawCard(spriteBatch, panel, ref y, WeText.UI("FontVanilla"), string.IsNullOrEmpty(WeSave.Data.FontFile), CardKind.Radio);
-			DrawButtonRow(spriteBatch, panel, ref y, WeText.UI("ImportFont"), WeText.UI("OpenFolder"), WeIcons.Font, WeIcons.Folder);
-			DrawHint(spriteBatch, panel, ref y, WeText.UI(WeOs.IsWindows ? "FontHint" : "FontOsHint"));
-			foreach (WeFontOffer offer in WeType.All)
-				DrawFontRow(spriteBatch, panel, ref y, offer);
-			DrawSlider(spriteBatch, panel, ref y, "fw", (WeLook.FontScaleX - 0.5f) / 1.3f, WeText.UI("FontWidth"));
-			DrawSlider(spriteBatch, panel, ref y, "fh", (WeLook.FontScaleY - 0.5f) / 1.3f, WeText.UI("FontHeight"));
-			y = top + h + 10;
+			if (WeSave.Data.MenuTextCustom) {
+				if (mode == ModeClick)
+					ClickRgb(panel, ref y, "menu");
+				else if (mode == ModeDraw)
+					DrawRgb(sb, panel, ref y, "menu", WeSettings.MenuTextColor);
+				else
+					y += 74;
+			}
+
+			// font
+			SubLabel(sb, panel, ref y, mode, WeText.UI("FontTitle"));
+			if (UCard(sb, panel, ref y, mode, WeText.UI("FontVanilla"), string.IsNullOrEmpty(WeSave.Data.FontFile), CardKind.Radio)) {
+				WeType.Clear();
+				return;
+			}
+
+			WeFontOffer[] offers = SnapshotFonts();
+			foreach (WeFontOffer offer in offers) {
+				if (mode == ModeDraw) {
+					DrawFontRow(sb, panel, ref y, offer);
+					continue;
+				}
+
+				if (mode == ModeMeasure) {
+					y += 50;
+					continue;
+				}
+
+				if (!ClickFont(panel, ref y, out bool trash))
+					continue;
+				if (trash)
+					WeType.Delete(offer);
+				else {
+					WeType.Select(offer.FileName);
+					if (!WeType.Active)
+						WeToast.Show("ToastFontFail");
+				}
+
+				return;
+			}
+
+			int row = URow(sb, panel, ref y, mode, WeText.UI("ImportFont"), WeText.UI("OpenFolder"), WeIcons.Font, WeIcons.Folder);
+			if (row == 0) {
+				WeType.TryImport();
+				return;
+			}
+
+			if (row == 1) {
+				WeFiles.OpenFolder(WeSave.FontFolder);
+				return;
+			}
+
+			UHint(sb, panel, ref y, mode, WeText.UI("FontHint"));
+			if (UCard(sb, panel, ref y, mode, WeText.UI("FontInPanels"), WeSave.Data.FontInPanels)) {
+				WeSave.Data.FontInPanels = !WeSave.Data.FontInPanels;
+				WeSave.Save();
+				return;
+			}
+
+			if (mode == ModeClick) {
+				ClickSlider(panel, ref y, "fw");
+				ClickSlider(panel, ref y, "fh");
+			}
+			else if (mode == ModeDraw) {
+				DrawSlider(sb, panel, ref y, "fw", (WeLook.FontScaleX - 0.5f) / 1.3f, WeText.UI("FontWidth"));
+				DrawSlider(sb, panel, ref y, "fh", (WeLook.FontScaleY - 0.5f) / 1.3f, WeText.UI("FontHeight"));
+			}
+			else
+				y += 44;
 		}
 
 		private static void DrawMenuLive(SpriteBatch spriteBatch, Rectangle box)
 		{
-			WeDraw.Fill(spriteBatch, box, new Color(10, 12, 16) * _fade);
-			WeDraw.Border(spriteBatch, box, WeAccent.Mid * (0.45f * _fade));
+			WeTerra.PixelRound(spriteBatch, box, 8, new Color(10, 9, 16) * _fade, WeAccent.Mid * (0.55f * _fade), 2);
 			string sample = WeText.UI("MenuPreview");
 			float wave = (MathF.Sin(Main.GlobalTimeWrappedHourly * 2.2f) + 1f) * 0.5f;
 			Color idle = WeLook.MenuIdle;
 			Color hover = WeAccent.Hover;
 			WeDraw.WithClip(spriteBatch, box, () => {
-				WeLook.DrawPreview(
-					spriteBatch, sample, new Vector2(box.X + box.Width * 0.28f, box.Center.Y),
-					idle, _fade, 0.38f);
-				WeLook.DrawPreview(
-					spriteBatch, sample, new Vector2(box.X + box.Width * 0.72f, box.Center.Y),
-					Color.Lerp(idle, hover, 0.35f + 0.65f * wave), _fade, 0.38f);
+				WeLook.DrawPreview(spriteBatch, sample, new Vector2(box.X + box.Width * 0.28f, box.Center.Y), idle, _fade, 0.38f, null, WeLook.TextFx);
+				WeLook.DrawPreview(spriteBatch, sample, new Vector2(box.X + box.Width * 0.72f, box.Center.Y),
+					Color.Lerp(idle, hover, 0.35f + 0.65f * wave), _fade, 0.38f, null, WeLook.TextFx, true);
 			});
 		}
 
@@ -311,17 +597,17 @@ namespace DieWithASmile.Engine.UI
 			bool on = string.Equals(WeSave.Data.FontFile, offer.FileName, StringComparison.OrdinalIgnoreCase);
 			bool hover = hit.Contains(Main.mouseX, Main.mouseY);
 			Card(spriteBatch, hit, hover, on);
-			var aa = new Rectangle(hit.X + 8, hit.Y + 6, 52, 32);
-			WeDraw.Fill(spriteBatch, aa, new Color(10, 12, 16) * _fade);
+			var aa = new Rectangle(hit.X + 8, hit.Y + 6, 56, 32);
+			WeTerra.PixelRound(spriteBatch, aa, 4, new Color(10, 9, 16) * _fade);
 			Texture2D prev = WeType.PreviewOf(offer.FileName);
 			if (prev != null) {
-				float s = Math.Min((aa.Width - 4f) / Math.Max(1, prev.Width), (aa.Height - 4f) / Math.Max(1, prev.Height));
+				float s = Math.Min((aa.Width - 6f) / Math.Max(1, prev.Width), (aa.Height - 6f) / Math.Max(1, prev.Height));
 				spriteBatch.Draw(prev, aa.Center.ToVector2(), null, Color.White * _fade, 0f, prev.Size() * 0.5f, s, SpriteEffects.None, 0f);
 			}
 
-			ChatManager.DrawColorCodedStringWithShadow(
-				spriteBatch, FontAssets.MouseText.Value, offer.Family,
-				new Vector2(aa.Right + 12, hit.Y + 13), Color.White * _fade, 0f, Vector2.Zero, new Vector2(0.78f));
+			string tag = offer.BuiltIn ? WeText.UI("FontBuiltIn") : WeText.UI("RightClickDelete");
+			TwoLine(spriteBatch, aa.Right + 12, hit.Y + 3, hit.Width - aa.Width - 60, offer.Family, tag);
+			Affordance(spriteBatch, hit, CardKind.Radio, on);
 			y += 50;
 		}
 

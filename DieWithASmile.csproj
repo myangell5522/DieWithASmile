@@ -14,6 +14,14 @@
 			<HintPath>lib\NLayer.dll</HintPath>
 			<Private>true</Private>
 		</Reference>
+		<Reference Include="StbFontBridge">
+			<HintPath>lib\StbFontBridge.dll</HintPath>
+			<Private>true</Private>
+		</Reference>
+		<Reference Include="StbTrueTypeSharp">
+			<HintPath>lib\StbTrueTypeSharp.dll</HintPath>
+			<Private>true</Private>
+		</Reference>
 		<Reference Include="OggVorbisEncoder">
 			<HintPath>lib\OggVorbisEncoder.dll</HintPath>
 			<Private>true</Private>

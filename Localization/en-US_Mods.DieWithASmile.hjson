@@ -92,7 +92,7 @@ UI: {
 	BtnClean: Hide version clutter
 	SplashTitle: This is your menu
 	Splash1: It starts as regular tModLoader. Everything you change is optional.
-	Splash2: The customize button next to the menu opens Wallpaper, Logo, Music, Widgets, Layout and Settings. In Settings you can switch it between a circle, a bar and a labelled sidebar.
+	Splash2: The customize button next to the menu opens Wallpaper, Logo, Music, Widgets, Layout and Settings. In Settings you can switch it between a circle, an island bar and a labelled sidebar.
 	Splash3: Add a music player, clock, greeting, moon phase, or Discord server. One tap hides version clutter. Drag, resize, or hide any element.
 	Splash4: Calamity Entropy is no longer blocked. You can keep both mods enabled together.
 	GotIt: Got it
@@ -241,7 +241,7 @@ UI: {
 	BorderlessHint: Title bar colors show in windowed mode.
 	HubStyle: Customize hub style
 	HubStyleRadial: Circle
-	HubStyleDock: Bar
+	HubStyleDock: Island
 	ToastHubStyle: Hub style applied
 	ToastWallpaper: Wallpaper applied
 	ToastLogo: Logo applied
@@ -279,7 +279,7 @@ UI: {
 	MenuPreview: Single Player
 	FontVanilla: tModLoader font
 	ImportFont: Import font
-	FontHint: TTF or OTF. Click to use. Right-click deletes.
+	FontHint: Built-in fonts work on every system. Imported TTF/OTF: click to use, right-click deletes.
 	FontOsHint: TTF or OTF files save here. Custom font drawing is Windows-only.
 	FontWidth: Width
 	FontHeight: Height
@@ -290,7 +290,7 @@ UI: {
 	ToastFontFail: Could not load that font
 	ToastFontGone: Font removed
 	ToastFontOs: Custom fonts draw on Windows. The file is saved for later.
-	ChromeOsHint: Window colors and icon are Windows-only. Everything else works here.
+	ChromeOsHint: Your desktop draws the title bar on Linux and macOS, so its colors stay. Icon and title work.
 	ToastChromeOs: Saved. Window colors apply on Windows.
 	ResetFactory: Reset mod to starter settings
 	ResetFactoryHint: Restores Entropy of Freedom, the pack logo, left menu, dock bar, and packed playlist. Deletes your pictures, uploaded music, fonts, and looks.
@@ -322,4 +322,26 @@ UI: {
 	BorrowBothHint: Right-click: use its logo too
 	ToastBorrowBoth: Sky and logo borrowed from the same theme
 	FromModsHint: Found automatically in your enabled mods. Click one to use it.
+	TitleVanilla: Vanilla (random)
+	TitleTheme: With theme name
+	WindowTitle: Window title
+	ChromeCustom: Custom title bar colors
+	ChromeTheme: Theme
+	ChromeCalamity: Calamity
+	ChromeNight: Night
+	ChromeLight: Light
+	UseModIcon: Use mod icon
+	TitleColorsWin11: Title bar colors need Windows 11. Dark mode, icon and title work here.
+	ButtonStyle: Button style
+	TextFxTitle: Animation
+	FxNone: None
+	FxWave: Wave
+	FxShimmer: Shimmer
+	FxGlow: Glow
+	FxRainbow: Rainbow
+	FxEmber: Embers
+	FontTitle: Font
+	FontBuiltIn: Built-in · works on Windows, Linux and macOS
+	FontInPanels: Use this font in settings too
+	ThemeLineFx: Animated "Switch Menu Theme" line
 }

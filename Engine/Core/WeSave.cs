@@ -156,6 +156,7 @@ namespace DieWithASmile.Engine.Core
 		public int TitleTextB { get; set; } = 240;
 		public bool DarkTitleBar { get; set; } = true;
 		public string WindowIconFile { get; set; } = "";
+		public int WindowTitleMode { get; set; }
 		public int WrenchStyle { get; set; }
 		public bool DisableLogoPulse { get; set; }
 		public bool MuteWhenUnfocused { get; set; }
@@ -165,6 +166,9 @@ namespace DieWithASmile.Engine.Core
 		public int MenuTextB { get; set; } = 255;
 		public int ButtonStyle { get; set; }
 		public string FontFile { get; set; } = "";
+		public int TextFx { get; set; }
+		public bool PlainThemeLine { get; set; }
+		public bool FontInPanels { get; set; } = true;
 		public float FontScaleX { get; set; } = 1f;
 		public float FontScaleY { get; set; } = 1f;
 		public bool PackedHosted { get; set; }
@@ -343,8 +347,35 @@ namespace DieWithASmile.Engine.Core
 				Save();
 		}
 
+		private static bool _holding;
+		private static bool _pending;
+
+		/// <summary>
+		/// While a slider is dragged, saves are held back and written once on release instead of every frame.
+		/// </summary>
+		internal static bool Holding
+		{
+			get => _holding;
+			set
+			{
+				if (_holding == value)
+					return;
+				_holding = value;
+				if (!value && _pending) {
+					_pending = false;
+					Save();
+				}
+			}
+		}
+
 		internal static void Save()
 		{
+			if (_holding) {
+				_pending = true;
+				return;
+			}
+
+			_pending = false;
 			try {
 				EnsureFolders();
 				// Write next to the file and swap it in, so a crash mid-write can't leave a truncated

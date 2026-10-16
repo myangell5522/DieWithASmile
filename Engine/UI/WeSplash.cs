@@ -95,29 +95,64 @@ namespace DieWithASmile.Engine.UI
 			if (_fade <= 0.01f)
 				return;
 
-			WeDraw.WithLinear(spriteBatch, () => {
+			WeDraw.WithLinear(spriteBatch, () => WeTerra.WithTheme(() => {
 				WeDraw.Fill(spriteBatch, WeDraw.CoverRect, Color.Black * (0.62f * _fade));
 				Rectangle card = Card();
 				WeTerra.Window(spriteBatch, card, _fade);
 
 				var font = FontAssets.MouseText.Value;
 				WeTerra.Headline(spriteBatch, WeText.UI("SplashTitle"), new Vector2(card.X + 28, card.Y + 16), WeTerra.Title * _fade, 0.62f);
-				string[] icons = { WeIcons.Star, WeIcons.Setting, WeIcons.Widget, WeIcons.Puzzle };
-				int[] rows = { 70, 130, 190, 256 };
-				for (int i = 0; i < 4; i++) {
-					WeTerra.Icon(spriteBatch, icons[i], new Vector2(card.X + 38, card.Y + rows[i] + 10), 16f, Color.White * _fade);
-					DrawWrapped(spriteBatch, font, WeText.UI("Splash" + (i + 1)), card.X + 60, card.Y + rows[i], card.Width - 88, _fade);
+				int y = card.Y + TextTop;
+				for (int i = 0; i < Icons.Length; i++) {
+					string wrapped = Wrap(font, WeText.UI("Splash" + (i + 1)), TextWidth(card) / TextScale);
+					WeTerra.Icon(spriteBatch, Icons[i], new Vector2(card.X + 38, y + 10), 16f, Color.White * _fade);
+					string[] lines = wrapped.Split('\n');
+					for (int l = 0; l < lines.Length; l++)
+						WeTerra.Label(spriteBatch, lines[l], new Vector2(card.X + 60, y + l * font.LineSpacing * TextScale), Color.White * (0.92f * _fade), TextScale);
+					y += ParagraphHeight(font, wrapped) + ParagraphGap;
 				}
 
 				DrawCheck(spriteBatch, CheckHit(card), _dontShow, WeText.UI("DontShow"), _fade);
 				DrawButton(spriteBatch, OkHit(card), WeText.UI("GotIt"), _fade);
-			});
+			}));
 		}
 
+		private static readonly string[] Icons = { WeIcons.Star, WeIcons.Setting, WeIcons.Widget, WeIcons.Puzzle };
+		private const float TextScale = 0.82f;
+		private const int TextTop = 72;
+		private const int ParagraphGap = 18;
+		private const int FooterH = 84;
+
+		private static int TextWidth(Rectangle card) => card.Width - 88;
+
+		private static int ParagraphHeight(ReLogic.Graphics.DynamicSpriteFont font, string wrapped)
+		{
+			int lines = 1;
+			foreach (char c in wrapped)
+				if (c == '\n')
+					lines++;
+			return (int)Math.Ceiling(lines * font.LineSpacing * TextScale);
+		}
+
+		/// <summary>Card sized to its wrapped text, so long translations never run into each other or the footer.</summary>
 		private static Rectangle Card()
 		{
 			int w = Math.Min(620, Main.screenWidth - 80);
-			int h = 460;
+			var font = FontAssets.MouseText.Value;
+			int textW = w - 88;
+			int h = TextTop + FooterH;
+			// Same (themed) measuring as Draw, so the buttons are hit where they are drawn.
+			bool was = WeTerra.Themed;
+			WeTerra.Themed = true;
+			try {
+				for (int i = 0; i < Icons.Length; i++)
+					h += ParagraphHeight(font, Wrap(font, WeText.UI("Splash" + (i + 1)), textW / TextScale)) + ParagraphGap;
+			}
+			finally {
+				WeTerra.Themed = was;
+			}
+
+			h = Math.Min(h, Main.screenHeight - 40);
 			return new Rectangle((Main.screenWidth - w) / 2, (Main.screenHeight - h) / 2, w, h);
 		}
 
@@ -143,17 +178,9 @@ namespace DieWithASmile.Engine.UI
 			ChatManager.DrawColorCodedStringWithShadow(spriteBatch, font, text, pos, color, 0f, Vector2.Zero, new Vector2(scale));
 		}
 
-		private static void DrawWrapped(SpriteBatch spriteBatch, ReLogic.Graphics.DynamicSpriteFont font, string text, int x, int y, int width, float fade)
-		{
-			string wrapped = Wrap(font, text, width / 0.82f);
-			ChatManager.DrawColorCodedStringWithShadow(
-				spriteBatch, font, wrapped,
-				new Vector2(x, y), Color.White * (0.92f * fade), 0f, Vector2.Zero, new Vector2(0.82f));
-		}
-
 		private static string Wrap(ReLogic.Graphics.DynamicSpriteFont font, string text, float width)
 		{
-			if (string.IsNullOrEmpty(text) || font.MeasureString(text).X <= width)
+			if (string.IsNullOrEmpty(text) || WeTerra.Measure(text, 1f).X <= width)
 				return text;
 
 			string[] words = text.Split(' ');
@@ -161,7 +188,7 @@ namespace DieWithASmile.Engine.UI
 			var result = "";
 			foreach (string word in words) {
 				string next = string.IsNullOrEmpty(line) ? word : line + " " + word;
-				if (font.MeasureString(next).X > width && line.Length > 0) {
+				if (WeTerra.Measure(next, 1f).X > width && line.Length > 0) {
 					result += line + "\n";
 					line = word;
 				}

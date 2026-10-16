@@ -82,7 +82,7 @@ namespace DieWithASmile.Engine.UI
 
 			Texture2D bg = BackTex;
 			Texture2D bd = BorderTex;
-			if (bg == null || bd == null || r.Width < Corner * 2 || r.Height < Corner * 2) {
+			if (bg == null || bd == null || r.Width < 8 || r.Height < 8) {
 				WeDraw.Fill(sb, r, back);
 				if (border.A > 0)
 					WeDraw.Border(sb, r, border);
@@ -110,26 +110,71 @@ namespace DieWithASmile.Engine.UI
 
 		private static void Slice(SpriteBatch sb, Texture2D tex, Rectangle r, Color c)
 		{
+			// Small panels (pills, mini buttons) shrink the corner instead of falling back to a square box.
+			int k = Math.Max(2, Math.Min(Corner, Math.Min(r.Width, r.Height) / 2));
 			var p = new Point(r.X, r.Y);
-			var q = new Point(r.Right - Corner, r.Bottom - Corner);
-			int w = q.X - p.X - Corner;
-			int h = q.Y - p.Y - Corner;
-			sb.Draw(tex, new Rectangle(p.X, p.Y, Corner, Corner), new Rectangle(0, 0, Corner, Corner), c);
-			sb.Draw(tex, new Rectangle(q.X, p.Y, Corner, Corner), new Rectangle(Corner + Bar, 0, Corner, Corner), c);
-			sb.Draw(tex, new Rectangle(p.X, q.Y, Corner, Corner), new Rectangle(0, Corner + Bar, Corner, Corner), c);
-			sb.Draw(tex, new Rectangle(q.X, q.Y, Corner, Corner), new Rectangle(Corner + Bar, Corner + Bar, Corner, Corner), c);
+			var q = new Point(r.Right - k, r.Bottom - k);
+			int w = q.X - p.X - k;
+			int h = q.Y - p.Y - k;
+			sb.Draw(tex, new Rectangle(p.X, p.Y, k, k), new Rectangle(0, 0, Corner, Corner), c);
+			sb.Draw(tex, new Rectangle(q.X, p.Y, k, k), new Rectangle(Corner + Bar, 0, Corner, Corner), c);
+			sb.Draw(tex, new Rectangle(p.X, q.Y, k, k), new Rectangle(0, Corner + Bar, Corner, Corner), c);
+			sb.Draw(tex, new Rectangle(q.X, q.Y, k, k), new Rectangle(Corner + Bar, Corner + Bar, Corner, Corner), c);
 			if (w > 0) {
-				sb.Draw(tex, new Rectangle(p.X + Corner, p.Y, w, Corner), new Rectangle(Corner, 0, Bar, Corner), c);
-				sb.Draw(tex, new Rectangle(p.X + Corner, q.Y, w, Corner), new Rectangle(Corner, Corner + Bar, Bar, Corner), c);
+				sb.Draw(tex, new Rectangle(p.X + k, p.Y, w, k), new Rectangle(Corner, 0, Bar, Corner), c);
+				sb.Draw(tex, new Rectangle(p.X + k, q.Y, w, k), new Rectangle(Corner, Corner + Bar, Bar, Corner), c);
 			}
 
 			if (h > 0) {
-				sb.Draw(tex, new Rectangle(p.X, p.Y + Corner, Corner, h), new Rectangle(0, Corner, Corner, Bar), c);
-				sb.Draw(tex, new Rectangle(q.X, p.Y + Corner, Corner, h), new Rectangle(Corner + Bar, Corner, Corner, Bar), c);
+				sb.Draw(tex, new Rectangle(p.X, p.Y + k, k, h), new Rectangle(0, Corner, Corner, Bar), c);
+				sb.Draw(tex, new Rectangle(q.X, p.Y + k, k, h), new Rectangle(Corner + Bar, Corner, Corner, Bar), c);
 			}
 
 			if (w > 0 && h > 0)
-				sb.Draw(tex, new Rectangle(p.X + Corner, p.Y + Corner, w, h), new Rectangle(Corner, Corner, Bar, Bar), c);
+				sb.Draw(tex, new Rectangle(p.X + k, p.Y + k, w, h), new Rectangle(Corner, Corner, Bar, Bar), c);
+		}
+
+		// ---- pixel-rounded shapes ----------------------------------------------------------------
+
+		/// <summary>
+		/// Rounded rectangle with crisp, stepped pixel corners (no blur), for capsule/island shapes.
+		/// A radius of half the height gives a pill.
+		/// </summary>
+		internal static void PixelRound(SpriteBatch sb, Rectangle r, int radius, Color color)
+		{
+			if (sb == null || r.Width < 2 || r.Height < 2 || color.A == 0)
+				return;
+			radius = Math.Clamp(radius, 0, Math.Min(r.Width, r.Height) / 2);
+			if (radius <= 1) {
+				WeDraw.Fill(sb, r, color);
+				return;
+			}
+
+			for (int dy = 0; dy < radius; dy++) {
+				float yy = radius - dy - 0.5f;
+				int inset = (int)MathF.Round(radius - MathF.Sqrt(Math.Max(0f, radius * radius - yy * yy)));
+				int w = r.Width - inset * 2;
+				if (w <= 0)
+					continue;
+				WeDraw.Fill(sb, new Rectangle(r.X + inset, r.Y + dy, w, 1), color);
+				WeDraw.Fill(sb, new Rectangle(r.X + inset, r.Bottom - 1 - dy, w, 1), color);
+			}
+
+			int mid = r.Height - radius * 2;
+			if (mid > 0)
+				WeDraw.Fill(sb, new Rectangle(r.X, r.Y + radius, r.Width, mid), color);
+		}
+
+		/// <summary>Pixel-rounded box with a border of <paramref name="thickness"/> pixels.</summary>
+		internal static void PixelRound(SpriteBatch sb, Rectangle r, int radius, Color fill, Color border, int thickness = 2)
+		{
+			if (border.A > 0 && thickness > 0) {
+				PixelRound(sb, r, radius, border);
+				r.Inflate(-thickness, -thickness);
+				radius = Math.Max(0, radius - thickness);
+			}
+
+			PixelRound(sb, r, radius, fill);
 		}
 
 		// ---- icons -------------------------------------------------------------------------------
@@ -137,22 +182,49 @@ namespace DieWithASmile.Engine.UI
 		/// <summary>Whole-number pixel scale for a 16px icon so it never smears.</summary>
 		internal static int IconScale(float size) => Math.Max(1, (int)MathF.Round(size / 16f));
 
-		/// <summary>Draws a pixel icon crisp (point sampling, integer scale, pixel-snapped).</summary>
+		/// <summary>
+		/// Draws a pixel icon crisp (point sampling, integer scale, pixel-snapped). Vanilla Terraria art is
+		/// always 2 screen pixels per art pixel, so small requests use the 10x10 mini twin at 2x (20px)
+		/// instead of the 16px art at 1:1, and larger ones use the 16px art at 2x or more.
+		/// </summary>
 		internal static void Icon(SpriteBatch sb, Texture2D icon, Vector2 center, float size, Color color, float rotation = 0f)
 		{
 			if (sb == null || icon == null || icon.IsDisposed)
 				return;
 
 			int dim = Math.Max(1, Math.Max(icon.Width, icon.Height));
-			// Our pixel icons are 16px: snap to 1x/2x/3x. Anything bigger (old art, other mods) just fits.
-			float scale = dim <= 32 ? IconScale(size) * 16f / dim : size / dim;
+			if (dim == 16 && size < 24f) {
+				Texture2D mini = WeIcons.MiniFor(icon);
+				if (mini != null) {
+					icon = mini;
+					dim = Math.Max(mini.Width, mini.Height);
+				}
+			}
+
+			float scale;
+			if (dim <= 12)
+				scale = size >= 30f ? 3f : 2f;
+			else if (dim <= 32)
+				scale = IconScale(size) * 16f / dim;
+			else
+				scale = size / dim; // big art from elsewhere just fits
 			var pos = new Vector2(MathF.Round(center.X), MathF.Round(center.Y));
 			var origin = new Vector2(icon.Width / 2, icon.Height / 2);
 			WeDraw.WithPoint(sb, () => sb.Draw(icon, pos, null, color, rotation, origin, scale, SpriteEffects.None, 0f));
 		}
 
-		internal static void Icon(SpriteBatch sb, string name, Vector2 center, float size, Color color, float rotation = 0f) =>
+		internal static void Icon(SpriteBatch sb, string name, Vector2 center, float size, Color color, float rotation = 0f)
+		{
+			if (size < 24f) {
+				Texture2D mini = WeIcons.GetMini(name);
+				if (mini != null) {
+					Icon(sb, mini, center, size, color, rotation);
+					return;
+				}
+			}
+
 			Icon(sb, WeIcons.Get(name), center, size, color, rotation);
+		}
 
 		/// <summary>An inventory-slot style square button with a pixel icon in the middle.</summary>
 		internal static void Slot(SpriteBatch sb, Rectangle r, string icon, bool hover, bool on, float fade)
@@ -165,12 +237,53 @@ namespace DieWithASmile.Engine.UI
 
 		internal static DynamicSpriteFont Font => FontAssets.MouseText.Value;
 
-		internal static Vector2 Measure(string text, float scale) => Font.MeasureString(text ?? "") * scale;
+		/// <summary>
+		/// Set while our own windows draw (settings, hub, intro). Text then uses the menu font the player chose,
+		/// when "Use in settings" is on and the font has every glyph of the string. Widgets keep the vanilla font.
+		/// </summary>
+		internal static bool Themed;
+
+		internal static void WithTheme(Action draw)
+		{
+			bool was = Themed;
+			Themed = true;
+			try {
+				draw();
+			}
+			finally {
+				Themed = was;
+			}
+		}
+
+		private static bool UseFont(string text) =>
+			Themed && WeSave.Data.FontInPanels && !string.IsNullOrEmpty(text) && text.IndexOf('[') < 0 && WeType.Use(text);
+
+		private static float MatchOf(DynamicSpriteFont vanilla) =>
+			vanilla.MeasureString("Ag").Y / Math.Max(1f, WeType.Line);
+
+		internal static Vector2 Measure(string text, float scale)
+		{
+			if (UseFont(text))
+				return WeType.Measure(text) * (scale * MatchOf(Font));
+			return Font.MeasureString(text ?? "") * scale;
+		}
 
 		internal static void Label(SpriteBatch sb, string text, Vector2 pos, Color color, float scale)
 		{
 			if (string.IsNullOrEmpty(text))
 				return;
+			if (UseFont(text)) {
+				var sc = new Vector2(scale * MatchOf(Font));
+				Color shadow = Color.Black * (color.A / 255f);
+				float d = 1.5f * Math.Max(0.6f, scale);
+				WeType.Draw(sb, text, pos + new Vector2(-d, 0f), shadow, 0f, Vector2.Zero, sc, SpriteEffects.None, 0f);
+				WeType.Draw(sb, text, pos + new Vector2(d, 0f), shadow, 0f, Vector2.Zero, sc, SpriteEffects.None, 0f);
+				WeType.Draw(sb, text, pos + new Vector2(0f, -d), shadow, 0f, Vector2.Zero, sc, SpriteEffects.None, 0f);
+				WeType.Draw(sb, text, pos + new Vector2(0f, d), shadow, 0f, Vector2.Zero, sc, SpriteEffects.None, 0f);
+				WeType.Draw(sb, text, pos, color, 0f, Vector2.Zero, sc, SpriteEffects.None, 0f);
+				return;
+			}
+
 			ChatManager.DrawColorCodedStringWithShadow(sb, Font, text, pos, color, 0f, Vector2.Zero, new Vector2(scale));
 		}
 
@@ -192,11 +305,23 @@ namespace DieWithASmile.Engine.UI
 			return t + dots;
 		}
 
-		/// <summary>Big Terraria title text (Andy font) with the vanilla black border.</summary>
+		/// <summary>Big Terraria title text (Andy font, or the chosen menu font) with the vanilla black border.</summary>
 		internal static void Headline(SpriteBatch sb, string text, Vector2 pos, Color color, float scale)
 		{
 			if (string.IsNullOrEmpty(text))
 				return;
+			if (UseFont(text)) {
+				var sc = new Vector2(scale * MatchOf(FontAssets.DeathText.Value));
+				Color rim = Color.Black * (color.A / 255f);
+				for (int i = 0; i < 4; i++) {
+					Vector2 off = (i * MathHelper.PiOver2).ToRotationVector2() * 2f;
+					WeType.Draw(sb, text, pos + off, rim, 0f, Vector2.Zero, sc, SpriteEffects.None, 0f);
+				}
+
+				WeType.Draw(sb, text, pos, color, 0f, Vector2.Zero, sc, SpriteEffects.None, 0f);
+				return;
+			}
+
 			Utils.DrawBorderStringFourWay(sb, FontAssets.DeathText.Value, text, pos.X, pos.Y, color, Color.Black, Vector2.Zero, scale);
 		}
 

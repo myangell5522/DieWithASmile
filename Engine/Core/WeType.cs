@@ -4,7 +4,9 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using StbFontBridge;
 using Terraria;
+using Terraria.ModLoader;
 
 namespace DieWithASmile.Engine.Core
 {
@@ -13,6 +15,7 @@ namespace DieWithASmile.Engine.Core
 		internal string FileName;
 		internal string Family;
 		internal string Path;
+		internal bool BuiltIn;
 	}
 
 	internal static class WeType
@@ -44,6 +47,23 @@ namespace DieWithASmile.Engine.Core
 		private static IntPtr _hfont;
 		private static IntPtr _oldFont;
 		private static string _deadFile = "";
+
+		// Cross-platform rasteriser (StbTrueTypeSharp) for the bundled fonts, and for imported fonts on
+		// Linux/macOS where GDI does not exist. Windows keeps GDI for imported fonts.
+		internal const string BuiltinPrefix = "builtin:";
+		private static readonly (string File, string Family)[] BuiltIns = {
+			("PixelifySans", "Pixelify Sans"),
+			("PressStart2P", "Press Start 2P"),
+			("Cinzel", "Cinzel"),
+			("Philosopher", "Philosopher"),
+			("YesevaOne", "Yeseva One"),
+			("KellySlab", "Kelly Slab"),
+			("Pangolin", "Pangolin")
+		};
+
+		private static StbFont _stb;
+		private static float _stbScale;
+		private static readonly HashSet<char> Missing = new();
 
 		private struct Glyph
 		{
@@ -99,6 +119,15 @@ namespace DieWithASmile.Engine.Core
 			catch {
 			}
 
+			for (int i = BuiltIns.Length - 1; i >= 0; i--) {
+				Offers.Insert(0, new WeFontOffer {
+					FileName = BuiltinPrefix + BuiltIns[i].File,
+					Family = BuiltIns[i].Family,
+					Path = BuiltinPrefix + "Assets/Fonts/" + BuiltIns[i].File + ".ttf",
+					BuiltIn = true
+				});
+			}
+
 			string want = WeSave.Data.FontFile ?? "";
 			if (string.IsNullOrEmpty(want)) {
 				Drop();
@@ -130,11 +159,6 @@ namespace DieWithASmile.Engine.Core
 				WeSave.Data.FontFile = Path.GetFileName(dest);
 				WeSave.Save();
 				Scan();
-				if (!WeOs.IsWindows) {
-					WeToast.Show("ToastFontOs");
-					return true;
-				}
-
 				if (!Active) {
 					WeSave.Data.FontFile = "";
 					WeSave.Save();
@@ -168,7 +192,7 @@ namespace DieWithASmile.Engine.Core
 
 		internal static void Delete(WeFontOffer offer)
 		{
-			if (offer == null)
+			if (offer == null || offer.BuiltIn)
 				return;
 			try {
 				bool was = string.Equals(offer.FileName, WeSave.Data.FontFile, StringComparison.OrdinalIgnoreCase);
@@ -185,6 +209,30 @@ namespace DieWithASmile.Engine.Core
 			Scan();
 			WeToast.Show("ToastFontGone");
 		}
+
+		/// <summary>
+		/// True when every visible character of <paramref name="text"/> exists in the loaded font. Callers draw
+		/// the whole string with the vanilla font otherwise, so e.g. Korean or Chinese text never turns blank.
+		/// </summary>
+		internal static bool Supports(string text)
+		{
+			if (!Active)
+				return false;
+			if (string.IsNullOrEmpty(text) || _stb == null)
+				return true;
+			foreach (char c in text) {
+				if (c < 32 || char.IsWhiteSpace(c))
+					continue;
+				EnsureChar(c);
+				if (Missing.Contains(c))
+					return false;
+			}
+
+			return true;
+		}
+
+		/// <summary>Use the custom font for this string (loaded, and it has every glyph).</summary>
+		internal static bool Use(string text) => Active && Supports(text);
 
 		internal static Vector2 Measure(string text)
 		{
@@ -213,7 +261,8 @@ namespace DieWithASmile.Engine.Core
 			SpriteEffects effects,
 			float layerDepth)
 		{
-			if (!Active || string.IsNullOrEmpty(text) || color.A < 8)
+			// Zero-alpha colours are additive light (glow), so only skip truly invisible ones.
+			if (!Active || string.IsNullOrEmpty(text) || (color.A < 8 && color.R + color.G + color.B < 8))
 				return;
 			EnsureString(text);
 			if (_atlas == null || _atlas.IsDisposed)
@@ -246,7 +295,7 @@ namespace DieWithASmile.Engine.Core
 			WeFontOffer offer = Offers.Find(item => string.Equals(item.FileName, fileName, StringComparison.OrdinalIgnoreCase));
 			if (offer == null)
 				return null;
-			Texture2D tex = BakePreview(offer.Path, offer.Family);
+			Texture2D tex = offer.BuiltIn || !WeOs.IsWindows ? BakePreviewStb(offer.Path) : BakePreview(offer.Path, offer.Family);
 			if (tex != null)
 				Previews[fileName] = tex;
 			return tex;
@@ -271,12 +320,52 @@ namespace DieWithASmile.Engine.Core
 			return new Vector2(v.X * c - v.Y * s, v.X * s + v.Y * c);
 		}
 
+		private static byte[] ReadFontBytes(string path)
+		{
+			try {
+				if (path.StartsWith(BuiltinPrefix, StringComparison.Ordinal))
+					return ModContent.GetInstance<global::DieWithASmile.DieWithASmile>()?.GetFileBytes(path.Substring(BuiltinPrefix.Length));
+				return File.Exists(path) ? File.ReadAllBytes(path) : null;
+			}
+			catch {
+				return null;
+			}
+		}
+
+		private static void LoadStb(string path, string family)
+		{
+			byte[] bytes = ReadFontBytes(path);
+			if (bytes == null || bytes.Length < 64)
+				return;
+			try {
+				_stb = StbFont.Create(bytes);
+				if (_stb == null)
+					return;
+				_stbScale = _stb.ScaleForPixelHeight(RasterPx);
+				_stb.VMetrics(out int asc, out int desc, out int gap);
+				_ascent = Math.Max(4f, asc * _stbScale);
+				_line = Math.Max(8f, (asc - desc) * _stbScale);
+				_loadedPath = path;
+				_face = family ?? "";
+				MakeAtlas(512, 512);
+				Prewarm();
+			}
+			catch {
+				Drop();
+			}
+		}
+
 		private static void Load(string path, string family)
 		{
 			Drop();
-			if (!WeOs.IsWindows)
+			if (string.IsNullOrEmpty(path))
 				return;
-			if (string.IsNullOrEmpty(path) || !File.Exists(path))
+			if (path.StartsWith(BuiltinPrefix, StringComparison.Ordinal) || !WeOs.IsWindows) {
+				LoadStb(path, family);
+				return;
+			}
+
+			if (!File.Exists(path))
 				return;
 
 			try {
@@ -312,6 +401,14 @@ namespace DieWithASmile.Engine.Core
 			}
 
 			_resourceAdded = false;
+			try {
+				_stb?.Dispose();
+			}
+			catch {
+			}
+
+			_stb = null;
+			Missing.Clear();
 			_loadedPath = "";
 			_face = "";
 			Glyphs.Clear();
@@ -351,7 +448,7 @@ namespace DieWithASmile.Engine.Core
 
 		private static void EnsureChar(char c)
 		{
-			if (Glyphs.ContainsKey(c) || _hdc == IntPtr.Zero)
+			if (Glyphs.ContainsKey(c) || (_hdc == IntPtr.Zero && _stb == null))
 				return;
 
 			if (c == '\r' || c == '\n') {
@@ -360,12 +457,147 @@ namespace DieWithASmile.Engine.Core
 			}
 
 			try {
-				if (!Raster(c, out Glyph glyph))
+				bool ok = _stb != null ? RasterStb(c, out Glyph glyph) : Raster(c, out glyph);
+				if (!ok) {
 					glyph = new Glyph { Advance = _line * 0.35f, Empty = true };
+					Missing.Add(c);
+				}
+
 				Glyphs[c] = glyph;
 			}
 			catch {
+				Missing.Add(c);
 				Glyphs[c] = new Glyph { Advance = _line * 0.35f, Empty = true };
+			}
+		}
+
+		private static bool RasterStb(char c, out Glyph glyph)
+		{
+			glyph = default;
+			int adv, lsb;
+			_stb.HMetrics(c, out adv, out lsb);
+			float advance = Math.Max(1f, adv * _stbScale);
+			if (char.IsWhiteSpace(c)) {
+				glyph = new Glyph { Advance = advance, Empty = true };
+				return true;
+			}
+
+			int code = c;
+			if (_stb.GlyphIndex(code) == 0) {
+				// A few fonts miss single Cyrillic letters that look exactly like Latin ones (e.g. "О").
+				char twin = Homoglyph(c);
+				if (twin == c || _stb.GlyphIndex(twin) == 0)
+					return false;
+				code = twin;
+				_stb.HMetrics(code, out adv, out lsb);
+				advance = Math.Max(1f, adv * _stbScale);
+			}
+
+			int x0, y0, x1, y1;
+			_stb.BitmapBox(code, _stbScale, _stbScale, out x0, out y0, out x1, out y1);
+			int gw = x1 - x0;
+			int gh = y1 - y0;
+			if (gw <= 0 || gh <= 0) {
+				glyph = new Glyph { Advance = advance, Empty = true };
+				return true;
+			}
+
+			var buf = new byte[gw * gh];
+			_stb.MakeBitmap(buf, gw, gh, gw, _stbScale, _stbScale, code);
+			if (!Pack(gw, gh, out int px, out int py))
+				return false;
+			for (int y = 0; y < gh; y++) {
+				for (int x = 0; x < gw; x++) {
+					byte a = buf[y * gw + x];
+					_pixels[(py + y) * _atlasW + (px + x)] = new Color(a, a, a, a); // premultiplied white
+				}
+			}
+
+			try {
+				_atlas.SetData(_pixels);
+			}
+			catch {
+				return false;
+			}
+
+			glyph = new Glyph {
+				Source = new Rectangle(px, py, gw, gh),
+				Offset = new Vector2(x0, _ascent + y0),
+				Advance = advance,
+				Empty = false
+			};
+			return true;
+		}
+
+		private static char Homoglyph(char c) => c switch {
+			'А' => 'A', 'В' => 'B', 'Е' => 'E', 'К' => 'K', 'М' => 'M', 'Н' => 'H', 'О' => 'O', 'Р' => 'P',
+			'С' => 'C', 'Т' => 'T', 'Х' => 'X', 'а' => 'a', 'е' => 'e', 'о' => 'o', 'р' => 'p', 'с' => 'c',
+			'у' => 'y', 'х' => 'x', 'Ѕ' => 'S', 'І' => 'I', 'Ј' => 'J', 'ѕ' => 's', 'і' => 'i', 'ј' => 'j',
+			_ => c
+		};
+
+		/// <summary>"Aa" sample for the font list, rasterised with Stb (built-in fonts, and Linux/macOS).</summary>
+		private static Texture2D BakePreviewStb(string path)
+		{
+			if (Main.graphics?.GraphicsDevice == null)
+				return null;
+			byte[] bytes = ReadFontBytes(path);
+			if (bytes == null)
+				return null;
+			StbFont font = null;
+			try {
+				font = StbFont.Create(bytes);
+				if (font == null)
+					return null;
+				float scale = font.ScaleForPixelHeight(36);
+				font.VMetrics(out int asc, out int desc, out int gap);
+				int baseline = (int)(asc * scale) + 4;
+				const string sample = "Aa";
+				int w = 8;
+				foreach (char ch in sample) {
+					int adv, lsb;
+					font.HMetrics(ch, out adv, out lsb);
+					w += (int)MathF.Ceiling(adv * scale);
+				}
+
+				w = Math.Clamp(w, 8, 200);
+				int h = Math.Clamp((int)((asc - desc) * scale) + 8, 8, 90);
+				var colors = new Color[w * h];
+				float pen = 4f;
+				foreach (char ch in sample) {
+					int x0, y0, x1, y1, adv, lsb;
+					font.HMetrics(ch, out adv, out lsb);
+					font.BitmapBox(ch, scale, scale, out x0, out y0, out x1, out y1);
+					int gw = x1 - x0;
+					int gh = y1 - y0;
+					if (gw > 0 && gh > 0) {
+						var buf = new byte[gw * gh];
+						font.MakeBitmap(buf, gw, gh, gw, scale, scale, ch);
+						for (int y = 0; y < gh; y++) {
+							for (int x = 0; x < gw; x++) {
+								int dx = (int)pen + x0 + x;
+								int dy = baseline + y0 + y;
+								if (dx < 0 || dy < 0 || dx >= w || dy >= h)
+									continue;
+								byte a = buf[y * gw + x];
+								if (a > colors[dy * w + dx].A)
+									colors[dy * w + dx] = new Color(a, a, a, a);
+							}
+						}
+					}
+
+					pen += adv * scale;
+				}
+
+				var tex = new Texture2D(Main.graphics.GraphicsDevice, w, h);
+				tex.SetData(colors);
+				return tex;
+			}
+			catch {
+				return null;
+			}
+			finally {
+				font?.Dispose();
 			}
 		}
 
@@ -456,7 +688,7 @@ namespace DieWithASmile.Engine.Core
 					int g = (v >> 8) & 255;
 					int b = (v >> 16) & 255;
 					byte a = (byte)Math.Max(r, Math.Max(g, b));
-					bits[i] = a < 2 ? Color.Transparent : new Color((byte)255, (byte)255, (byte)255, a);
+					bits[i] = a < 2 ? Color.Transparent : new Color(a, a, a, a); // premultiplied white
 				}
 
 				return true;
@@ -688,7 +920,7 @@ namespace DieWithASmile.Engine.Core
 				for (int i = 0; i < raw.Length; i++) {
 					int v = raw[i];
 					byte a = (byte)Math.Max(v & 255, Math.Max((v >> 8) & 255, (v >> 16) & 255));
-					colors[i] = a < 2 ? Color.Transparent : new Color((byte)255, (byte)255, (byte)255, a);
+					colors[i] = a < 2 ? Color.Transparent : new Color(a, a, a, a);
 				}
 
 				SelectObject(hdc, oldBmp);

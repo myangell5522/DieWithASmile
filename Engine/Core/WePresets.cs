@@ -64,6 +64,7 @@ namespace DieWithASmile.Engine.Core
 		public int MenuTextB { get; set; } = 255;
 		public int ButtonStyle { get; set; }
 		public string FontFile { get; set; } = "";
+		public int TextFx { get; set; }
 		public float FontScaleX { get; set; } = 1f;
 		public float FontScaleY { get; set; } = 1f;
 		public bool ChromeCustom { get; set; }
@@ -267,6 +268,7 @@ namespace DieWithASmile.Engine.Core
 				MenuTextB = cur.MenuTextB,
 				ButtonStyle = cur.ButtonStyle,
 				FontFile = cur.FontFile ?? "",
+				TextFx = cur.TextFx,
 				FontScaleX = cur.FontScaleX,
 				FontScaleY = cur.FontScaleY,
 				ChromeCustom = cur.ChromeCustom,
@@ -327,6 +329,7 @@ namespace DieWithASmile.Engine.Core
 			cur.MenuTextB = data.MenuTextB;
 			cur.ButtonStyle = data.ButtonStyle;
 			cur.FontFile = data.FontFile ?? "";
+			cur.TextFx = Math.Clamp(data.TextFx, 0, WeLook.FxCount - 1);
 			cur.FontScaleX = data.FontScaleX;
 			cur.FontScaleY = data.FontScaleY;
 			cur.ChromeCustom = data.ChromeCustom;

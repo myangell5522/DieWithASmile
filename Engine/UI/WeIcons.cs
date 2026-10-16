@@ -62,12 +62,45 @@ namespace DieWithASmile.Engine.UI
 		};
 
 		private static readonly Dictionary<string, Asset<Texture2D>> Assets = new();
+		private static readonly Dictionary<string, Asset<Texture2D>> Minis = new();
 
 		internal static void Load()
 		{
 			Assets.Clear();
-			foreach (string name in Names)
+			Minis.Clear();
+			foreach (string name in Names) {
 				Request(name);
+				RequestMini(name);
+			}
+		}
+
+		/// <summary>10x10 versions drawn at 2x for small spots, so small icons keep vanilla pixel density.</summary>
+		private static void RequestMini(string name)
+		{
+			string path = "DieWithASmile/Assets/Textures/UI/Icons/Mini/" + name;
+			if (ModContent.HasAsset(path))
+				Minis[name] = ModContent.Request<Texture2D>(path, AssetRequestMode.ImmediateLoad);
+		}
+
+		internal static Texture2D GetMini(string name)
+		{
+			if (string.IsNullOrEmpty(name) || !Minis.TryGetValue(name, out Asset<Texture2D> asset))
+				return null;
+			Texture2D tex = asset?.Value;
+			return tex == null || tex.IsDisposed ? null : tex;
+		}
+
+		/// <summary>The mini twin of a full-size icon texture, or null.</summary>
+		internal static Texture2D MiniFor(Texture2D full)
+		{
+			if (full == null)
+				return null;
+			foreach (KeyValuePair<string, Asset<Texture2D>> pair in Assets) {
+				if (pair.Value != null && pair.Value.IsLoaded && ReferenceEquals(pair.Value.Value, full))
+					return GetMini(pair.Key);
+			}
+
+			return null;
 		}
 
 		private static void Request(string name)

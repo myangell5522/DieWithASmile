@@ -223,9 +223,15 @@ namespace DieWithASmile.Engine.Chrome
 
 			Color paint = wave && ShouldShift() ? WeAccent.Hover : (ShouldShift() ? WeLook.IdleOr(color) : color);
 			if (ShouldShift() && WeLook.CustomMenuDraw) {
-				WeLook.DrawStyled(
-					spriteBatch, spriteFont, text, position, paint, scale, origin,
-					rotation, effects, layerDepth, false);
+				WeLook.BeginFx(wave);
+				try {
+					WeLook.DrawStyled(
+						spriteBatch, spriteFont, text, position, paint, scale, origin,
+						rotation, effects, layerDepth, false);
+				}
+				finally {
+					WeLook.EndFx();
+				}
 				return;
 			}
 
@@ -268,9 +274,17 @@ namespace DieWithASmile.Engine.Chrome
 						text = text.Substring(0, maxCharactersDisplayed);
 					Vector2 size = vanilla.MeasureString(text);
 					Vector2 origin = size * new Vector2(anchorx, anchory);
-					return WeLook.DrawStyled(
-						spriteBatch, vanilla, text, pos, paint, scale, origin,
-						0f, SpriteEffects.None, 0f, true);
+					// Vanilla paints the hovered button gold (or our accent): treat that as hot.
+					bool hot = color.R > 200 && color.G > 150 && color.B < 80 || color == WeAccent.Hover;
+					WeLook.BeginFx(hot);
+					try {
+						return WeLook.DrawStyled(
+							spriteBatch, vanilla, text, pos, paint, scale, origin,
+							0f, SpriteEffects.None, 0f, true);
+					}
+					finally {
+						WeLook.EndFx();
+					}
 				}
 
 				return orig(spriteBatch, text, pos, paint, scale, anchorx, anchory, maxCharactersDisplayed);
@@ -315,7 +329,8 @@ namespace DieWithASmile.Engine.Chrome
 			_remapYNext = (int)Math.Round(menu.Y - VanillaMenuY);
 			Vector2 size = WeLook.Measure(font, text, scale);
 			Vector2 originUse = origin;
-			if (WeType.Active) {
+			bool atlas = WeType.Use(text);
+			if (atlas) {
 				Vector2 oldSize = font.MeasureString(text);
 				Vector2 newSize = WeType.Measure(text);
 				if (oldSize.X > 0.5f && oldSize.Y > 0.5f && newSize.X > 0.5f)
@@ -323,7 +338,7 @@ namespace DieWithASmile.Engine.Chrome
 			}
 
 			Vector2 sc = WeLook.MenuScale(scale);
-			if (WeType.Active && WeType.Line > 1f)
+			if (atlas && WeType.Line > 1f)
 				sc *= font.MeasureString("Ag").Y / WeType.Line;
 			NoteBounds(
 				(int)MathF.Round(position.X - originUse.X * sc.X),

@@ -92,7 +92,7 @@ UI: {
 	BtnClean: Hide version clutter
 	SplashTitle: This is your menu
 	Splash1: It starts as regular tModLoader. Everything you change is optional.
-	Splash2: 메뉴 옆의 꾸미기 버튼으로 배경, 로고, 음악, 위젯, 배치, 설정을 엽니다. 설정에서 원형, 막대, 이름이 붙은 사이드바 중에서 고를 수 있습니다.
+	Splash2: 메뉴 옆의 꾸미기 버튼으로 배경, 로고, 음악, 위젯, 배치, 설정을 엽니다. 설정에서 원형, 아일랜드 막대, 이름이 붙은 사이드바 중에서 고를 수 있습니다.
 	Splash3: Add a music player, clock, greeting, moon phase, or Discord server. One tap hides version clutter. Drag, resize, or hide any element.
 	Splash4: Calamity Entropy 차단이 더 이상 적용되지 않습니다. 두 모드를 함께 켠 채로 둘 수 있습니다.
 	GotIt: Got it
@@ -241,7 +241,7 @@ UI: {
 	BorderlessHint: Title bar colors show in windowed mode.
 	HubStyle: Customize hub style
 	HubStyleRadial: Circle
-	HubStyleDock: Bar
+	HubStyleDock: 아일랜드
 	ToastHubStyle: Hub style applied
 	ToastWallpaper: Wallpaper applied
 	ToastLogo: Logo applied
@@ -279,7 +279,7 @@ UI: {
 	MenuPreview: Single Player
 	FontVanilla: tModLoader font
 	ImportFont: Import font
-	FontHint: TTF or OTF. Click to use. Right-click deletes.
+	FontHint: 내장 글꼴은 모든 시스템에서 작동합니다. 가져온 TTF/OTF: 클릭해 사용, 우클릭으로 삭제.
 	FontOsHint: TTF or OTF files save here. Custom font drawing is Windows-only.
 	FontWidth: Width
 	FontHeight: Height
@@ -290,7 +290,7 @@ UI: {
 	ToastFontFail: Could not load that font
 	ToastFontGone: Font removed
 	ToastFontOs: Custom fonts draw on Windows. The file is saved for later.
-	ChromeOsHint: Window colors and icon are Windows-only. Everything else works here.
+	ChromeOsHint: Linux와 macOS에서는 시스템이 제목 표시줄을 그려 색상이 바뀌지 않습니다. 아이콘과 제목은 됩니다.
 	ToastChromeOs: Saved. Window colors apply on Windows.
 	ResetFactory: 모드를 초기 설정으로 재설정
 	ResetFactoryHint: Entropy of Freedom, 팩 로고, 왼쪽 메뉴, 하단 독, 내장 재생목록을 되돌립니다. 직접 넣은 그림, 올린 음악, 글꼴, 프리셋을 삭제합니다.
@@ -322,4 +322,26 @@ UI: {
 	BorrowBothHint: 우클릭: 로고도 함께 사용
 	ToastBorrowBoth: 같은 테마의 하늘과 로고를 적용했습니다
 	FromModsHint: 켜진 모드에서 자동으로 찾았습니다. 눌러서 사용하세요.
+	TitleVanilla: 바닐라 (무작위)
+	TitleTheme: 테마 이름 포함
+	WindowTitle: 창 제목
+	ChromeCustom: 제목 표시줄 색상 직접 지정
+	ChromeTheme: 테마
+	ChromeCalamity: 칼라미티
+	ChromeNight: 밤
+	ChromeLight: 밝게
+	UseModIcon: 모드 아이콘 사용
+	TitleColorsWin11: 제목 표시줄 색상은 Windows 11이 필요합니다. 다크 모드, 아이콘, 제목은 사용 가능합니다.
+	ButtonStyle: 버튼 스타일
+	TextFxTitle: 애니메이션
+	FxNone: 없음
+	FxWave: 물결
+	FxShimmer: 반짝임
+	FxGlow: 빛남
+	FxRainbow: 무지개
+	FxEmber: 불씨
+	FontTitle: 글꼴
+	FontBuiltIn: 내장 · Windows, Linux, macOS 지원
+	FontInPanels: 설정 화면에도 이 글꼴 사용
+	ThemeLineFx: "\"메뉴 테마 전환\" 줄 애니메이션"
 }

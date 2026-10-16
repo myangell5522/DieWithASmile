@@ -192,6 +192,8 @@ namespace DieWithASmile.Engine.Chrome
 			float maxWidth,
 			float spread)
 		{
+			if (WeThemeLine.TryDraw(spriteBatch, font, text, position, baseColor, baseScale, out Vector2 themed))
+				return themed;
 			if (!Applies)
 				return orig(spriteBatch, font, text, position, baseColor, rotation, origin, baseScale, maxWidth, spread);
 

@@ -92,7 +92,7 @@ UI: {
 	BtnClean: 隐藏版本信息
 	SplashTitle: 这是你的菜单
 	Splash1: 一开始就是普通的 tModLoader。你改的每一项都是可选的。
-	Splash2: 菜单旁的自定义按钮可打开壁纸、标志、音乐、小部件、布局和设置。在设置中可以把它切换为圆环、横栏或带文字的侧边栏。
+	Splash2: 菜单旁的自定义按钮可打开壁纸、标志、音乐、小部件、布局和设置。在设置中可以把它切换为圆环、灵动岛横栏或带文字的侧边栏。
 	Splash3: 可添加音乐播放器、时钟、问候、月相或 Discord 服务器。点一下即可隐藏版本信息。任意元素都能拖动、缩放或隐藏。
 	Splash4: 不再屏蔽 Calamity Entropy。两个模组可以同时保持启用。
 	GotIt: 知道了
@@ -241,7 +241,7 @@ UI: {
 	BorderlessHint: 标题栏颜色在窗口模式下显示。
 	HubStyle: 自定义中心样式
 	HubStyleRadial: 圆形
-	HubStyleDock: 条栏
+	HubStyleDock: 灵动岛
 	ToastHubStyle: 已应用中心样式
 	ToastWallpaper: 已应用壁纸
 	ToastLogo: 已应用标志
@@ -279,7 +279,7 @@ UI: {
 	MenuPreview: 单人游戏
 	FontVanilla: tModLoader 字体
 	ImportFont: 导入字体
-	FontHint: TTF 或 OTF。点击使用。右键删除。
+	FontHint: 内置字体在所有系统上可用。导入的 TTF/OTF：点击使用，右键删除。
 	FontOsHint: TTF 或 OTF 文件会保存在这里。自定义字体绘制仅限 Windows。
 	FontWidth: 宽度
 	FontHeight: 高度
@@ -290,7 +290,7 @@ UI: {
 	ToastFontFail: 无法加载该字体
 	ToastFontGone: 已移除字体
 	ToastFontOs: 自定义字体在 Windows 上绘制。文件已保存。
-	ChromeOsHint: 窗口颜色和图标仅限 Windows。其余功能在此正常。
+	ChromeOsHint: 在 Linux 和 macOS 上标题栏由系统绘制，颜色无法更改。图标和标题可用。
 	ToastChromeOs: 已保存。窗口颜色在 Windows 上生效。
 	ResetFactory: 将模组重置为初始设置
 	ResetFactoryHint: 恢复 Entropy of Freedom、模组标志、左侧菜单、底部工具栏和内置播放列表。将删除你的图片、上传的音乐、字体和外观预设。
@@ -322,4 +322,26 @@ UI: {
 	BorrowBothHint: 右键：同时使用它的标志
 	ToastBorrowBoth: 已从同一主题借用天空和标志
 	FromModsHint: 已在你启用的模组中自动找到。点击即可使用。
+	TitleVanilla: 原版（随机）
+	TitleTheme: 带主题名称
+	WindowTitle: 窗口标题
+	ChromeCustom: 自定义标题栏颜色
+	ChromeTheme: 主题
+	ChromeCalamity: 灾厄
+	ChromeNight: 夜晚
+	ChromeLight: 浅色
+	UseModIcon: 使用模组图标
+	TitleColorsWin11: 标题栏颜色需要 Windows 11。深色模式、图标和标题在这里可用。
+	ButtonStyle: 按钮样式
+	TextFxTitle: 动画
+	FxNone: 无
+	FxWave: 波浪
+	FxShimmer: 闪光
+	FxGlow: 辉光
+	FxRainbow: 彩虹
+	FxEmber: 火星
+	FontTitle: 字体
+	FontBuiltIn: 内置 · 支持 Windows、Linux 和 macOS
+	FontInPanels: 设置界面也使用此字体
+	ThemeLineFx: 动画化“切换菜单主题”文字
 }

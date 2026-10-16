@@ -1,3 +1,18 @@
+Version 3.0.26
+
+Title
+- Fonts: 7 built-in fonts (Pixelify Sans, Press Start 2P, Cinzel, Philosopher, Yeseva One, Kelly Slab, Pangolin; all SIL Open Font License) that work on Windows, Linux and macOS. Imported TTF/OTF fonts now work on Linux and macOS too. Strings a font can't show (e.g. Korean or Chinese with a Latin-only font) fall back to the vanilla font instead of turning blank.
+- The chosen font is also used in the settings window, hub and intro card (can be turned off).
+- New menu text animations: Wave, Shimmer, Glow, Rainbow and Embers, with live previews.
+- "Switch Menu Theme" line: while this theme is active, the theme name glows with a crimson-to-gold gradient, a moving shine, embers and sparkles (can be turned off).
+- Hub "Bar" style became an Island: a rounded capsule that opens on hover and names the section and what it does.
+- Icons follow vanilla pixel density (2 screen pixels per art pixel), with a new compact 10x10 set for small spots and colour-matched outlines.
+- Discord widget redesigned: framed server badge, status dot, stacked avatars with a +N chip, voice footer, Join buttons, voice rooms and members as rows. No duplicate "online" line.
+- Music player: the spectrum now follows the square button instead of a circle.
+- Window settings rebuilt: live window preview, one-click title bar looks, window icon (now also on Linux and macOS, plus "Use mod icon"), window title options. Title bar colours are offered only where Windows supports them (Windows 11); Linux and macOS get a clear note instead.
+- Intro card: paragraphs no longer run into each other when the text wraps.
+- Dragging colour sliders no longer rewrites the settings file every frame.
+
 Version 3.0.25
 
 Title

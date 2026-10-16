@@ -124,9 +124,9 @@ namespace DieWithASmile.Engine.Audio
 			if (_barHeights == null || fade <= 0f)
 				return;
 
-			float circular = 1f - expand;
-			if (circular > 0.02f)
-				DrawCircular(spriteBatch, fade * circular, circleCenter, buttonRadius, pulse);
+			float collapsed = 1f - expand;
+			if (collapsed > 0.02f)
+				DrawSquare(spriteBatch, fade * collapsed, circleCenter, buttonRadius, pulse);
 
 			if (expand > 0.02f)
 				DrawWings(spriteBatch, fade * expand, card);
@@ -165,23 +165,76 @@ namespace DieWithASmile.Engine.Audio
 			}
 		}
 
-		private static void DrawCircular(SpriteBatch spriteBatch, float fade, Vector2 center, float buttonRadius, float pulse)
+		/// <summary>
+		/// Equalizer bars standing on the four edges of the square player button, pointing outward.
+		/// Mirrored left/right so the shape stays balanced; a soft highlight travels around the frame.
+		/// Bars are whole-pixel rectangles with stepped alpha so they match the pixel-art UI.
+		/// </summary>
+		private static void DrawSquare(SpriteBatch spriteBatch, float fade, Vector2 center, float half, float pulse)
 		{
 			Texture2D pixel = TextureAssets.MagicPixel.Value;
-			float inner = MathHelper.Max(8f, buttonRadius);
-			float maxLen = 32f * pulse;
-			int count = 56;
-			int half = count / 2;
+			half = MathHelper.Max(8f, half);
+			const int perEdge = 9;
+			const int width = 3;
+			const float gap = 3f;
+			float inset = MathHelper.Clamp(half * 0.22f, 5f, 12f); // keep clear of the rounded corners
+			float maxLen = 24f * pulse;
 			int activeCount = Math.Max(16, BarCount * 2 / 5);
 			int activeStart = FindMostActiveSlice(activeCount);
+			float time = Main.GlobalTimeWrappedHourly;
+			float span = half * 2f - inset * 2f;
 
-			for (int i = 0; i < count; i++) {
-				float ang = i / (float)count * MathHelper.TwoPi - MathHelper.PiOver2 + _spin;
-				int mirrored = i <= half ? i : count - i;
-				int bar = activeStart + (int)MathF.Round(mirrored / (float)half * (activeCount - 1));
-				float len = (6f + _barHeights[bar] * maxLen) * pulse;
-				Vector2 dir = ang.ToRotationVector2();
-				DrawFadedRay(spriteBatch, pixel, center, dir, inner, len, fade);
+			for (int edge = 0; edge < 4; edge++) {
+				for (int k = 0; k < perEdge; k++) {
+					float along = -half + inset + (k + 0.5f) / perEdge * span;
+					Vector2 p;
+					Point n;
+					switch (edge) {
+						case 0: p = new Vector2(center.X + along, center.Y - half); n = new Point(0, -1); break;
+						case 1: p = new Vector2(center.X + half, center.Y + along); n = new Point(1, 0); break;
+						case 2: p = new Vector2(center.X - along, center.Y + half); n = new Point(0, 1); break;
+						default: p = new Vector2(center.X - half, center.Y - along); n = new Point(-1, 0); break;
+					}
+
+					// angle from straight up, folded so left and right mirror each other
+					float ang = MathF.Atan2(p.X - center.X, -(p.Y - center.Y));
+					float m = MathF.Abs(ang) / MathHelper.Pi;
+					int bar = Math.Clamp(activeStart + (int)MathF.Round(m * (activeCount - 1)), 0, BarCount - 1);
+					int len = (int)MathF.Round((3f + _barHeights[bar] * maxLen) * pulse);
+					float sweep = 0.78f + 0.22f * MathF.Sin(ang * 2f - time * 2.6f);
+					DrawEdgeBar(spriteBatch, pixel, p, n, len, width, gap, fade * sweep);
+				}
+			}
+		}
+
+		private static void DrawEdgeBar(SpriteBatch spriteBatch, Texture2D pixel, Vector2 at, Point normal, int length, int width, float gap, float fade)
+		{
+			if (length < 1)
+				return;
+			const int steps = 4;
+			int px = (int)MathF.Round(at.X);
+			int py = (int)MathF.Round(at.Y);
+			int g = (int)gap;
+			int drawn = 0;
+			for (int s = 0; s < steps; s++) {
+				int seg = s == steps - 1 ? length - drawn : Math.Max(1, length / steps);
+				if (seg <= 0)
+					break;
+				float alpha = (1f - s * 0.22f) * fade * BaseAlpha;
+				int from = g + drawn;
+				Rectangle r = normal.X != 0
+					? new Rectangle(normal.X > 0 ? px + from : px - from - seg, py - width / 2, seg, width)
+					: new Rectangle(px - width / 2, normal.Y > 0 ? py + from : py - from - seg, width, seg);
+				spriteBatch.Draw(pixel, r, BarColor * alpha);
+				// one-pixel bright cap on the outer end
+				if (s == steps - 1) {
+					Rectangle cap = normal.X != 0
+						? new Rectangle(normal.X > 0 ? r.Right - 1 : r.X, r.Y, 1, r.Height)
+						: new Rectangle(r.X, normal.Y > 0 ? r.Bottom - 1 : r.Y, r.Width, 1);
+					spriteBatch.Draw(pixel, cap, WeAccent.Light * (alpha * 0.9f));
+				}
+
+				drawn += seg;
 			}
 		}
 

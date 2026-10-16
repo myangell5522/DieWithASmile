@@ -90,6 +90,7 @@ namespace DieWithASmile.Engine.UI
 				return;
 			_id = WePanelId.None;
 			_dragSlider = null;
+			WeSave.Holding = false;
 			_factoryArmed = false;
 			DiscordWidget.Unfocus();
 			SoundEngine.PlaySound(SoundID.MenuClose);
@@ -97,6 +98,12 @@ namespace DieWithASmile.Engine.UI
 
 		internal static void Update()
 		{
+			// A drag always ends with the mouse button; never leave saves held back.
+			if (!WeInput.LeftDown) {
+				_dragSlider = null;
+				WeSave.Holding = false;
+			}
+
 			if (!WeModMenu.OnTitle) {
 				if (IsOpen)
 					DiscordWidget.Unfocus();
@@ -132,10 +139,14 @@ namespace DieWithASmile.Engine.UI
 			_lastWheel = wheel;
 
 			if (_dragSlider != null) {
-				if (WeInput.LeftDown)
+				if (WeInput.LeftDown) {
+					WeSave.Holding = true;
 					ApplySlider(_dragSlider);
-				else
+				}
+				else {
 					_dragSlider = null;
+					WeSave.Holding = false;
+				}
 				return;
 			}
 
@@ -179,7 +190,7 @@ namespace DieWithASmile.Engine.UI
 			if (_fade <= 0.02f)
 				return;
 
-			WeDraw.WithLinear(spriteBatch, () => {
+			WeDraw.WithLinear(spriteBatch, () => WeTerra.WithTheme(() => {
 				// Wallpaper/logo need to be seen while you change them; the rest gets a deeper dim.
 				float dim = _id is WePanelId.Wallpaper or WePanelId.Logo ? 0.12f : 0.32f;
 				WeDraw.Fill(spriteBatch, WeDraw.CoverRect, Color.Black * (dim * _fade));
@@ -195,7 +206,7 @@ namespace DieWithASmile.Engine.UI
 				if (!string.IsNullOrEmpty(_tip) && view.Contains(Main.mouseX, Main.mouseY))
 					WeTerra.Tooltip(spriteBatch, _tipAnchor, _tip, _fade, preferLeft: true);
 				_tip = null;
-			});
+			}));
 		}
 
 		// ---- window chrome: title, one-line explanation, close button and the section tabs ----------
@@ -643,29 +654,6 @@ namespace DieWithASmile.Engine.UI
 			ClientAccent(null, panel, ref y, true);
 			ClientFactory(null, panel, ref y, true);
 		}
-		private static void DrawHubStyle(SpriteBatch spriteBatch, Rectangle panel, ref int y, int style)
-		{
-			Rectangle hit = Row(panel, y, 92);
-			bool on = WeSave.Data.WrenchStyle == style;
-			bool hover = hit.Contains(Main.mouseX, Main.mouseY);
-			Card(spriteBatch, hit, hover, on);
-			var preview = new Rectangle(hit.X + 8, hit.Y + 8, 168, hit.Height - 16);
-			WeDraw.Fill(spriteBatch, preview, new Color(16, 18, 24) * _fade);
-			WrenchToolbar.DrawStylePreview(spriteBatch, preview, style, _fade, on);
-			string title = WeText.UI(style == 1 ? "HubStyleDock" : "HubStyleRadial");
-			ChatManager.DrawColorCodedStringWithShadow(
-				spriteBatch, FontAssets.MouseText.Value, title,
-				new Vector2(preview.Right + 14, hit.Y + 34), Color.White * _fade, 0f, Vector2.Zero, new Vector2(0.82f));
-			y += 100;
-		}
-
-		private static bool ClickHubStyle(Rectangle panel, ref int y, int style)
-		{
-			Rectangle hit = Row(panel, y, 92);
-			y += 100;
-			return hit.Contains(Main.mouseX, Main.mouseY);
-		}
-
 		private static void DrawWidgetBand(SpriteBatch spriteBatch, Rectangle panel, ref int y, int slot, string title, bool on, Action<SpriteBatch, Rectangle, float> preview)
 		{
 			DrawWidgetTile(spriteBatch, panel, ref y, title, on, preview, slot);
@@ -1293,9 +1281,7 @@ namespace DieWithASmile.Engine.UI
 		private static void DrawRgb(SpriteBatch spriteBatch, Rectangle panel, ref int y, string key, Color color, string label = null)
 		{
 			if (!string.IsNullOrEmpty(label)) {
-				ChatManager.DrawColorCodedStringWithShadow(
-					spriteBatch, FontAssets.MouseText.Value, label,
-					new Vector2(panel.X + 18, y), Color.White * _fade, 0f, Vector2.Zero, new Vector2(0.72f));
+				WeTerra.Label(spriteBatch, label, new Vector2(panel.X + 18, y), Color.White * _fade, 0.72f);
 				y += 20;
 			}
 
@@ -1334,6 +1320,7 @@ namespace DieWithASmile.Engine.UI
 			y += 22;
 			if (bar.Contains(Main.mouseX, Main.mouseY)) {
 				_dragSlider = key;
+				WeSave.Holding = true;
 				ApplySlider(key);
 			}
 		}

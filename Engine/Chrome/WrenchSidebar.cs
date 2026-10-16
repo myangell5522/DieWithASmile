@@ -179,7 +179,7 @@ namespace DieWithASmile.Engine.Chrome
 		{
 			if (!WeModMenu.OnTitle || !SceneGraph.Visible(SceneGraph.Wrench))
 				return;
-			WeDraw.WithLinear(spriteBatch, () => Paint(spriteBatch, Bounds(), 1f, interactive: true));
+			WeDraw.WithLinear(spriteBatch, () => WeTerra.WithTheme(() => Paint(spriteBatch, Bounds(), 1f, interactive: true)));
 		}
 
 		private static void Paint(SpriteBatch spriteBatch, Rectangle b, float fade, bool interactive)

@@ -2,8 +2,6 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
-using Terraria.GameContent;
-using Terraria.UI.Chat;
 using DieWithASmile.Engine.Content;
 using DieWithASmile.Engine.Core;
 using DieWithASmile.Engine.Layout;
@@ -11,16 +9,21 @@ using DieWithASmile.Engine.UI;
 
 namespace DieWithASmile.Engine.Chrome
 {
+	/// <summary>
+	/// "Bar" hub style, drawn as a Dynamic-Island capsule: a dark pixel-rounded pill with the section icons
+	/// at vanilla pixel density (2x). Hovering morphs it open - it grows away from the nearest screen edge and
+	/// spells out the hovered section's name and what it does, so nothing has to be guessed from an icon.
+	/// </summary>
 	internal static class WrenchDock
 	{
-		private const float Slot = 52f;
-		private const float BarH = 50f;
-		private const float Pad = 14f;
-		private const float Tile = 40f;
-		private const float Lift = 26f;
+		private const float Slot = 46f;
+		private const float Pad = 12f;
+		private const float RestH = 50f;
+		private const float OpenH = 98f;
+		private const float Grow = 28f;
 
 		private static float _focus;
-		private static float _lift;
+		private static float _open;
 		private static int _hover = -1;
 		private static bool _frameInput;
 		private static bool _mouseHeld;
@@ -28,29 +31,29 @@ namespace DieWithASmile.Engine.Chrome
 
 		internal static bool Busy => HoverBar() || _hover >= 0;
 
-		internal static Rectangle HitRect() => BarBounds();
+		internal static Rectangle HitRect() => Island(_open, WrenchToolbar.Scale);
 
 		internal static void Reset()
 		{
 			_hover = -1;
 			_focus = 0f;
-			_lift = 0f;
+			_open = 0f;
 		}
 
 		internal static void Update()
 		{
 			if (!WeModMenu.OnTitle) {
 				_hover = -1;
-				_lift = 0f;
+				_open = 0f;
 				return;
 			}
 
 			float target = _hover >= 0 ? 1f : 0f;
-			_lift = MathHelper.Lerp(_lift, target, 0.28f);
-			if (Math.Abs(_lift - target) < 0.012f)
-				_lift = target;
+			_open = MathHelper.Lerp(_open, target, target > _open ? 0.24f : 0.16f);
+			if (Math.Abs(_open - target) < 0.01f)
+				_open = target;
 			if (_hover >= 0)
-				_focus = MathHelper.Lerp(_focus, _hover, 0.32f);
+				_focus = MathHelper.Lerp(_focus, _hover, 0.35f);
 		}
 
 		internal static void HandleInput()
@@ -91,88 +94,93 @@ namespace DieWithASmile.Engine.Chrome
 			if (!WeModMenu.OnTitle || !SceneGraph.Visible(SceneGraph.Wrench))
 				return;
 
-			WeDraw.WithLinear(spriteBatch, () => DrawBar(spriteBatch, BarBounds(), _focus, _lift, 1f, interactive: true));
+			WeDraw.WithLinear(spriteBatch, () => WeTerra.WithTheme(() =>
+				Paint(spriteBatch, Island(_open, WrenchToolbar.Scale), _open, _focus, 1f, true, GrowsDown)));
 		}
 
+		/// <summary>Static preview for Settings → Hub style.</summary>
 		internal static void DrawPreview(SpriteBatch spriteBatch, Rectangle dest, float fade, bool on)
 		{
-			var inner = new Rectangle(dest.X + 6, dest.Y + dest.Height / 3, dest.Width - 12, dest.Height / 2);
-			float focus = on ? 4f : 2f;
-			float lift = on ? 0.55f + MathF.Sin(Main.GlobalTimeWrappedHourly * 2.2f) * 0.12f : 0f;
-			DrawBar(spriteBatch, inner, focus, lift, fade, interactive: false);
+			float open = on ? 0.5f + 0.5f * MathF.Sin(Main.GlobalTimeWrappedHourly * 1.6f) : 0f;
+			open = MathHelper.Clamp(open, 0f, 1f);
+			int n = WrenchHub.Actions.Length;
+			float natural = n * Slot + Pad * 2f;
+			float s = Math.Min((dest.Width - 8f) / (natural + Grow), (dest.Height - 6f) / OpenH);
+			s = Math.Max(0.2f, s);
+			float w = (natural + Grow * open) * s;
+			float h = MathHelper.Lerp(RestH, OpenH, open) * s;
+			var r = new Rectangle((int)(dest.Center.X - w * 0.5f), dest.Y + 3, (int)w, (int)h);
+			Paint(spriteBatch, r, open, 2f, fade, false, true, s);
 		}
 
-		private static void DrawBar(SpriteBatch spriteBatch, Rectangle bounds, float focus, float lift, float fade, bool interactive)
+		/// <summary>True when the island should open downward (it sits in the top half of the screen).</summary>
+		private static bool GrowsDown => WrenchToolbar.Anchor.Y < Main.screenHeight * 0.5f;
+
+		private static Rectangle Island(float open, float scale)
 		{
 			int n = WrenchHub.Actions.Length;
-			float slot = bounds.Width / (float)n;
-			float barH = Math.Max(22f, bounds.Height * (BarH / (BarH + Lift + 12f)));
-			float barTop = bounds.Bottom - barH - 4f;
-			var bar = new Rectangle(bounds.X, (int)barTop, bounds.Width, (int)barH);
-			Color fill = WeTerra.WindowBack;
-			WeTerra.Panel(spriteBatch, bar, fill * fade, Color.Black * fade);
+			float rest = (n * Slot + Pad * 2f) * scale;
+			float w = rest + Grow * scale * Smooth(open);
+			float h = MathHelper.Lerp(RestH, OpenH, Smooth(open)) * scale;
+			Vector2 anchor = WrenchToolbar.Anchor;
+			float restTop = anchor.Y - RestH * scale * 0.5f;
+			float top = GrowsDown ? restTop : restTop + RestH * scale - h;
+			return new Rectangle((int)(anchor.X - w * 0.5f), (int)top, (int)w, (int)h);
+		}
 
+		private static void Paint(SpriteBatch spriteBatch, Rectangle island, float open, float focus, float fade, bool interactive, bool down, float scale = -1f)
+		{
+			if (scale < 0f)
+				scale = WrenchToolbar.Scale;
+			float o = Smooth(open);
+			int n = WrenchHub.Actions.Length;
+			float restH = RestH * scale;
+			int radius = (int)MathHelper.Lerp(restH * 0.5f, 22f * scale, o);
+
+			// soft shadow, dark rim, glass body, accent hairline
+			WeTerra.PixelRound(spriteBatch, new Rectangle(island.X + 2, island.Y + 4, island.Width, island.Height), radius, Color.Black * (0.35f * fade));
+			WeTerra.PixelRound(spriteBatch, island, radius, new Color(10, 8, 16) * (0.94f * fade), Color.Black * fade, 2);
+			var inner = new Rectangle(island.X + 2, island.Y + 2, island.Width - 4, island.Height - 4);
+			WeTerra.PixelRound(spriteBatch, inner, Math.Max(0, radius - 2), Color.Transparent, WeAccent.Mid * ((0.45f + 0.35f * o) * fade), 1);
+			WeDraw.Fill(spriteBatch, new Rectangle(island.X + radius, island.Y + 3, Math.Max(1, island.Width - radius * 2), 1), Color.White * (0.07f * fade));
+
+			// icon row sits at the resting height, at the edge the island grows away from
+			float rowY = down ? island.Y + restH * 0.5f : island.Bottom - restH * 0.5f;
+			float slot = Slot * scale;
+			float rowX = island.Center.X - n * slot * 0.5f;
 			for (int i = 0; i < n; i++) {
-				float pop = lift * Smooth(1f - Math.Abs(i - focus));
-				Vector2 rest = new(bar.X + slot * (i + 0.5f), bar.Center.Y);
-				Vector2 center = rest - new Vector2(0f, pop * Lift * (bar.Height / BarH));
-				float size = MathHelper.Lerp(bar.Height * 0.46f, Tile * (bar.Height / BarH), pop);
+				WrenchAction action = WrenchHub.Actions[i];
+				var center = new Vector2(rowX + slot * (i + 0.5f), rowY);
+				float near = o * Smooth(1f - Math.Abs(i - focus));
 				bool hot = interactive && i == _hover;
+				bool on = WrenchHub.IsOn(action);
+				if (near > 0.05f || hot) {
+					int pill = (int)(slot - 6f * scale);
+					var bg = new Rectangle((int)(center.X - pill * 0.5f), (int)(center.Y - pill * 0.5f), pill, pill);
+					WeTerra.PixelRound(spriteBatch, bg, pill / 3, WeTerra.RowHover * (Math.Max(near, hot ? 0.8f : 0f) * fade));
+				}
 
-				if (pop > 0.08f)
-					WeTerra.Panel(spriteBatch, TileRect(center, size), WeTerra.LookOf(hot, WrenchHub.IsOn(WrenchHub.Actions[i])), fade * pop);
-
-				// 16px when resting, 32px when the slot lifts, always on whole pixels.
-				WeTerra.Icon(spriteBatch, WrenchHub.IconName(WrenchHub.Actions[i]), center, pop > 0.55f ? 32f : 16f, Color.White * fade);
-
-				if (interactive && pop > 0.72f && hot) {
-					string label = WeText.UI(WrenchHub.TipKey(WrenchHub.Actions[i]));
-					DrawLabel(spriteBatch, new Vector2(center.X, center.Y - size * 0.5f - 12f), label, fade * pop);
+				Vector2 at = hot ? center - new Vector2(0f, 2f) : center;
+				// vanilla pixel density: 16px art drawn at 2x (1x only in tiny previews)
+				WeTerra.Icon(spriteBatch, WrenchHub.IconName(action), at, scale >= 0.75f ? 32f : 16f, Color.White * fade);
+				if (on) {
+					var dot = new Rectangle((int)center.X - 2, (int)(center.Y + slot * 0.42f), 4, 2);
+					WeDraw.Fill(spriteBatch, dot, WeAccent.Light * fade);
 				}
 			}
-		}
 
-		private static void DrawLabel(SpriteBatch spriteBatch, Vector2 center, string text, float fade)
-		{
-			if (string.IsNullOrEmpty(text) || fade < 0.25f)
+			// the morph: name + what it does, fading in as the island opens
+			if (!interactive || o < 0.35f || _hover < 0)
 				return;
-
-			var font = FontAssets.MouseText.Value;
-			Vector2 size = font.MeasureString(text) * 0.62f;
-			var rect = new Rectangle(
-				(int)(center.X - size.X * 0.5f - 9f),
-				(int)(center.Y - size.Y * 0.5f - 4f),
-				(int)size.X + 18,
-				(int)size.Y + 8);
-			WeTerra.Panel(spriteBatch, rect, new Color(23, 25, 52) * (0.94f * fade), Color.Black * fade);
-			ChatManager.DrawColorCodedStringWithShadow(
-				spriteBatch, font, text,
-				new Vector2(rect.X + 9, rect.Y + 4),
-				Color.White * fade, 0f, Vector2.Zero, new Vector2(0.62f));
-		}
-
-		private static void FillRound(SpriteBatch spriteBatch, Rectangle rect, float radius, Color color)
-		{
-			if (rect.Width < 2 || rect.Height < 2 || color.A < 8)
-				return;
-
-			int r = Math.Clamp((int)MathF.Round(radius), 1, Math.Min(rect.Width, rect.Height) / 2);
-			WeDraw.Fill(spriteBatch, new Rectangle(rect.X + r, rect.Y, Math.Max(1, rect.Width - r * 2), r), color);
-			WeDraw.Fill(spriteBatch, new Rectangle(rect.X + r, rect.Bottom - r, Math.Max(1, rect.Width - r * 2), r), color);
-			WeDraw.Fill(spriteBatch, new Rectangle(rect.X, rect.Y + r, rect.Width, Math.Max(1, rect.Height - r * 2)), color);
-			Texture2D circle = WeDraw.Circle();
-			float scale = r * 2f / circle.Width;
-			Vector2 origin = circle.Size() * 0.5f;
-			spriteBatch.Draw(circle, new Vector2(rect.X + r, rect.Y + r), null, color, 0f, origin, scale, SpriteEffects.None, 0f);
-			spriteBatch.Draw(circle, new Vector2(rect.Right - r, rect.Y + r), null, color, 0f, origin, scale, SpriteEffects.None, 0f);
-			spriteBatch.Draw(circle, new Vector2(rect.X + r, rect.Bottom - r), null, color, 0f, origin, scale, SpriteEffects.None, 0f);
-			spriteBatch.Draw(circle, new Vector2(rect.Right - r, rect.Bottom - r), null, color, 0f, origin, scale, SpriteEffects.None, 0f);
-		}
-
-		private static Rectangle TileRect(Vector2 center, float size)
-		{
-			int s = Math.Max(14, (int)size);
-			return new Rectangle((int)(center.X - s * 0.5f), (int)(center.Y - s * 0.5f), s, s);
+			float textFade = MathHelper.Clamp((o - 0.35f) / 0.5f, 0f, 1f) * fade;
+			WrenchAction cur = WrenchHub.Actions[Math.Clamp(_hover, 0, n - 1)];
+			float textTop = down ? island.Y + restH + 2f : island.Y + 8f * scale;
+			float maxW = island.Width - 28f * scale;
+			string title = WeTerra.Fit(WeText.UI(WrenchHub.LabelKey(cur)), 0.86f, maxW);
+			string tip = WeTerra.Fit(WeText.UI(WrenchHub.TipKey(cur)), 0.66f, maxW);
+			WeTerra.LabelCentered(spriteBatch, title, new Vector2(island.Center.X, textTop + 9f), WeTerra.Title * textFade, 0.86f);
+			if (tip != title)
+				WeTerra.LabelCentered(spriteBatch, tip, new Vector2(island.Center.X, textTop + 30f), WeTerra.Muted * textFade, 0.66f);
 		}
 
 		private static float Smooth(float t)
@@ -181,32 +189,29 @@ namespace DieWithASmile.Engine.Chrome
 			return t * t * (3f - 2f * t);
 		}
 
-		private static Rectangle BarBounds()
-		{
-			float scale = WrenchToolbar.Scale;
-			int n = WrenchHub.Actions.Length;
-			float width = (n * Slot + Pad * 2f) * scale;
-			float height = (BarH + Lift + 18f) * scale;
-			Vector2 origin = WrenchToolbar.Anchor;
-			return new Rectangle(
-				(int)(origin.X - width * 0.5f),
-				(int)(origin.Y - height * 0.5f),
-				(int)width,
-				(int)height);
-		}
-
-		private static bool HoverBar() => BarBounds().Contains(Main.mouseX, Main.mouseY);
+		// The hit area is the fully open island, so moving the mouse onto the label never collapses it.
+		private static bool HoverBar() =>
+			(_open > 0.05f ? Island(1f, WrenchToolbar.Scale) : Island(0f, WrenchToolbar.Scale)).Contains(Main.mouseX, Main.mouseY);
 
 		private static int HitIndex()
 		{
-			if (!HoverBar())
-				return -1;
-
-			Rectangle bar = BarBounds();
+			float scale = WrenchToolbar.Scale;
+			Rectangle rest = Island(0f, scale);
+			Rectangle full = Island(1f, scale);
 			int n = WrenchHub.Actions.Length;
-			float slot = bar.Width / (float)n;
-			int index = (int)((Main.mouseX - bar.X) / slot);
-			return Math.Clamp(index, 0, n - 1);
+			float slot = Slot * scale;
+			float rowX = rest.Center.X - n * slot * 0.5f;
+			float restH = RestH * scale;
+			float rowTop = GrowsDown ? rest.Y : rest.Bottom - restH;
+			bool inRow = Main.mouseY >= rowTop && Main.mouseY <= rowTop + restH &&
+			             Main.mouseX >= rowX && Main.mouseX < rowX + n * slot;
+			if (inRow)
+				return Math.Clamp((int)((Main.mouseX - rowX) / slot), 0, n - 1);
+
+			// Over the open label area: keep the current section highlighted.
+			if (_hover >= 0 && full.Contains(Main.mouseX, Main.mouseY))
+				return _hover;
+			return -1;
 		}
 	}
 }
