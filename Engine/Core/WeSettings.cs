@@ -379,9 +379,8 @@ namespace DieWithASmile.Engine.Core
 
 			Current.WrenchStyle = style;
 			WeSave.Save();
-			WrenchToolbar.Collapse();
-			WrenchDock.Reset();
-			WrenchSidebar.Reset();
+			WeUi.HubCollapse();
+			WeUi.HubResetStyles();
 			WeToast.Show("ToastHubStyle");
 		}
 
@@ -541,10 +540,10 @@ namespace DieWithASmile.Engine.Core
 			ClientChrome.Reset();
 			WePackedMusic.ForceExtract(ModContent.GetInstance<DieWithASmileCalamitasMenu>()?.Mod);
 			WeNestedPacks.ApplyPackLook();
-			WeSplash.Show();
-			WrenchToolbar.OnThemeSelected();
+			WeUi.SplashShow();
+			WeUi.HubOnThemeSelected();
 			LayoutEditor.Reset();
-			WePanels.Close();
+			WeUi.ClosePanels();
 			WeArt.Scan();
 			CalamitasMenuUserArt.Scan();
 			WeType.Scan();

@@ -11,6 +11,7 @@ using DieWithASmile.Engine.Core;
 using DieWithASmile.Engine.Grab;
 using DieWithASmile.Engine.Layout;
 using DieWithASmile.Engine.UI;
+using DieWithASmile.Engine;
 
 namespace DieWithASmile.Content
 {
@@ -57,7 +58,7 @@ namespace DieWithASmile.Content
 		public override void Load()
 		{
 			_emptyTexture = ModContent.Request<Texture2D>(EmptyTexturePath);
-			WeIcons.Load();
+			WeUi.LoadIcons();
 			WePresetLogos.Load();
 			WePackedMusic.EnsureExtracted(Mod);
 			WePlaylist.Load(Mod);
@@ -76,12 +77,12 @@ namespace DieWithASmile.Content
 			WeCatalog.Refresh();
 			WeCatalog.DropMissing();
 			WeLibrary.ScanIntoSave();
-			WeSplash.OnThemeSelected();
+			WeUi.SplashOnThemeSelected();
 			WePlaylist.OnThemeSelected();
-			WePlayerUI.Reset();
-			WePanels.Close();
+			WeUi.PlayerReset();
+			WeUi.ClosePanels();
 			LayoutEditor.Reset();
-			WrenchToolbar.OnThemeSelected();
+			WeUi.HubOnThemeSelected();
 			WeType.Scan();
 		}
 
@@ -89,8 +90,8 @@ namespace DieWithASmile.Content
 		{
 			if (Main.gameMenu && Main.menuMode != 0) {
 				LayoutEditor.Cancel(false);
-				WePanels.Close();
-				WeSplash.Hide();
+				WeUi.ClosePanels();
+				WeUi.SplashHide();
 				return;
 			}
 
@@ -98,8 +99,8 @@ namespace DieWithASmile.Content
 			CalamitasMenuPersist.OnOurMenuDeselected();
 			WePlaylist.Silence();
 			LayoutEditor.Cancel(false);
-			WePanels.Close();
-			WeSplash.Hide();
+			WeUi.ClosePanels();
+			WeUi.SplashHide();
 		}
 
 		public override void Update(bool isOnTitleScreen)

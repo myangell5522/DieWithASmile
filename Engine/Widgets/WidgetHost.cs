@@ -9,40 +9,30 @@ namespace DieWithASmile.Engine.Widgets
 {
 	internal static class WidgetHost
 	{
-		internal static bool Busy => WePlayerUI.Busy || DiscordWidget.Busy;
+		internal static bool Busy => WeUi.PlayerBusy || WeUi.DiscordBusy;
 
 		internal static void Update()
 		{
 			if (!Main.gameMenu || !WeModMenu.IsActive)
 				return;
 
-			WePlayerUI.Update();
-			if (!WeModMenu.OnTitle)
-				return;
-
-			QuoteWidget.Refresh();
-			DiscordFeed.Tick();
-			DiscordWidget.Tick();
-			DiscordWidget.TickInput();
+			WeUi.UpdateWidgets(WeModMenu.OnTitle);
+			if (WeModMenu.OnTitle)
+				DiscordFeed.Tick();
 		}
 
 		internal static void HandleInput()
 		{
 			if (!WeModMenu.OnTitle)
 				return;
-			if (WePanels.Covering || WePanels.AteInput)
+			if (WeUi.Covering || WeUi.AteInput || WeUiChooser.Visible)
 				return;
-			WePlayerUI.HandleInput();
-			DiscordWidget.HandleInput();
+			WeUi.HandleWidgetInput();
 		}
 
 		internal static void Draw(SpriteBatch spriteBatch, float fade)
 		{
-			WePlayerUI.Draw(spriteBatch, fade);
-			ClockWidget.Draw(spriteBatch, fade);
-			QuoteWidget.Draw(spriteBatch, fade);
-			MoonWidget.Draw(spriteBatch, fade);
-			DiscordWidget.Draw(spriteBatch, fade);
+			WeUi.DrawWidgets(spriteBatch, fade);
 		}
 	}
 }

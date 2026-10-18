@@ -43,7 +43,7 @@ namespace DieWithASmile.Engine.Content
 			WeBorrowFx.Unload();
 			WeModListLook.Unload();
 			WeArt.Unload();
-			WePlayerUI.Unload();
+			WeUi.Unload();
 			DiscordFeed.Unload();
 			WePlaylist.Unload();
 			WePresetLogos.Unload();
@@ -56,9 +56,8 @@ namespace DieWithASmile.Engine.Content
 		{
 			WeToast.Update();
 			LayoutEditor.Update();
-			WrenchToolbar.Update();
-			WePanels.Update();
-			WeSplash.Update();
+			WeUi.UpdateUi();
+			WeUiChooser.Update();
 			WidgetHost.Update();
 			WeFx.Update();
 			WeCatalog.Pulse();
@@ -85,9 +84,7 @@ namespace DieWithASmile.Engine.Content
 
 			WeBackgroundStyle.EndFrame();
 			LayoutEditor.EndFrame();
-			WePlayerUI.EndFrame();
-			WrenchToolbar.EndFrame();
-			WePanels.EndFrame();
+			WeUi.EndFrame();
 		}
 
 		private static void DrawTitleChrome()
@@ -100,13 +97,8 @@ namespace DieWithASmile.Engine.Content
 			try {
 				WeDraw.BeginUi(spriteBatch);
 				LayoutEditor.Draw(spriteBatch, 1f);
-				// The sidebar doubles as navigation while a page is open, so it is drawn above the page's dim.
-				if (!WrenchHub.UseSidebar)
-					WrenchToolbar.Draw(spriteBatch);
-				WePanels.Draw(spriteBatch);
-				if (WrenchHub.UseSidebar)
-					WrenchToolbar.Draw(spriteBatch);
-				WeSplash.Draw(spriteBatch);
+				WeUi.DrawTitleChrome(spriteBatch);
+				WeUiChooser.Draw(spriteBatch);
 				WeToast.Draw(spriteBatch);
 			}
 			finally {
@@ -201,7 +193,7 @@ namespace DieWithASmile.Engine.Content
 				WeAnim.Pulse();
 				HandleInput();
 				releaseAfterInput = Main.mouseLeftRelease;
-				steal = WeSplash.Visible || WePanels.Covering || WePanels.AteInput || WrenchToolbar.Busy || LayoutEditor.Editing || WidgetHost.Busy;
+				steal = WeUiChooser.Visible || WeUi.SplashVisible || WeUi.Covering || WeUi.AteInput || WeUi.HubBusy || LayoutEditor.Editing || WidgetHost.Busy;
 				if (steal) {
 					Main.blockMouse = true;
 					Main.mouseLeftRelease = false;
@@ -210,7 +202,7 @@ namespace DieWithASmile.Engine.Content
 
 				MenuButtonHooks.BeginFrame();
 				int dy = MenuButtonHooks.MouseRemapY;
-				if (dy != 0 && !WePanels.Covering && !WeSplash.Visible && SceneGraph.Visible(SceneGraph.MenuButtons)) {
+				if (dy != 0 && !WeUi.Covering && !WeUi.SplashVisible && !WeUiChooser.Visible && SceneGraph.Visible(SceneGraph.MenuButtons)) {
 					Main.mouseY -= dy;
 					remapY = true;
 				}
@@ -242,24 +234,28 @@ namespace DieWithASmile.Engine.Content
 		private static void HandleInput()
 		{
 			bool esc = Main.keyState.IsKeyDown(Keys.Escape);
-			if (esc && !_esc) {
-				if (WeSplash.Visible)
-					WeSplash.Dismiss(savePreference: false);
-				else if (WePanels.IsOpen)
-					WePanels.Close();
-				else if (LayoutEditor.Editing)
-					LayoutEditor.Cancel(true);
-				else if (WrenchToolbar.Expanded)
-					WrenchToolbar.Collapse();
-			}
-
+			bool escPressed = esc && !_esc;
 			_esc = esc;
-			WeSplash.HandleInput();
-			if (WeSplash.Visible)
+			// The interface chooser comes first and owns all input while it is up.
+			if (WeUiChooser.HandleInput(escPressed))
 				return;
 
-			WePanels.HandleInput();
-			WrenchToolbar.HandleInput();
+			if (escPressed) {
+				if (WeUi.SplashVisible)
+					WeUi.SplashDismiss(false);
+				else if (WeUi.PanelOpen)
+					WeUi.ClosePanels();
+				else if (LayoutEditor.Editing)
+					LayoutEditor.Cancel(true);
+				else if (WeUi.HubExpanded)
+					WeUi.HubCollapse();
+			}
+
+			WeUi.HandleSplashInput();
+			if (WeUi.SplashVisible)
+				return;
+
+			WeUi.HandlePanelAndHubInput();
 			LayoutEditor.HandleInput();
 			WidgetHost.HandleInput();
 		}

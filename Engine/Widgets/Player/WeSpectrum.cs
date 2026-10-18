@@ -125,8 +125,13 @@ namespace DieWithASmile.Engine.Audio
 				return;
 
 			float collapsed = 1f - expand;
-			if (collapsed > 0.02f)
-				DrawSquare(spriteBatch, fade * collapsed, circleCenter, buttonRadius, pulse);
+			if (collapsed > 0.02f) {
+				// Classic interface: round button with a ring of rays. Pixel interface: square button, edge bars.
+				if (WeUi.Classic)
+					DrawCircular(spriteBatch, fade * collapsed, circleCenter, buttonRadius, pulse);
+				else
+					DrawSquare(spriteBatch, fade * collapsed, circleCenter, buttonRadius, pulse);
+			}
 
 			if (expand > 0.02f)
 				DrawWings(spriteBatch, fade * expand, card);
@@ -162,6 +167,26 @@ namespace DieWithASmile.Engine.Audio
 
 				var rect = new Rectangle((int)x, (int)(baseY - height), (int)WingBarWidth, (int)height);
 				spriteBatch.Draw(pixel, rect, BarColor * (BaseAlpha * fade * fadeOut));
+			}
+		}
+
+		private static void DrawCircular(SpriteBatch spriteBatch, float fade, Vector2 center, float buttonRadius, float pulse)
+		{
+			Texture2D pixel = TextureAssets.MagicPixel.Value;
+			float inner = MathHelper.Max(8f, buttonRadius);
+			float maxLen = 32f * pulse;
+			int count = 56;
+			int half = count / 2;
+			int activeCount = Math.Max(16, BarCount * 2 / 5);
+			int activeStart = FindMostActiveSlice(activeCount);
+
+			for (int i = 0; i < count; i++) {
+				float ang = i / (float)count * MathHelper.TwoPi - MathHelper.PiOver2 + _spin;
+				int mirrored = i <= half ? i : count - i;
+				int bar = activeStart + (int)MathF.Round(mirrored / (float)half * (activeCount - 1));
+				float len = (6f + _barHeights[bar] * maxLen) * pulse;
+				Vector2 dir = ang.ToRotationVector2();
+				DrawFadedRay(spriteBatch, pixel, center, dir, inner, len, fade);
 			}
 		}
 

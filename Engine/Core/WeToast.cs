@@ -49,7 +49,12 @@ namespace DieWithASmile.Engine.Core
 				18,
 				(int)size.X + 36,
 				36);
-			WeTerra.Window(spriteBatch, rect, alpha);
+			if (WeUi.Classic) {
+				WeDraw.Fill(spriteBatch, rect, new Color(24, 26, 32) * (0.88f * alpha));
+				WeDraw.Border(spriteBatch, rect, WeAccent.Mid * alpha);
+			}
+			else
+				WeTerra.Window(spriteBatch, rect, alpha);
 			ChatManager.DrawColorCodedStringWithShadow(
 				spriteBatch,
 				font,

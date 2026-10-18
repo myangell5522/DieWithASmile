@@ -56,7 +56,7 @@ namespace DieWithASmile.Engine.Layout
 
 		internal static void Begin(string focus = "", bool logoOnly = false)
 		{
-			WePanels.Close();
+			WeUi.ClosePanels();
 			Work.Clear();
 			BeginSnap.Clear();
 			_logoOnly = logoOnly;
@@ -151,7 +151,7 @@ namespace DieWithASmile.Engine.Layout
 			_frameInput = true;
 
 			bool esc = Main.keyState.IsKeyDown(Keys.Escape);
-			if (esc && !_esc && _editing && !WeSplash.Visible && !WePanels.IsOpen) {
+			if (esc && !_esc && _editing && !(WeUi.SplashVisible || WeUiChooser.Visible) && !WeUi.PanelOpen) {
 				Cancel(true);
 				_esc = true;
 				return;
@@ -204,7 +204,7 @@ namespace DieWithASmile.Engine.Layout
 				return;
 			}
 
-			if (WePanels.Covering || WeSplash.Visible)
+			if (WeUi.Covering || (WeUi.SplashVisible || WeUiChooser.Visible))
 				return;
 
 			if (pressed) {
@@ -346,6 +346,20 @@ namespace DieWithASmile.Engine.Layout
 		private static void DrawChip(SpriteBatch spriteBatch, Rectangle hit, string text, string icon, bool armed, float fade)
 		{
 			bool hover = hit.Contains(Main.mouseX, Main.mouseY);
+			if (WeUi.Classic) {
+				// the original flat chip, text only
+				WeDraw.Fill(spriteBatch, hit, (armed ? WeAccent.Deep : new Color(24, 26, 32)) * ((hover ? 0.94f : 0.8f) * fade));
+				WeDraw.Border(spriteBatch, hit, (hover || armed ? WeAccent.Hover : WeAccent.Mid) * fade);
+				var font = FontAssets.MouseText.Value;
+				string fitted = WeTerra.Fit(text, 0.78f, hit.Width - 12);
+				Vector2 sz = font.MeasureString(fitted) * 0.78f;
+				ChatManager.DrawColorCodedStringWithShadow(
+					spriteBatch, font, fitted,
+					new Vector2(hit.X + (hit.Width - sz.X) * 0.5f, hit.Y + (hit.Height - sz.Y) * 0.5f),
+					Color.White * fade, 0f, Vector2.Zero, new Vector2(0.78f));
+				return;
+			}
+
 			WeTerra.Panel(spriteBatch, hit, WeTerra.LookOf(hover, armed), fade);
 			WeTerra.Icon(spriteBatch, icon, new Vector2(hit.X + 18, hit.Center.Y), 16f, Color.White * fade);
 			string label = WeTerra.Fit(text, 0.76f, hit.Width - 40);

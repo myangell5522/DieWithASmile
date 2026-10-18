@@ -637,6 +637,8 @@ namespace DieWithASmile.Engine.UI
 
 		private static void DrawClient(SpriteBatch spriteBatch, Rectangle panel, ref int y)
 		{
+			// Interface style switch (Classic / Pixel), first so it is easy to find.
+			DrawCard(spriteBatch, panel, ref y, WeText.UI("UiStyleRow").Replace("{0}", WeText.UI("UiPixel")), false, CardKind.Cycle);
 			ClientLooks(spriteBatch, panel, ref y, false);
 			ClientHub(spriteBatch, panel, ref y, false);
 			ClientWindow(spriteBatch, panel, ref y, false);
@@ -647,6 +649,12 @@ namespace DieWithASmile.Engine.UI
 
 		private static void ClickClient(Rectangle panel, ref int y)
 		{
+			if (ClickCard(panel, ref y)) {
+				Close();
+				WeUi.SetSkin(WeUi.SkinClassic);
+				return;
+			}
+
 			ClientLooks(null, panel, ref y, true);
 			ClientHub(null, panel, ref y, true);
 			ClientWindow(null, panel, ref y, true);

@@ -344,4 +344,16 @@ UI: {
 	FontBuiltIn: 内置 · 支持 Windows、Linux 和 macOS
 	FontInPanels: 设置界面也使用此字体
 	ThemeLineFx: 动画化“切换菜单主题”文字
+	ClassicHubStyleDock: 条栏
+	ClassicSplash2: 菜单按钮和「切换菜单主题」之间的圆钮可以打开壁纸、音乐、标志、小组件和布局。
+	UiChooseTitle: 选择你的界面
+	UiChooseSub: 两种界面功能相同。之后可随时在设置中切换。
+	UiClassic: 经典
+	UiClassicDesc: 3.0.25 之前的平滑外观：圆形按钮、柔和面板和原来的图标。
+	UiPixel: 像素
+	UiPixelDesc: 3.0.25 的泰拉瑞亚像素风：原版面板、像素图标、灵动岛、字体和文字动画。
+	UiPick: 使用这个
+	UiStyleRow: 界面：{0}（点击切换）
+	ToastUiClassic: 已切换到经典界面
+	ToastUiPixel: 已切换到像素界面
 }

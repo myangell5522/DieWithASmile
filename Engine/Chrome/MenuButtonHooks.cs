@@ -47,7 +47,7 @@ namespace DieWithASmile.Engine.Chrome
 		}
 
 		internal static bool HideButtons =>
-			ShouldShift() && (WePanels.Covering || WeSplash.Visible || !SceneGraph.Visible(SceneGraph.MenuButtons));
+			ShouldShift() && (WeUi.Covering || (WeUi.SplashVisible || WeUiChooser.Visible) || !SceneGraph.Visible(SceneGraph.MenuButtons));
 
 		internal static Rectangle MenuHit()
 		{

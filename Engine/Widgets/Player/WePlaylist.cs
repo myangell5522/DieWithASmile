@@ -229,7 +229,7 @@ namespace DieWithASmile.Engine.Audio
 		internal static void TogglePause()
 		{
 			if (Active.Count == 0) {
-				WePanels.Open(WePanelId.Music);
+				WeUi.OpenMusic();
 				return;
 			}
 

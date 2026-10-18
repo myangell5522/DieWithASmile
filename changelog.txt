@@ -1,3 +1,11 @@
+Version 3.0.27
+
+Title
+- You choose the interface: on the next start a window asks whether to keep the Classic interface (the smooth look up to 3.0.24: round buttons, soft panels, the original icons) or the Pixel one from 3.0.25. Escape keeps Classic.
+- Switch any time: Settings has "Interface: ... (click to switch)" as its first row, in both interfaces.
+- Classic is the real 3.0.24 interface (hub, all pages, widgets, music player, intro card, notifications), with the later fixes kept: volume slider, Swap My Audio! support, safe settings saving, and the intro card's text no longer overlapping.
+- Both interfaces share the same settings, music, wallpapers and widgets, so switching never loses anything.
+
 Version 3.0.26
 
 Title

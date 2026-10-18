@@ -344,4 +344,16 @@ UI: {
 	FontBuiltIn: Built-in · works on Windows, Linux and macOS
 	FontInPanels: Use this font in settings too
 	ThemeLineFx: Animated "Switch Menu Theme" line
+	ClassicHubStyleDock: Bar
+	ClassicSplash2: The circle between the menu buttons and Switch Menu Theme opens wallpapers, music, logo, widgets, and layout.
+	UiChooseTitle: Choose your interface
+	UiChooseSub: Both have every feature. You can switch any time in Settings.
+	UiClassic: Classic
+	UiClassicDesc: The smooth look from before version 3.0.25: round buttons, soft panels and the original icons.
+	UiPixel: Pixel
+	UiPixelDesc: The Terraria pixel-art look from 3.0.25: vanilla panels, pixel icons, island hub, fonts and text animations.
+	UiPick: Use this one
+	UiStyleRow: Interface: {0}  (click to switch)
+	ToastUiClassic: Classic interface on
+	ToastUiPixel: Pixel interface on
 }

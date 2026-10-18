@@ -167,6 +167,7 @@ namespace DieWithASmile.Engine.Core
 		public int ButtonStyle { get; set; }
 		public string FontFile { get; set; } = "";
 		public int TextFx { get; set; }
+		public int UiSkin { get; set; } = -1;
 		public bool PlainThemeLine { get; set; }
 		public bool FontInPanels { get; set; } = true;
 		public float FontScaleX { get; set; } = 1f;

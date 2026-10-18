@@ -153,9 +153,8 @@ namespace DieWithASmile.Engine.Core
 			int hub = Math.Clamp(WeSave.Data.WrenchStyle, 0, 2);
 			WeSave.Data.WrenchStyle = hub;
 			if (hub != prevHub) {
-				WrenchToolbar.Collapse();
-				WrenchDock.Reset();
-				WrenchSidebar.Reset();
+				WeUi.HubCollapse();
+				WeUi.HubResetStyles();
 			}
 
 			if (WeSave.Data.ChromeCustom)
